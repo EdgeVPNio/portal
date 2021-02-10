@@ -38,4 +38,3 @@ Change the IP and the port to where your visualizer is running.
 * Node.js
 * Express.js
 * React.js
-
