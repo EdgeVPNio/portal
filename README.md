@@ -24,7 +24,7 @@ To redirect the Evio node information to the above visualizer application, add t
 <pre> <code>
   "OverlayVisualizer": {
     "Enabled": true,
-    "TimerInterval": 25,
+    "TimerInterval": 30,
     "WebServiceAddress": "*.*.*.*:*",
     "NodeName": "nd-###"
   },
