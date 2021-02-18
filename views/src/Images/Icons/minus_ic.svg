@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="68" height="68" viewBox="0 0 68 68">
+  <defs>
+    <filter id="Rectangle_1021" x="0" y="0" width="68" height="68" filterUnits="userSpaceOnUse">
+      <feOffset dy="3" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-opacity="0.251"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Minus" transform="translate(10 7)">
+    <g transform="matrix(1, 0, 0, 1, -10, -7)" filter="url(#Rectangle_1021)">
+      <g id="Rectangle_1021-2" data-name="Rectangle 1021" transform="translate(10 7)" fill="#213758" stroke="#405b80" stroke-width="1">
+        <rect width="48" height="48" rx="6" stroke="none"/>
+        <rect x="-0.5" y="-0.5" width="49" height="49" rx="6.5" fill="none"/>
+      </g>
+    </g>
+    <g id="remove" transform="translate(14 23)">
+      <g id="Group_57" data-name="Group 57">
+        <path id="Path_43" data-name="Path 43" d="M18.915,211.613H1.085a1.44,1.44,0,0,0,0,2.791H18.915a1.44,1.44,0,0,0,0-2.791Z" transform="translate(0 -211.613)" fill="#8fa7c7"/>
+      </g>
+    </g>
+  </g>
+</svg>

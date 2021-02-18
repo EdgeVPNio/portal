@@ -12,6 +12,15 @@ sudo systemctl start mongod
 sudo systemctl enable mongod
 npm install mongodb --save
 npm install mongoose --save
-npm install --save react
-npm install --save react-dom
 npm install --save dotenv
+npm install --save --legacy-peer-deps google-map-react
+#commenting out required UI(React)dependencies but already added to package.json in older versions
+#npm install --save react
+#npm install --save react-dom
+#npm install bootstrap
+#npm install react-router-dom
+#npm install axios
+#npm install react-bootstrap
+#npm install react-bootstrap-typeahead
+#npm install react-cytoscapejs
+#npm install react-tippy

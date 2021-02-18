@@ -1,0 +1,374 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+/* customize global */
+* {
+    font-family: 'Roboto', sans-serif;
+}
+
+#root {
+    width           : 100vw;
+    height          : 100vh;
+    background-color: #101B2B;
+    color           : 'white';
+    overflow        : hidden;
+}
+
+header {
+    width           : 100vw;
+    background-color: #213758;
+    color           : white;
+}
+
+/* customize title name */
+#ipopTitle {
+    margin-left : 5%;
+    margin-right: 5%;
+}
+
+#loading {
+    position: absolute;
+    margin  : auto;
+    left    : 50%;
+    top     : 50%;
+}
+
+#mainContent {
+    width : 100%;
+    height: 100vh;
+}
+
+#overlayList {
+    width : -webkit-fit-content;
+    width : -moz-fit-content;
+    width : fit-content;
+    height: -webkit-fit-content;
+    height: -moz-fit-content;
+    height: fit-content;
+    margin: auto;
+}
+
+#midArea {
+    width : 100%;
+    height: 95%;
+}
+
+/* customize overlay button */
+.overlay {
+    background     : url("../Images/Icons/overlay_ic.svg")no-repeat;
+    background-size: contain;
+    width          : 100px;
+    height         : 75px;
+    border         : none;
+    outline        : none;
+    margin         : auto;
+
+}
+
+.overlayBtn>button,
+.connectedNodeBtn>button,
+.sourceNodeBtn>button,
+.targetNodeBtn>button {
+    text-align: left;
+    width     : 100%;
+    padding   : 4%;
+    outline   : transparent;
+    border    : transparent;
+}
+
+.overlayBtn>button:focus,
+.connectedNodeBtn>button:focus,
+.sourceNodeBtn>button:focus,
+.targetNodeBtn>button:focus {
+    -webkit-box-shadow: none;
+            box-shadow: none;
+}
+
+.arrow {
+    width: 10%;
+}
+
+.overlay_ic {
+    width: 75%;
+}
+
+#rightPanel {
+    padding         : 0.5%;
+    color           : white;
+    position        : fixed;
+    width           : 19vw;
+    height          : 95vh;
+    right           : 0;
+    background-color: #213758;
+    z-index         : 2;
+    overflow-wrap   : break-word;
+    overflow-y      : auto;
+}
+
+#viewBar {
+    margin    : auto;
+    text-align: center;
+}
+
+#viewSelector {
+    width: 15%;
+}
+
+#rightPanel::-webkit-scrollbar {
+    display: none;
+}
+
+#rightPanelBtn {
+    margin-top        : auto;
+    margin-bottom     : auto;
+    margin-left       : 0.25%;
+    margin-right      : 0.25%;
+    padding           : 0;
+    right             : 0;
+    width             : 30px;
+    border            : none;
+    height            : 30px;
+    outline           : none;
+    /* position       : fixed; */
+    background        : url(../Images/Icons/menu_ic.svg) no-repeat;
+    background-size   : contain;
+}
+
+.overlayBtn,
+.connectedNodeBtn,
+.transmissionCard {
+    border-radius   : 3px;
+    border          : solid #486186;
+    background-color: #405B80;
+    margin-bottom   : 2.5%;
+}
+
+.sourceNodeBtn {
+    border-radius   : 3px;
+    /* border          : solid #8FD24D; */
+    /* background-color: #8FD24D; */
+}
+
+.targetNodeBtn {
+    border-radius   : 3px;
+    /* border          : solid #42B2C3; */
+    /* background-color: #42B2C3; */
+}
+
+#rightPanel {
+    padding         : 0.5%;
+    color           : white;
+    position        : fixed;
+    width           : 19.5vw;
+    right           : 0;
+    background-color: #213758;
+    z-index         : 3;
+    overflow-wrap   : break-word;
+}
+
+#leftTools {
+    position : absolute;
+    top      : 50%;
+    -webkit-transform: translatey(-50%);
+        -ms-transform: translatey(-50%);
+            transform: translatey(-50%);
+    left     : 0.5%;
+    width    : -webkit-fit-content;
+    width    : -moz-fit-content;
+    width    : fit-content;
+    height   : -webkit-fit-content;
+    height   : -moz-fit-content;
+    height   : fit-content;
+    z-index  : 1;
+}
+
+#homeBtn,
+#refreshBtn,
+#infoBtn,
+#plusBtn,
+#minusBtn,
+#switchBtn,
+#configBtn,
+#breadcrum {
+    outline   : none;
+    border    : none;
+    background: none;
+    width     : 60px;
+    height    : 60px;
+    padding   : 0;
+}
+
+#homeBtn {
+    background-image: url('../Images/Icons/home_ic.svg');
+    background-size : cover;
+}
+
+#switchBtn {
+    width          : 25px;
+    height         : 25px;
+    background     : url('../Images/Icons/swap_ic.svg')no-repeat;
+    background-size: cover;
+}
+
+#refreshBtn {
+    background-image: url('../Images/Icons/refresh_ic.svg');
+    background-size : cover;
+}
+
+#infoBtn {
+    background-image: url('../Images/Icons/info_ic.svg');
+    background-size : cover;
+}
+
+.node_img {
+    -webkit-transform: translateY(-2.5px);
+        -ms-transform: translateY(-2.5px);
+            transform: translateY(-2.5px);
+    width    : 100%;
+}
+
+.tunnel_img {
+    -webkit-transform: translateY(1px);
+        -ms-transform: translateY(1px);
+            transform: translateY(1px);
+    width    : 90%;
+}
+
+#configBtn {
+    background-image: url('../Images/Icons/config_ic.svg');
+    background-size : cover;
+}
+
+.popover {
+    padding  : 0.5%;
+    /* width : fit-content; */
+    width    : 320px;
+    max-width: unset;
+}
+
+.popover-header {
+    background-color: white;
+    border          : none;
+}
+
+#plusBtn {
+    background-image: url('../Images/Icons/plus_ic.svg');
+    background-size : cover;
+}
+
+#zoomSlider {
+    position   : absolute;
+    margin-left: -14.2vh;
+    margin-top : 15.5vh;
+    -webkit-transform  : rotate(-90deg);
+        -ms-transform  : rotate(-90deg);
+            transform  : rotate(-90deg);
+    width      : 35vh;
+}
+
+#minusBtn {
+    margin-top      : 34.2vh;
+    background-image: url('../Images/Icons/minus_ic.svg');
+    background-size : cover;
+}
+
+.nodeMarker {
+    outline        : none;
+    border         : none;
+    width          : 70px;
+    height         : 70px;
+    background     : url("../Images/Icons/green_node_ic.svg") no-repeat;
+    background-size: contain;
+}
+
+.markerLabel {
+    font-size  : medium;
+    margin     : 0;
+    padding    : 0;
+    width      : 60px;
+    font-weight: bold;
+}
+
+.nodeMarker.selected {
+    -webkit-transform      : translate(-15%, -15%);
+        -ms-transform      : translate(-15%, -15%);
+            transform      : translate(-15%, -15%);
+    outline        : none;
+    border         : none;
+    width          : 100px;
+    height         : 100px;
+    background     : url('../Images/Icons/green_node_selected_ic.svg') no-repeat;
+    background-size: contain;
+}
+
+#non-coordinate-card {
+    font-family: 'Roboto', sans-serif;
+    position   : relative;
+    max-width  : -webkit-fit-content;
+    max-width  : -moz-fit-content;
+    max-width  : fit-content;
+    z-index    : 5;
+    -webkit-transform  : translateY(-50%);
+        -ms-transform  : translateY(-50%);
+            transform  : translateY(-50%);
+    -webkit-transform  : translateX(-60%);
+        -ms-transform  : translateX(-60%);
+            transform  : translateX(-60%);
+}
+
+#non-coordinate-card>.card-header {
+    font-size       : large;
+    text-align      : center;
+    padding         : 2.5%;
+    background-color: #213758;
+}
+
+#non-coordinate-card>.card-body {
+    text-align      : center;
+    padding         : 1%;
+    background-color: #101B2B;
+}
+
+.nodeMarker {
+    margin: 1%;
+}
+
+.breadcrumbName {
+    color    : white;
+    -webkit-transform: translateX(-10%);
+        -ms-transform: translateX(-10%);
+            transform: translateX(-10%);
+}
+
+#overlayBreadcrumb,
+#elementBreadcrumb {
+    position  : absolute;
+    outline   : none;
+    border    : none;
+    background: none;
+    padding   : 0;
+    width     : 240px;
+    height    : 60px;
+}
+
+#overlayBreadcrumb {
+    background     : url('../Images/Icons/overlayBreadcrumb.svg') no-repeat;
+    background-size: contain;
+    -webkit-transform      : translateX(25%);
+        -ms-transform      : translateX(25%);
+            transform      : translateX(25%);
+}
+
+#elementBreadcrumb {
+    background     : url('../Images/Icons/elementBreadcrumb.svg') no-repeat;
+    background-size: contain;
+    -webkit-transform      : translateX(100%);
+        -ms-transform      : translateX(100%);
+            transform      : translateX(100%);
+}
+
+.breadcrumbLabel {
+    color    : white;
+    -webkit-transform: translateX(-6%);
+        -ms-transform: translateX(-6%);
+            transform: translateX(-6%);
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="68" height="68" viewBox="0 0 68 68">
+  <defs>
+    <filter id="Rectangle_1021" x="0" y="0" width="68" height="68" filterUnits="userSpaceOnUse">
+      <feOffset dy="3" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-opacity="0.251"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Plus" transform="translate(10 7)">
+    <g transform="matrix(1, 0, 0, 1, -10, -7)" filter="url(#Rectangle_1021)">
+      <g id="Rectangle_1021-2" data-name="Rectangle 1021" transform="translate(10 7)" fill="#213758" stroke="#405b80" stroke-width="1">
+        <rect width="48" height="48" rx="6" stroke="none"/>
+        <rect x="-0.5" y="-0.5" width="49" height="49" rx="6.5" fill="none"/>
+      </g>
+    </g>
+    <g id="add" transform="translate(14 14)">
+      <g id="Group_56" data-name="Group 56">
+        <path id="Path_42" data-name="Path 42" d="M18.915,8.606H11.4V1.086A1.349,1.349,0,0,0,10,0,1.349,1.349,0,0,0,8.6,1.086V8.606H1.085A1.349,1.349,0,0,0,0,10a1.349,1.349,0,0,0,1.085,1.4H8.6v7.519A1.349,1.349,0,0,0,10,20a1.349,1.349,0,0,0,1.4-1.085V11.4h7.519A1.349,1.349,0,0,0,20,10,1.349,1.349,0,0,0,18.915,8.606Z" transform="translate(0 -0.001)" fill="#8fa7c7"/>
+      </g>
+    </g>
+  </g>
+</svg>

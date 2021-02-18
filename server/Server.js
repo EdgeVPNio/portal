@@ -21,6 +21,7 @@
 */
 
 const express = require('express')
+const path = __dirname +'/../ui/'; //ui contains the built react static content
 const bodyParser = require('body-parser');
 const {MongoDBImpl} = require('../db/MongoDBImpl')
 const overlays = require("../controllers/Overlays.controller.js");
@@ -28,6 +29,7 @@ const topology = require("../controllers/Topology.controller.js");
 const dotenv = require('dotenv')
 
 const app = express()
+app.use(express.static(path));
 // parse requests of content-type - application/json
 app.use(bodyParser.json({type: ['application/gzip', 'application/json'], inflate: true}))
 
@@ -42,7 +44,7 @@ if (process.env.DB == "mongo") {
   var dbInstance = new MongoDBImpl('mongodb://localhost:27017/Evio', 'Evio')
 }
 app.get('/', (req, res) => {
-  res.json({ message: "Welcome to Visualizer application." });
+  res.sendFile(path + "index.html");//loads the react UI
 });
 
 //routing logic for GET all intervals
