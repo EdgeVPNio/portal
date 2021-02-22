@@ -1,5 +1,5 @@
 #!/bin/bash
-curl -sL https://deb.nodesource.com/setup_15.x | -E bash -
+curl -sL https://deb.nodesource.com/setup_15.x | bash -
 apt-get install -y nodejs
 npm install --legacy-peer-deps
 wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
