@@ -133,8 +133,8 @@ class OverlaysView extends React.Component {
 
     var allowOrigin = 'https://cors-anywhere.herokuapp.com/'
     // var allowOrigin = ''
-    var nodeURL = allowOrigin + 'http://' + Config.ip + ':' + Config.port + '/IPOP/overlays/' + overlayId + '/nodes?interval=' + intervalNo + '&current_state=True'
-    var linkURL = allowOrigin + 'http://' + Config.ip + ':' + Config.port + '/IPOP/overlays/' + overlayId + '/links?interval=' + intervalNo + '&current_state=True'
+    var nodeURL = allowOrigin + 'http://localhost' + ':' + this.port + '/IPOP/overlays/' + overlayId + '/nodes?interval=' + intervalNo + '&current_state=True'
+    var linkURL = allowOrigin + 'http://localhost' + ':' + this.port + '/IPOP/overlays/' + overlayId + '/links?interval=' + intervalNo + '&current_state=True'
 
     //console.log(nodeURL);
 
