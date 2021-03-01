@@ -84,7 +84,12 @@ class MongoDBImpl extends DataBaseInterface {
      * @param {String} intervalId Interval identifier to query.
      */
     async getOverlays(tableName, intervalId) {
-        return tableName.find({_id:intervalId});
+        if(intervalId) {
+            //Find the next available interval, greater than the previous one from client
+            return tableName.find({ "_id": { $gt: intervalId } }).sort({'_id':1}).limit(1);
+        }
+        //Most recent entry - intervalId not passed
+        return tableName.find().sort({'_id':-1}).limit(1);
     }
 
     /**
@@ -95,7 +100,12 @@ class MongoDBImpl extends DataBaseInterface {
      * @param {String} overlayId 
      */
     async getTopology(tableName, intervalId, overlayId) {
-        return tableName.find({"Topology.OverlayId":overlayId,"_id":intervalId});
+        if(intervalId) {
+            //Find the next available interval, greater than the previous one from client
+            return tableName.find({ "_id": { $gt: intervalId }, "Topology.OverlayId":overlayId }).sort({'_id':1}).limit(1);
+        }
+        //Most recent entry - intervalId not passed
+        return tableName.find({"_id":-1,"Topology.OverlayId":overlayId}).limit(1);
     }
 }
 

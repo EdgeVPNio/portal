@@ -75,7 +75,11 @@ setInterval(function(){
 }, 30000)
 
 // PORT taken from the .env file
-const port = process.env.PORT;
+const port = 5000; //default
+
+if(process.env.PORT) {
+  port = process.env.PORT;
+}
 
 // Start of the webservice
 app.listen(port, () => {

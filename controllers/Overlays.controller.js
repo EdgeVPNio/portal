@@ -44,15 +44,36 @@ exports.findAllIntervals = (req, res, dbInstance) => {
 exports.findOverlays = (req, res, dbInstance) => {
 
     const intervalId = parseFloat(req.query.interval);
-   
+
     dbInstance.getOverlays(overlayModel, intervalId)
     .then(data => {
-        res.send(data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while retrieving overlays."
+      var send = true; //Flag to send data to client
+      //console.log("Data is " + data)
+      if (Object.keys(data).length == 0) {
+        send = false; //data not available yet, waiting for insert
+        //console.log("data not found");
+        const pipeline = [{'$match': {'operationType': 'insert'}}]; //watch for insert operation
+        const overlayChangeStream = dbInstance.getDb().db('Evio').collection('Overlays').watch(pipeline);
+
+        overlayChangeStream.on('change', newData => {
+            //console.log(newData);
+            data = newData.fullDocument;
+            send = true;
         });
+      }
+      //Logic to check every 1 second for insert on db
+      setTimeout(function() {
+        var overlayIntervalId = setInterval(function(){
+        if (send) {
+          res.send(data); //data found and sent to client, clearing interval time
+          clearInterval(overlayIntervalId);
+        }}, 1000)
+      }, 50000); //timeout on wait for 50 seconds
+    })
+    .catch(err => {
+      res.status(502).send({
+        message:
+          err.message || "Some error occurred while retrieving overlays."
       });
+    });
 };

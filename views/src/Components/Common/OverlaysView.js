@@ -9,9 +9,10 @@ import CollapsibleButton from './CollapsibleButton'
 import { Typeahead } from 'react-bootstrap-typeahead'
 import Header from './Header'
 import '../../CSS/Main.css'
-import Config from '../../config'
 import Overlays from './Overlays.js'
 import Topology from './Topology.js'
+const dotenv = require('dotenv')
+dotenv.config()
 
 class OverlaysView extends React.Component {
   constructor(props) {
@@ -22,25 +23,38 @@ class OverlaysView extends React.Component {
       topology: null,
       isToggle: true
     }
+    this.port = 5000; //deafult port value
+    if(process.env.PORT) {
+      this.port = process.env.PORT;
+    }
+  }
+
+  async getOverlaysData(intervalId) {
+    var url = 'http://localhost' + ':' + this.port + '/overlays?interval=' + intervalId
+    console.log(url);
+    
+    await fetch(url).then(res => {
+      console.log(res)
+      return res.json()})
+    .then(res => {
+      if(res.status == 502) {
+        //connection timeout error
+        console.log("waiting for new data");
+        this.getOverlaysData(intervalId);
+      }else{
+        //Got response, display the data
+        console.log("got response");
+        this.setState({overlays : new Overlays(res)});
+        intervalId = res[0]._id;
+        this.getOverlaysData(intervalId);
+      }
+    }).catch(err => {
+      console.log('error has been occured on fetch overlay process.' + err);
+    })
   }
 
   componentDidMount() {
-    //var intervalNo = new Date().toISOString().split('.')[0] //TODO : Read the most recent intervalId
-
-    // URL for REST API.
-    var url = 'http://' + Config.ip + ':' + Config.port + '/overlays?interval=100.42'
-    //var url = allowOrigin + 'http://67.58.53.58:5000/IPOP/overlays?interval=2020-04-29T21:28:42&current_state=True'
-
-    console.log(url);
-
-    fetch(url).then(res => res.json())
-      .then((overlays) => {
-        return new Overlays(overlays) // create overlay object that contain all overlays and its details.
-      })
-      .then((overlays) => { this.setState({ overlays: overlays }) }) // set overlay object to overlays state.
-      .catch(() => {
-        //console.log('error has been occered on fetch overlay process.')
-      })
+    this.getOverlaysData();
   }
 
   // toggle overlay right panel
