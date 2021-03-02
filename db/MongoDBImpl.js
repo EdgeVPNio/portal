@@ -102,10 +102,10 @@ class MongoDBImpl extends DataBaseInterface {
     async getTopology(tableName, intervalId, overlayId) {
         if(intervalId) {
             //Find the next available interval, greater than the previous one from client
-            return tableName.find({ "_id": { $gt: intervalId }, "Topology.OverlayId":overlayId }).sort({'_id':1}).limit(1);
+            return tableName.find({"_id":intervalId}, {"Topology": {$elemMatch: {"OverlayId":overlayId}}}).sort({'_id':1}).limit(1);
         }
         //Most recent entry - intervalId not passed
-        return tableName.find({"_id":-1,"Topology.OverlayId":overlayId}).limit(1);
+        return tableName.find({"_id":-1}, {"Topology": {$elemMatch: {"OverlayId":overlayId}}}).limit(1);
     }
 }
 
