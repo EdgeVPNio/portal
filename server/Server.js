@@ -21,7 +21,7 @@
 */
 
 const express = require('express')
-const path = __dirname +'/../views/build/'; //ui contains the built react static content
+const path = __dirname +'/../build/'; //ui contains the built react static content
 const bodyParser = require('body-parser');
 const {MongoDBImpl} = require('../db/MongoDBImpl')
 const overlays = require("../controllers/Overlays.controller.js");
