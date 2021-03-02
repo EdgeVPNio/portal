@@ -75,7 +75,7 @@ setInterval(function(){
 }, 30000)
 
 // PORT taken from the .env file
-const port = 5000; //default
+var port = 5000; //default
 
 if(process.env.PORT) {
   port = process.env.PORT;
