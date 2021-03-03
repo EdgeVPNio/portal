@@ -21,7 +21,7 @@
 */
 
 const express = require('express')
-const path = __dirname +'/../build/'; //ui contains the built react static content
+const path = __dirname +'/../build/'; //build contains the built react static content
 const bodyParser = require('body-parser');
 const {MongoDBImpl} = require('../db/MongoDBImpl')
 const overlays = require("../controllers/Overlays.controller.js");
@@ -41,7 +41,7 @@ dotenv.config()
 var Data = {}
 //As the object dbInstance is built, Evio db is connected from constructor, check for the type of database.
 if (process.env.DB == "mongo") {
-  var dbInstance = new MongoDBImpl('mongodb://localhost:27017/Evio', 'Evio')
+  var dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio')
 }
 app.get('/', (req, res) => {
   res.sendFile(path + "index.html");//loads the react UI

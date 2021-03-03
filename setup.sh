@@ -12,4 +12,3 @@ sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
 ./db/mongo.sh start 
 systemctl enable mongod
 npm run build
-#cd views && npm run build
