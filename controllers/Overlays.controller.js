@@ -62,13 +62,12 @@ exports.findOverlays = (req, res, dbInstance) => {
         });
       }
       //Logic to check every 1 second for insert on db
-      setTimeout(function() {
         var overlayIntervalId = setInterval(function(){
         if (send) {
           res.send(data); //data found and sent to client, clearing interval time
           clearInterval(overlayIntervalId);
-        }}, 1000)
-      }, 50000); //timeout on wait for 50 seconds
+        }
+      }, 1000); //timeout on wait for 50 seconds
     })
     .catch(err => {
       res.status(502).send({
