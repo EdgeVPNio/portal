@@ -40,7 +40,7 @@ class OverlaysView extends React.Component {
         this.getOverlaysData(intervalId);
       }else{
         //Got response, display the data
-        console.log("got response");
+        //console.log("got response");
         this.setState({overlays : new Overlays(res)});
         intervalId = res[0]._id;
         this.getOverlaysData(intervalId);

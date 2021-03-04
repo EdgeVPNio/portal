@@ -57,7 +57,7 @@ exports.findOverlays = (req, res, dbInstance) => {
 
         overlayChangeStream.on('change', newData => {
             //console.log(newData);
-            data = newData.fullDocument;
+            data = [newData.fullDocument];
             send = true;
         });
       }
