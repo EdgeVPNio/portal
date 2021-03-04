@@ -21,7 +21,7 @@
 */
 
 const express = require('express')
-const path = __dirname +'/../build/'; //build contains the built react static content
+const path = require('path')
 const bodyParser = require('body-parser');
 const {MongoDBImpl} = require('../db/MongoDBImpl')
 const overlays = require("../controllers/Overlays.controller.js");
@@ -29,7 +29,7 @@ const topology = require("../controllers/Topology.controller.js");
 const dotenv = require('dotenv')
 
 const app = express()
-app.use(express.static(path));
+
 // parse requests of content-type - application/json
 app.use(bodyParser.json({type: ['application/gzip', 'application/json'], inflate: true}))
 
@@ -38,13 +38,29 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 dotenv.config()
 
+var API_PORT = 5000; //default
+
+// PORT taken from the .env file
+if(process.env.PORT) {
+  API_PORT = process.env.PORT;
+}
+
 var Data = {}
 //As the object dbInstance is built, Evio db is connected from constructor, check for the type of database.
 if (process.env.DB == "mongo") {
   var dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio')
 }
+
+app.set('views', path.join(__dirname, '../build'));
+app.engine('html', require('ejs').renderFile);
+
+app.use(
+  '/static',
+  express.static(path.join(__dirname, '../build/static')),
+);
+
 app.get('/', (req, res) => {
-  res.sendFile(path + "index.html");//loads the react UI
+  res.render('index.html', { API_PORT });
 });
 
 //routing logic for GET all intervals
@@ -74,14 +90,7 @@ setInterval(function(){
     }
 }, 30000)
 
-// PORT taken from the .env file
-var port = 5000; //default
-
-if(process.env.PORT) {
-  port = process.env.PORT;
-}
-
 // Start of the webservice
-app.listen(port, () => {
-  console.log(`Evio Visualizer app listening at http://localhost:${port}`)
+app.listen(API_PORT, () => {
+  console.log(`Evio Visualizer app listening at http://localhost:${API_PORT}`)
 })

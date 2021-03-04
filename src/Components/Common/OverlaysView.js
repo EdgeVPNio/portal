@@ -11,8 +11,9 @@ import Header from './Header'
 import '../../CSS/Main.css'
 import Overlays from './Overlays.js'
 import Topology from './Topology.js'
-const dotenv = require('dotenv')
-dotenv.config()
+const { REACT_APP_GIT_HASH, REACT_APP_MY_ENV, NODE_ENV } = process.env;
+const API_PORT = NODE_ENV === 'production' ? window.API_PORT : process.env.REACT_APP_API_PORT;
+
 
 class OverlaysView extends React.Component {
   constructor(props) {
@@ -23,14 +24,10 @@ class OverlaysView extends React.Component {
       topology: null,
       isToggle: true
     }
-    this.port = 5000; //deafult port value
-    if(process.env.PORT) {
-      this.port = process.env.PORT;
-    }
   }
 
   async getOverlaysData(intervalId) {
-    var url = 'http://localhost' + ':' + this.port + '/overlays?interval=' + intervalId
+    var url = 'http://localhost' + ':' + API_PORT + '/overlays?interval=' + intervalId
     console.log(url);
     
     await fetch(url).then(res => {
