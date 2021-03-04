@@ -27,7 +27,7 @@ class OverlaysView extends React.Component {
   }
 
   async getOverlaysData(intervalId) {
-    var url = 'http://localhost' + ':' + API_PORT + '/overlays?interval=' + intervalId
+    var url = '/overlays?interval=' + intervalId
     console.log(url);
     
     await fetch(url).then(res => {

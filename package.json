@@ -2,6 +2,7 @@
   "name": "evio-portal",
   "version": "1.0.0",
   "description": "Web portal for network administration and visualization",
+  "proxy":"http://localhost",
   "main": "server/Server.js",
   "repository": {
     "type": "git",
