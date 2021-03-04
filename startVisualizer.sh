@@ -19,7 +19,7 @@ function start()
 
 function stop()
 {
-    ps aux | grep -v grep | grep "Server.js" | awk '{print $2}' | xargs sudo kill -9
+    ps aux | grep -v grep | grep "Server.js" | awk '{print $2}' | xargs kill -9
 }
 
 cmd=$1
