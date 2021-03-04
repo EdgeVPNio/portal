@@ -37,6 +37,13 @@ class MongoDBImpl extends DataBaseInterface {
     }
 
     /**
+     * Getter function for the db attribute
+     */
+    getDb() {
+        return this.db;
+    }
+
+    /**
      * Function to insert the PUT data sent by the EVIO nodes into 
      * collections: 1) Overlays
      *              2) Topology
