@@ -31,6 +31,7 @@ exports.findTopology = (req, res, dbInstance) => {
 
     dbInstance.getTopology(topologyModel, intervalId, overlayId)
       .then(data => {
+      console.log("getTopology" + res);
       res.send(data);
     })
     .catch(err => {

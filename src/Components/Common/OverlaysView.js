@@ -135,6 +135,7 @@ class OverlaysView extends React.Component {
       return res.json();})
       .then(res => {
         //logic to process the GET topology
+	console.log("Response at select is" +res);
         this.setState({topology : new Topology(res)});
       }).catch(err => {
         console.log('Error occured on fetch topology process' + err);

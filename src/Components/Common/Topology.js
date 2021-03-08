@@ -9,8 +9,10 @@ export default class Topology {
         var nodeDetails = {};
         var edgeDetails = {};
 
-        var nodesData = response[0].Topology.Nodes;
-        for(var node in nodesData) {
+        var nodesData = response[0].Topology[0].Nodes;
+	console.log("Nodes Data is:" + nodesData);
+        for(var idx in nodesData) {
+	    var node = nodesData[idx];
             var nodeData = {
                 group : "nodes",
                 data : {
@@ -21,6 +23,7 @@ export default class Topology {
                     coordinate: ""
                 }
             }
+	    console.log("Node data is:"  + nodeData);
             topology.push(nodeData);
             var nodeDetail = {
                 "name": node.NodeName,
@@ -29,9 +32,11 @@ export default class Topology {
                 "raw_data": node
             }
             nodeDetails[node.NodeId] = nodeDetail;
-
+	    console.log("Node raw data is :" + node);
             var edgesData = node.Edges;
-            for(var edge in edgesData) {
+	    console.log("Edges data is:" + edgesData);
+            for(var edgeidx in edgesData) {
+		var edge = edgesData[edgeidx];
                 var edgeData = {
                     group : "edges",
                     data : {
@@ -82,32 +87,17 @@ export default class Topology {
                     target: edge.PeerId,
                     raw_data: edge
                 }
+		console.log("Edgedetail done:" , edgeDetail);
+		if(!edgeDetails[edge.EdgeId]) {
+			edgeDetails[edge.EdgeId] = {};
+		}
                 edgeDetails[edge.EdgeId][node.NodeId] = edgeDetail;
             }
         }
-        console.log("topology:" + topology);
-        console.log("nodeDetails:" + nodeDetails);
-        console.log("edgeDetails: " + edgeDetails);
+        console.log("topology:" , topology);
+        console.log("nodeDetails:" , nodeDetails);
+        console.log("edgeDetails: " , edgeDetails);
         
-        this.getLinkColor = (type) => {
-            var linkColor;
-            switch (type) {
-                case 'CETypeILongDistance':
-                    linkColor = '#5E4FA2'
-                    break
-                case 'CETypeLongDistance':
-                    linkColor = '#5E4FA2'
-                    break
-                case 'CETypePredecessor':
-                    linkColor = '#01665E'
-                    break
-                case 'CETypeSuccessor':
-                    linkColor = '#01665E'
-                    break
-                default: break
-            }
-            return linkColor;
-        }
 
         // this.addNodeElement = (id) => {
         //     const nodeDetails = this.getNodeDetails(id)
@@ -216,4 +206,24 @@ export default class Topology {
         }
 
     }
+	 getLinkColor(type){
+            var linkColor;
+            switch (type) {
+                case 'CETypeILongDistance':
+                    linkColor = '#5E4FA2'
+                    break
+                case 'CETypeLongDistance':
+                    linkColor = '#5E4FA2'
+                    break
+                case 'CETypePredecessor':
+                    linkColor = '#01665E'
+                    break
+                case 'CETypeSuccessor':
+                    linkColor = '#01665E'
+                    break
+                default: break
+            }
+            return linkColor;
+        }
+
 }
