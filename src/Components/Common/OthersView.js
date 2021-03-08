@@ -996,7 +996,7 @@ class OthersView extends React.Component {
         <div>
           <OverlayTrigger rootClose={true} trigger="click" placement="right" overlay={
             <Popover>
-              <Popover.Title as="h3">IPOP Network Visualizer : Legend</Popover.Title>
+              <Popover.Title as="h3">EVIO Network Visualizer : Legend</Popover.Title>
               {/* <Card id="infoContent"> */}
               <Popover.Content id="infoContent">
                 <table>
@@ -1042,7 +1042,7 @@ class OthersView extends React.Component {
         <div>
           <OverlayTrigger rootClose={true} trigger="click" placement="right" overlay={
             <Popover>
-              <Popover.Title as="h3">IPOP Network Visualizer : Configure</Popover.Title>
+              <Popover.Title as="h3">EVIO Network Visualizer : Configure</Popover.Title>
               <Popover.Content id="configContent">
                 <div className="row">
                   <div className="col">

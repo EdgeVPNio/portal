@@ -117,7 +117,7 @@ class OverlaysView extends React.Component {
   renderOverlayBtn = () => {
     const overlayBtn = this.state.overlays.getOverlayName().map((overlay) => {
       return <CollapsibleButton onClick="s" key={overlay + 'Btn'} id={overlay + 'Btn'} name={overlay} className='overlayBtn'>
-        <div>{this.state.overlays.getOverlayDescription(overlay)}<br />Number of nodes : {this.state.overlays.getNumberOfNodes(overlay)}<br />Number of links : {this.state.overlays.getNumberOfLinks(overlay)}</div>
+        <div>Number of nodes : {this.state.overlays.getNumberOfNodes(overlay)}<br />Number of links : {this.state.overlays.getNumberOfLinks(overlay)}</div>
       </CollapsibleButton>
     })
     return overlayBtn
@@ -125,21 +125,23 @@ class OverlaysView extends React.Component {
 
   selectOverlay = (overlayId) => {
     this.setState({ selectedOverlay: overlayId })
-
-    var intervalNo = new Date().toISOString().split('.')[0]
-
-    var allowOrigin = 'https://cors-anywhere.herokuapp.com/'
-    // var allowOrigin = ''
-    var nodeURL = allowOrigin + 'http://localhost' + ':' + this.port + '/IPOP/overlays/' + overlayId + '/nodes?interval=' + intervalNo + '&current_state=True'
-    var linkURL = allowOrigin + 'http://localhost' + ':' + this.port + '/IPOP/overlays/' + overlayId + '/links?interval=' + intervalNo + '&current_state=True'
-
-    //console.log(nodeURL);
-
-    //console.log(linkURL);
+    var url = '/topology?overlayid=' + overlayId + '&interval='
+    console.log("selectOverlay url:" + url);
 
     var topology = null
 
-    try {
+    fetch(url).then(res => {
+      console.log("at selectOverlay:" + res);
+      return res.json();})
+      .then(res => {
+        //logic to process the GET topology
+        this.setState({topology : new Topology(res)});
+      }).catch(err => {
+        console.log('Error occured on fetch topology process' + err);
+    })
+  }
+
+    /*try {
 
       fetch(nodeURL).then(res => res.json()).then(nodesJSON => {
         //console.log(nodesJSON);
@@ -179,8 +181,8 @@ class OverlaysView extends React.Component {
 
     } catch{
       // console.log('error has been occered on fetch node and tunnel process.')
-    }
-  }
+    }*/
+  //}
 
   render() {
     return (<div id="container" className="container-fluid" style={{ padding: '0' }} >

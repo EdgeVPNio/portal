@@ -37,7 +37,7 @@ class Header extends React.Component {
       <div id='ipopTitle' className='col-2' style={{ margin: '0' }}>
         <img id='ipopLogo' src={ipop_ic} alt='ipop_ic' />
         <label id='ipopTitle' style={{ marginTop: '0.5rem', color: 'white' }}>
-          IPOP NETWORK VISUALIZER
+          EVIO NETWORK VISUALIZER
       </label>
       </div>
 
