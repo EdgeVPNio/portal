@@ -6,14 +6,16 @@ export default class Topology {
         var topology = [];
         var nodeDetails = {};
         var edgeDetails = {};
+        var nodeSet = new Set();
+        var notConnectedSet = new Set();
 
         var nodesData = response[0].Topology[0].Nodes;
-	console.log("Nodes Data is:" + nodesData);
-        for(var idx in nodesData) {
-	    var node = nodesData[idx];
+        console.log("Nodes Data is:" + nodesData);
+        for (var idx in nodesData) {
+            var node = nodesData[idx];
             var nodeData = {
-                group : "nodes",
-                data : {
+                group: "nodes",
+                data: {
                     id: node.NodeId,
                     label: node.NodeName,
                     state: "",
@@ -21,7 +23,7 @@ export default class Topology {
                     coordinate: ""
                 }
             }
-	    console.log("Node data is:"  + nodeData);
+            console.log("Node data is:" + nodeData);
             topology.push(nodeData);
             var nodeDetail = {
                 "name": node.NodeName,
@@ -30,14 +32,15 @@ export default class Topology {
                 "raw_data": node
             }
             nodeDetails[node.NodeId] = nodeDetail;
-	    console.log("Node raw data is :" + node);
+            console.log("Node raw data is :" + node);
             var edgesData = node.Edges;
-	    console.log("Edges data is:" + edgesData);
-            for(var edgeidx in edgesData) {
-		var edge = edgesData[edgeidx];
+            console.log("Edges data is:" + edgesData);
+            for (var edgeidx in edgesData) {
+                var edge = edgesData[edgeidx];
+                nodeSet.add(edge.PeerId);
                 var edgeData = {
-                    group : "edges",
-                    data : {
+                    group: "edges",
+                    data: {
                         id: edge.EdgeId,
                         label: edge.TapName,
                         source: node.NodeId,
@@ -59,38 +62,42 @@ export default class Topology {
                     target: edge.PeerId,
                     raw_data: edge
                 }
-                if(!nodeDetails[edgeDetail.target]) {
-                    //not reported nodes
-                    var nodeDetail = {
-                        "name": ' ',
-                        "id": edgeDetail.target,
-                        "state": '-',
-                        "raw_data": ' '
-                    }
-                    nodeDetails[edgeDetail.target] = nodeDetail;
-	      	    var nodeData = {
-                		group : "nodes",
-                		data : {
-                    			id: edgeDetail.target,
-                    			label: edgeDetail.target.slice(edgeDetail.target.length - 6),
-                    			state: "",
-                    			type: "",
-                    			coordinate: ""
-                		}
-            	    }
-		    topology.push(nodeData);
+                
+                console.log("Edgedetail done:", edgeDetail);
+                if (!edgeDetails[edge.EdgeId]) {
+                    edgeDetails[edge.EdgeId] = {};
                 }
-		console.log("Edgedetail done:" , edgeDetail);
-		if(!edgeDetails[edge.EdgeId]) {
-			edgeDetails[edge.EdgeId] = {};
-		}
                 edgeDetails[edge.EdgeId][node.NodeId] = edgeDetail;
             }
         }
-        console.log("topology:" , topology);
-        console.log("nodeDetails:" , nodeDetails);
-        console.log("edgeDetails: " , edgeDetails);
-        
+        for (var nodeId in nodeSet) {
+            if (!nodeDetails[nodeId]) {
+                //not reported nodes
+                var nodeDetail = {
+                    "name": ' ',
+                    "id": nodeId,
+                    "state": '-',
+                    "raw_data": ' '
+                }
+                nodeDetails[nodeId] = nodeDetail;
+                var nodeData = {
+                    group: "nodes",
+                    data: {
+                        id: nodeId,
+                        label: nodeId.slice(nodeId.length - 6),
+                        state: "",
+                        type: "",
+                        coordinate: ""
+                    }
+                }
+                topology.push(nodeData);
+                notConnectedSet.add(nodeId);
+            }
+        }
+        console.log("topology:", topology);
+        console.log("nodeDetails:", nodeDetails);
+        console.log("edgeDetails: ", edgeDetails);
+
 
         // this.addNodeElement = (id) => {
         //     const nodeDetails = this.getNodeDetails(id)
@@ -135,61 +142,61 @@ export default class Topology {
 
         this.getNodeDetails = (id) => {
 
-        //     var nodeDetails = {
-        //         // "name": raw_nodes[id].NodeName,
-        //         "name": raw_nodes[id].node_name,
-        //         "id": id,
-        //         "state": '-',
-        //         "raw_data": raw_nodes
-        //     }
+            //     var nodeDetails = {
+            //         // "name": raw_nodes[id].NodeName,
+            //         "name": raw_nodes[id].node_name,
+            //         "id": id,
+            //         "state": '-',
+            //         "raw_data": raw_nodes
+            //     }
 
             return nodeDetails[id];
         }
 
         this.getLinkDetails = (src, id) => {
-        //     var linkDetails = {
-        //         // "name": raw_links[src][id].InterfaceName,
-        //         "name": res['Topology']['Nodes'][src][id].tap_name,
-        //         "id": id,
-        //         // "MAC": raw_links[src][id].MAC,
-        //         "MAC": raw_links[src][id].mac,
-        //         // "state": raw_links[src][id].State,
-        //         "state": raw_links[src][id].state,
-        //         // "type": raw_links[src][id].Type,
-        //         "type": raw_links[src][id].edge_type,
-        //         // "ICEConnectionType": '-',
-        //         // "ICERole": '-',
-        //         "role": '-',
-        //         // "remoteAddress": '-',
-        //         // "remoteAddress": raw_links[src][id].ChannelProperties.IceProperties.remote_addr,
-        //         // "localAddress": '-',
-        //         // "localAddress": raw_links[src][id].ChannelProperties.IceProperties.local_addr,
-        //         // "latency": '-',
-        //         // "latency": raw_links[src][id].ChannelProperties.IceProperties.latency,
-        //         // "stats": raw_links[src][id].Stats,
-        //         "stats": raw_links[src][id].ChannelProperties,
-        //         // "source":raw_links[src][id]['SrcNodeId'],
-        //         "source": raw_links[src][id]['SrcNodeID'],
-        //         // "target":raw_links[src][id]['TgtNodeId'],
-        //         "target": raw_links[src][id]['TgtNodeID'],
-        //         "raw_data": raw_links
-        //     }
+            //     var linkDetails = {
+            //         // "name": raw_links[src][id].InterfaceName,
+            //         "name": res['Topology']['Nodes'][src][id].tap_name,
+            //         "id": id,
+            //         // "MAC": raw_links[src][id].MAC,
+            //         "MAC": raw_links[src][id].mac,
+            //         // "state": raw_links[src][id].State,
+            //         "state": raw_links[src][id].state,
+            //         // "type": raw_links[src][id].Type,
+            //         "type": raw_links[src][id].edge_type,
+            //         // "ICEConnectionType": '-',
+            //         // "ICERole": '-',
+            //         "role": '-',
+            //         // "remoteAddress": '-',
+            //         // "remoteAddress": raw_links[src][id].ChannelProperties.IceProperties.remote_addr,
+            //         // "localAddress": '-',
+            //         // "localAddress": raw_links[src][id].ChannelProperties.IceProperties.local_addr,
+            //         // "latency": '-',
+            //         // "latency": raw_links[src][id].ChannelProperties.IceProperties.latency,
+            //         // "stats": raw_links[src][id].Stats,
+            //         "stats": raw_links[src][id].ChannelProperties,
+            //         // "source":raw_links[src][id]['SrcNodeId'],
+            //         "source": raw_links[src][id]['SrcNodeID'],
+            //         // "target":raw_links[src][id]['TgtNodeId'],
+            //         "target": raw_links[src][id]['TgtNodeID'],
+            //         "raw_data": raw_links
+            //     }
 
-                return edgeDetails[id][src]; 
+            return edgeDetails[id][src];
         }
 
         this.getConnectedNodeDetails = (src, tgt) => {
             var connectedNodeDetails
 
-        //     Object.keys(raw_links[src]).forEach(link => {
-        //         // if (raw_links[src][link].TgtNodeId === tgt) {
-        //         if (raw_links[src][link].TgtNodeID === tgt) {
-        //             connectedNodeDetails = this.getLinkDetails(src, link)
-        //         }
-        //     });
+            //     Object.keys(raw_links[src]).forEach(link => {
+            //         // if (raw_links[src][link].TgtNodeId === tgt) {
+            //         if (raw_links[src][link].TgtNodeID === tgt) {
+            //             connectedNodeDetails = this.getLinkDetails(src, link)
+            //         }
+            //     });
             Object.keys(edgeDetails).forEach(edgeId => {
                 Object.keys(edgeDetails[edgeId]).forEach(nodeId => {
-                    if (nodeId == src && edgeDetails[edgeId][nodeId].target == tgt) {
+                    if (!notConnectedSet.has(nodeId) && nodeId == src && edgeDetails[edgeId][nodeId].target == tgt) {
                         connectedNodeDetails = edgeDetails[edgeId][nodeId];
                     }
                 })
@@ -199,24 +206,24 @@ export default class Topology {
         }
 
     }
-	 getLinkColor(type){
-            var linkColor;
-            switch (type) {
-                case 'CETypeILongDistance':
-                    linkColor = '#5E4FA2'
-                    break
-                case 'CETypeLongDistance':
-                    linkColor = '#5E4FA2'
-                    break
-                case 'CETypePredecessor':
-                    linkColor = '#01665E'
-                    break
-                case 'CETypeSuccessor':
-                    linkColor = '#01665E'
-                    break
-                default: break
-            }
-            return linkColor;
+    getLinkColor(type) {
+        var linkColor;
+        switch (type) {
+            case 'CETypeILongDistance':
+                linkColor = '#5E4FA2'
+                break
+            case 'CETypeLongDistance':
+                linkColor = '#5E4FA2'
+                break
+            case 'CETypePredecessor':
+                linkColor = '#01665E'
+                break
+            case 'CETypeSuccessor':
+                linkColor = '#01665E'
+                break
+            default: break
         }
+        return linkColor;
+    }
 
 }
