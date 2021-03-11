@@ -3,8 +3,6 @@ export default class Topology {
     constructor(response) {
         var res = response;
         console.log("response:" + response);
-        // var raw_nodes = nodes
-        // var raw_links = links
         var topology = [];
         var nodeDetails = {};
         var edgeDetails = {};
@@ -50,32 +48,6 @@ export default class Topology {
                     }
                 }
                 topology.push(edgeData);
-                        //     var linkDetails = {
-        //         // "name": raw_links[src][id].InterfaceName,
-        //         "name": res['Topology']['Nodes'][src][id].tap_name,
-        //         "id": id,
-        //         // "MAC": raw_links[src][id].MAC,
-        //         "MAC": raw_links[src][id].mac,
-        //         // "state": raw_links[src][id].State,
-        //         "state": raw_links[src][id].state,
-        //         // "type": raw_links[src][id].Type,
-        //         "type": raw_links[src][id].edge_type,
-        //         // "ICEConnectionType": '-',
-        //         // "ICERole": '-',
-        //         "role": '-',
-        //         // "remoteAddress": '-',
-        //         // "remoteAddress": raw_links[src][id].ChannelProperties.IceProperties.remote_addr,
-        //         // "localAddress": '-',
-        //         // "localAddress": raw_links[src][id].ChannelProperties.IceProperties.local_addr,
-        //         // "latency": '-',
-        //         // "latency": raw_links[src][id].ChannelProperties.IceProperties.latency,
-        //         // "stats": raw_links[src][id].Stats,
-        //         "stats": raw_links[src][id].ChannelProperties,
-        //         // "source":raw_links[src][id]['SrcNodeId'],
-        //         "source": raw_links[src][id]['SrcNodeID'],
-        //         // "target":raw_links[src][id]['TgtNodeId'],
-        //         "target": raw_links[src][id]['TgtNodeID'],
-        //         "raw_data": raw_links
                 var edgeDetail = {
                     name: edge.TapName,
                     id: edge.EdgeId,
@@ -86,6 +58,16 @@ export default class Topology {
                     source: node.NodeId,
                     target: edge.PeerId,
                     raw_data: edge
+                }
+                if(!nodeDetails[edgeDetail.target]) {
+                    //not reported nodes
+                    var nodeDetail = {
+                        "name": ' ',
+                        "id": edgeDetail.target,
+                        "state": '-',
+                        "raw_data": ' '
+                    }
+                    nodeDetails[edgeDetail.target] = nodeDetail;
                 }
 		console.log("Edgedetail done:" , edgeDetail);
 		if(!edgeDetails[edge.EdgeId]) {
