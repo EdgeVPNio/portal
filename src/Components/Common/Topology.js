@@ -70,7 +70,9 @@ export default class Topology {
                 edgeDetails[edge.EdgeId][node.NodeId] = edgeDetail;
             }
         }
-        for (var nodeId in nodeSet) {
+	console.log("Node set", nodeSet);
+        for (var nodeId of nodeSet) {
+	    console.log("NodeId in set is ", nodeId);
             if (!nodeDetails[nodeId]) {
                 //not reported nodes
                 var nodeDetail = {
