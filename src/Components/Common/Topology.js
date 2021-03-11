@@ -68,6 +68,17 @@ export default class Topology {
                         "raw_data": ' '
                     }
                     nodeDetails[edgeDetail.target] = nodeDetail;
+	      	    var nodeData = {
+                		group : "nodes",
+                		data : {
+                    			id: edgeDetail.target,
+                    			label: edgeDetail.target.slice(edgeDetail.target.length - 6),
+                    			state: "",
+                    			type: "",
+                    			coordinate: ""
+                		}
+            	    }
+		    topology.push(nodeData);
                 }
 		console.log("Edgedetail done:" , edgeDetail);
 		if(!edgeDetails[edge.EdgeId]) {
