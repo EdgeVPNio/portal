@@ -4,6 +4,7 @@ export default class Topology {
         var res = response;
         console.log("response:" + response);
         var topology = [];
+        var nodes = [];
         var nodeDetails = {};
         var edgeDetails = {};
         var nodeSet = new Set();
@@ -24,7 +25,7 @@ export default class Topology {
                 }
             }
             console.log("Node data is:" + nodeData);
-            topology.push(nodeData);
+            nodes.push(nodeData);
             var nodeDetail = {
                 "name": node.NodeName,
                 "id": node.NodeId,
@@ -92,14 +93,17 @@ export default class Topology {
                         coordinate: ""
                     }
                 }
-                topology.push(nodeData);
+                nodes.push(nodeData);
                 notConnectedSet.add(nodeId);
             }
         }
         console.log("topology:", topology);
         console.log("nodeDetails:", nodeDetails);
         console.log("edgeDetails: ", edgeDetails);
-
+        nodes.sort(function(a, b) {
+            return a.data['id'].localeCompare(b.data['id']);
+        })
+        nodes.forEach(node => topology.push(node))
 
         // this.addNodeElement = (id) => {
         //     const nodeDetails = this.getNodeDetails(id)

@@ -509,8 +509,9 @@ class OthersView extends React.Component {
 
       style={{ width: window.innerWidth, height: window.innerHeight }}
 
-      layout={{ name: 'circle' }}
+      layout={{ name: 'circle', clockwise: true}}
 
+      
     />, document.getElementById('midArea'))
 
     ReactDOM.render(<select defaultValue="Topology" onChange={this.handleViewSelector} id="viewSelector" className="custom-select">
