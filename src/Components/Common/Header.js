@@ -37,8 +37,8 @@ class Header extends React.Component {
     return <header id='header' className='row' style={{ padding: '0.2%', margin: '0' }}>
       <div id='ipopTitle' className='col-2' style={{ margin: '0' }}>
         <img id='ipopLogo' src={evio_logo} alt='evio_logo' />
-        <label id='ipopTitle' style={{ marginTop: '0.5rem', color: 'white' }}>
-          EVIO NETWORK VISUALIZER
+        <label id='ipopTitle'  style={{ marginTop: '0.5rem',color: 'white' }}>
+          EVIO-VISUALIZER
       </label>
       </div>
 
