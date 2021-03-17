@@ -585,9 +585,7 @@ class OthersView extends React.Component {
   }
 
   handleBackToHome = () => {
-    if (window.confirm('Your current process will be loss. Are you sure to go back ?') === true) {
       window.location.reload(true)
-    }
   }
 
   renderSubgraph = () => {
@@ -818,7 +816,7 @@ class OthersView extends React.Component {
   }
 
   componentDidUpdate() {
-    if (this.cy != null && this.cy != undefined) {
+    /*if (this.cy != null && this.cy != undefined) {
       var nodes = this.cy.elements('nodes')
       nodes.toArray().forEach((node) => {
         if (node.incomers().length == 0 && node.outgoers().length == 0) {
@@ -960,7 +958,7 @@ class OthersView extends React.Component {
           // document.getElementById("viewSelector").value = this.state.currentView;
         }
       }
-    }
+    }*/
   }
 
   handleViewSelector = (e) => {
@@ -1047,12 +1045,16 @@ class OthersView extends React.Component {
               <Popover.Content id="configContent">
                 <div className="row">
                   <div className="col">
-                    <label>Minimun zoom</label>
+                    <label>Minimum zoom</label>
                   </div>
                   <div className="col">
                     <select defaultValue={this.state.setMinZoom} onChange={this.handleSetMinZoom} id="minZoomSelector" value={this.state.minZoom}>
                       <option id="0.2">0.2</option>
                       <option id="1">1</option>
+                      <option id="2">2</option>
+                      <option id="3">3</option>
+                      <option id="5">5</option>
+                      <option id="10">10</option>
                     </select>
                   </div>
                 </div>
@@ -1064,6 +1066,9 @@ class OthersView extends React.Component {
                     <select defaultValue={this.state.setMaxZoom} onChange={this.handleSetMaxZoom} id="maxZoomSelector" value={this.state.maxZoom}>
                       <option>2</option>
                       <option>5</option>
+                      <option>10</option>
+                      <option>15</option>
+                      <option>20</option>
                     </select>
                   </div>
                 </div>

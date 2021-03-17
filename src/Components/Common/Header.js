@@ -1,6 +1,6 @@
 import React from 'react'
 import ipop_ic from '../../Images/Icons/ipop_ic.svg'
-import evio_logo from '../../Images/Icons/evio-logo-g1.png'
+import evio_logo from '../../Images/Icons/evio.svg'
 
 class Header extends React.Component {
 
@@ -36,7 +36,7 @@ class Header extends React.Component {
   render() {
     return <header id='header' className='row' style={{ padding: '0.2%', margin: '0' }}>
       <div id='ipopTitle' className='col-2' style={{ margin: '0' }}>
-        <img id='ipopLogo' src={evio_logo} alt='evio_logo' width="40" height="32" />
+        <img id='ipopLogo' src={evio_logo} alt='evio_logo' />
         <label id='ipopTitle' style={{ marginTop: '0.5rem', color: 'white' }}>
           EVIO NETWORK VISUALIZER
       </label>
