@@ -21,7 +21,7 @@ export default class Topology {
                     label: node.NodeName,
                     state: "",
                     type: "",
-                    coordinate: ""
+                    coordinate: node.GeoCoordinates
                 }
             }
             console.log("Node data is:" + nodeData);

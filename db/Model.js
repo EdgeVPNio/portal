@@ -59,6 +59,7 @@ var nodeSchema = new mongoose.Schema({
     NodeId: String,
     NodeName:String,
     Version: String,
+    GeoCoordinates:String,
     Edges:[edgeSchema]
 }, { _id: false });
 

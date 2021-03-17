@@ -65,6 +65,7 @@ class DataTransformer {
                     NodeId:data[timeStampId]['NodeName'],
                     NodeName:data[timeStampId]['NodeName'],
                     Version:data[timeStampId]['Version'],
+                    GeoCoordinates:data[timeStampId]['GeoCoordinate'],
                     Edges:[]
                 };
                 for (var nodeId in linkManagerData) {
