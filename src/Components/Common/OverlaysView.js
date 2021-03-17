@@ -24,6 +24,7 @@ class OverlaysView extends React.Component {
       topology: null,
       isToggle: true
     }
+    this.doOverlayUpdate = true;
   }
 
   async getOverlaysData(intervalId) {
@@ -43,7 +44,9 @@ class OverlaysView extends React.Component {
         //console.log("got response");
         this.setState({overlays : new Overlays(res)});
         intervalId = res[0]._id;
-        this.getOverlaysData(intervalId);
+        if (this.doOverlayUpdate) {
+          this.getOverlaysData(intervalId);
+        }
       }
     }).catch(err => {
       console.log('error has been occured on fetch overlay process.' + err);
@@ -51,7 +54,9 @@ class OverlaysView extends React.Component {
   }
 
   componentDidMount() {
-    this.getOverlaysData();
+    if (this.doOverlayUpdate) {
+      this.getOverlaysData();
+    }
   }
 
   // toggle overlay right panel
@@ -125,6 +130,7 @@ class OverlaysView extends React.Component {
 
   selectOverlay = (overlayId) => {
     this.setState({ selectedOverlay: overlayId })
+    this.doOverlayUpdate = false;
     var url = '/topology?overlayid=' + overlayId + '&interval='
     console.log("selectOverlay url:" + url);
 

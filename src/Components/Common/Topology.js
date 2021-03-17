@@ -11,7 +11,7 @@ export default class Topology {
         var notConnectedSet = new Set();
 
         var nodesData = response[0].Topology[0].Nodes;
-        console.log("Nodes Data is:" + nodesData);
+        console.log("Nodes Data is:" ,nodesData);
         for (var idx in nodesData) {
             var node = nodesData[idx];
             var nodeData = {
