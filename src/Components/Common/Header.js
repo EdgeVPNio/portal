@@ -36,9 +36,9 @@ class Header extends React.Component {
   render() {
     return <header id='header' className='row' style={{ padding: '0.2%', margin: '0' }}>
       <div id='ipopTitle' className='col-2' style={{ margin: '0' }}>
-        <img id='ipopLogo' src={evio_logo} alt='evio_logo' />
+	<img id='ipopLogo' src={evio_logo} alt='evio_logo' width="150" height="130"/>
         <label id='ipopTitle'  style={{ marginTop: '0.5rem',color: 'white' }}>
-          EVIO-VISUALIZER
+	  EdgeVPN.io Visualizer
       </label>
       </div>
 
