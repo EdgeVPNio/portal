@@ -5,7 +5,7 @@ var cytoscapeStyle = [{
     height: '60%',
     label: 'data(label)',
     'text-valign': 'center',
-    'background-color': '#8AA626',
+    'background-color': 'data(color)',
     'font-weight': 'bold',
     'overlay-opacity': '0'
   }

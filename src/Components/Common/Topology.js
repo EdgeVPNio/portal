@@ -21,7 +21,8 @@ export default class Topology {
                     label: node.NodeName,
                     state: "",
                     type: "",
-                    coordinate: node.GeoCoordinates
+                    coordinate: node.GeoCoordinates,
+		    color: '#8AA626'
                 }
             }
             console.log("Node data is:" + nodeData);
@@ -90,7 +91,8 @@ export default class Topology {
                         label: nodeId.slice(nodeId.length - 6),
                         state: "",
                         type: "",
-                        coordinate: ""
+                        coordinate: "",
+			color: "#ADD8E6"
                     }
                 }
                 nodes.push(nodeData);
