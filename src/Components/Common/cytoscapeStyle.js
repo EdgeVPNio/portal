@@ -37,7 +37,8 @@ var cytoscapeStyle = [{
     width: '5%',
     'z-index': '3',
     'overlay-opacity': '0',
-    'border':'2px solid red'
+    'border-color': 'red',
+    'border-width': '5px',
   }
 }, {
   selector: 'edge.transparent',
