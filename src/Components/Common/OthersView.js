@@ -40,7 +40,7 @@ class OthersView extends React.Component {
   }
 
   componentDidMount() {
-    // document.getElementById('rightPanelBtn').click()
+    //document.getElementById('rightPanelBtn').click()
     this.renderGraph()
     //console.log(this.props.topology)
 
@@ -88,10 +88,32 @@ class OthersView extends React.Component {
   }
 
   renderNodeDetails = () => {
-
     var sourceNode = this.state.nodeDetails.sourceNode
     var connectedNodes = this.state.nodeDetails.connectedNodes
-    var coordinate = sourceNode.raw_data[sourceNode.id].geo_coordinate.split(',')
+    if(sourceNode.raw_data == " ") {
+	//Not reporting nodes
+	 var nodeContent = <div>
+
+          <h5>{sourceNode.id.slice(sourceNode.id.length - 6)}</h5>
+
+          <div className="DetailsLabel">Node ID</div>
+          {sourceNode.id}
+
+          <div className="DetailsLabel">State</div>
+          {sourceNode.state}
+
+          <div className="DetailsLabel">City/State/Country</div>
+          {"Unknown"}
+          <hr style={{ backgroundColor: '#486186' }} />
+          <br /><br />
+
+          </div>
+
+
+	ReactDOM.render(nodeContent, document.getElementById('rightPanelContent'))
+	return;
+    }
+    var coordinate = sourceNode.raw_data['GeoCoordinates'].split(',')
 
     fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinate[0]},${coordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
       .then(res => res.json()).then((data) => {
@@ -141,31 +163,6 @@ class OthersView extends React.Component {
                     {connectedNodeDetail.state}
                     <div className="DetailsLabel">Tunnel Type</div>
                     {connectedNodeDetail.type}
-                    {/* <div className="DetailsLabel">ICE Connection Type</div>
-                    {connectedNodeDetail.ICEConnectionType} */}
-                    <div className="DetailsLabel">ICE Role</div>
-                    {connectedNodeDetail.stats.IceProperties.role}
-                    <div className="DetailsLabel">Remote Address</div>
-                    {connectedNodeDetail.remoteAddress}
-                    <div className="DetailsLabel">Local Address</div>
-                    {connectedNodeDetail.localAddress}
-                    <div className="DetailsLabel">Latency</div>
-                    {connectedNodeDetail.stats.IceProperties.latency}
-                    <Card.Body className="transmissionCard" >
-                      Sent
-                      <div className="DetailsLabel">Byte Sent</div>
-                      {connectedNodeDetail.stats.byte_sent}
-                      <div className="DetailsLabel">Total Byte Sent</div>
-                      {connectedNodeDetail.stats.total_byte_sent}
-                    </Card.Body>
-
-                    <Card.Body className="transmissionCard">
-                      Received
-                      <div className="DetailsLabel">Byte Received</div>
-                      {connectedNodeDetail.stats.byte_receive}
-                      <div className="DetailsLabel">Total Byte Received</div>
-                      {connectedNodeDetail.stats.total_byte_receive}
-                    </Card.Body>
 
                   </CollapsibleButton>
 
@@ -191,9 +188,9 @@ class OthersView extends React.Component {
     //console.log(sourceNodeDetails);
     //console.log(targetNodeDetails);
 
-    const srcCoordinate = sourceNodeDetails.raw_data[sourceNodeDetails.id].geo_coordinate.split(',')
+    const srcCoordinate = sourceNodeDetails.raw_data['GeoCoordinates'].split(',')
 
-    const tgtCoordinate = targetNodeDetails.raw_data[targetNodeDetails.id].geo_coordinate.split(',')
+    const tgtCoordinate = targetNodeDetails.raw_data['GeoCoordinates'].split(',')
 
     fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${srcCoordinate[0]},${srcCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
       .then(res => res.json()).then(data => {
@@ -288,35 +285,8 @@ class OthersView extends React.Component {
               {linkDetails.State}
               <div className="DetailsLabel">Tunnel Type</div>
               {linkDetails.type}
-              {/* <div className="DetailsLabel">ICE Connection Type</div>
-              {linkDetails.ICEConnectionType} */}
-              <div className="DetailsLabel">ICE Role</div>
-              {linkDetails.stats.IceProperties.role}
-              <div className="DetailsLabel">Remote Address</div>
-              {linkDetails.stats.IceProperties.remote_addr}
-              <div className="DetailsLabel">Local Address</div>
-              {linkDetails.stats.IceProperties.local_addr}
-              <div className="DetailsLabel">Latency</div>
-              {linkDetails.stats.IceProperties.latency}
-              <br /><br />
-
-              <Card.Body className="transmissionCard">
-                <div className="DetailsLabel">Byte Sent</div>
-                {linkDetails.stats.byte_sent}
-                <div className="DetailsLabel">Total Byte Sent</div>
-                {linkDetails.stats.total_byte_sent}
-              </Card.Body>
-
-              <Card.Body className="transmissionCard">
-                Received
-                <div className="DetailsLabel">Byte Received</div>
-                {linkDetails.stats.byte_receive}
-                <div className="DetailsLabel">Total Byte Received</div>
-                {linkDetails.stats.total_byte_receive}
-              </Card.Body>
 
             </div >
-
             ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
           })
       })
@@ -371,7 +341,6 @@ class OthersView extends React.Component {
   }
 
   setNodeDetails = (node) => {
-    // //console.log("setting node ");
     var that = this
     var promise = new Promise(function (resolve, reject) {
       try {
@@ -458,7 +427,7 @@ class OthersView extends React.Component {
             this.state.currentSelectedElement.select()
             relatedElement2.removeClass('transparent')
             notRelatedElement2.addClass('transparent')
-          }
+          } 
         }
 
         this.cy.on('click', function (e) {
@@ -466,21 +435,19 @@ class OthersView extends React.Component {
           var relatedElement
           var notRelatedElement
           try {
-            // //console.log(e.target[0]===this.cy);
             if (document.getElementById('rightPanel').hidden === true) {
               document.getElementById('overlayRightPanelBtn').click()
             }
             if (selectedElement.isNode()) {
-              // //console.log(`selected from clicked : ${JSON.stringify(e.target.data())}`);
               that.setNodeDetails(selectedElement)
-
               relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
               notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
             } else if (selectedElement.isEdge()) {
               that.setLinkDetails(selectedElement)
               relatedElement = selectedElement.connectedNodes().union(selectedElement)
               notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
-            }
+            } 
+
             if (document.getElementById('viewSelector').value !== 'Subgraph') {
               relatedElement.removeClass('transparent')
               notRelatedElement.addClass('transparent')
@@ -971,6 +938,7 @@ class OthersView extends React.Component {
     }
   }
 
+
   render() {
     return <>
       <div id="leftTools">
@@ -1102,3 +1070,4 @@ class OthersView extends React.Component {
 }
 
 export default OthersView
+
