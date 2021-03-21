@@ -37,6 +37,7 @@ class OthersView extends React.Component {
       currentSelectedElement: null,
       currentView: null
     }
+    this.autoRefresh = true;
   }
 
   componentDidMount() {
@@ -503,6 +504,13 @@ class OthersView extends React.Component {
 
   handleRefresh = () => {
     this.cy.zoom(0.8)
+    if (!this.autoRefresh) {
+      document.getElementById('refreshBtn').style.opacity = '1';
+      this.autoRefresh = true;
+    } else {
+      document.getElementById('refreshBtn').style.opacity = '0.4';
+      this.autoRefresh = false;
+    }
     document.getElementById('zoomSlider').value = this.cy.zoom()
     this.cy.center()
   }
@@ -958,7 +966,7 @@ class OthersView extends React.Component {
           <button onClick={this.handleBackToHome} id="homeBtn" className="leftToolsBtn"></button>
         </div>
         <div>
-          <button onClick={this.handleRefresh} id="refreshBtn" className="leftToolsBtn"></button>
+          <button onClick={this.handleRefresh} id="refreshBtn" className="leftToolsBtn" title="Disable/Enable Auto Refresh"></button>
         </div>
         <div>
           <OverlayTrigger rootClose={true} trigger="click" placement="right" overlay={
