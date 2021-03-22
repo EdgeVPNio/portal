@@ -27,8 +27,6 @@ class OverlaysView extends React.Component {
     this.doOverlayUpdate = true;
   }
 
-  doTopologyUpdate = true;
-
   async getOverlaysData(intervalId) {
 
     var url = '/overlays?interval=' + intervalId
@@ -133,10 +131,10 @@ class OverlaysView extends React.Component {
 
   setTopologyUpdate() {
     console.log("Call at set topology update");
-    if (doTopologyUpdate) {
-      doTopologyUpdate = false;
+    if (OverlaysView.doTopologyUpdate) {
+      OverlaysView.doTopologyUpdate = false;
     } else {
-      doTopologyUpdate = true;
+      OverlaysView.doTopologyUpdate = true;
     }
   }
 
@@ -155,7 +153,7 @@ class OverlaysView extends React.Component {
         intervalId = res[0]._id;
         //logic to process the GET topology
         this.setState({topology : new Topology(res)});
-        if (doTopologyUpdate) {
+        if (OverlaysView.doTopologyUpdate) {
           console.log("Called topology polling" + overlayId + intervalId)
           this.selectOverlayPolling(overlayId, intervalId);
         }
@@ -254,3 +252,4 @@ class OverlaysView extends React.Component {
 }
 
 export default OverlaysView
+OverlaysView.doTopologyUpdate = true;
