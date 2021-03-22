@@ -28,16 +28,33 @@ exports.findTopology = (req, res, dbInstance) => {
     
     const overlayId = req.query.overlayid;
     const intervalId = parseFloat(req.query.interval);
-
+    var send = false;
     dbInstance.getTopology(topologyModel, intervalId, overlayId)
       .then(data => {
-      console.log("getTopology" + res);
-      res.send(data);
+      send = true;
+      if (Object.keys(data).length == 0) {
+        send = false;
+        const pipeline = [{'$match': {'operationType': 'insert'}}]; //watch for insert operation
+        const topologyChangeStream = dbInstance.getDb().db('Evio').collection('Topology').watch(pipeline);
+
+        topologyChangeStream.on('change', newData => {
+          //console.log(newData);
+          data = [newData.fullDocument];
+          send = true;
+        });
+      }
+      //Logic to check every 1 second for insert on db
+      var topologyIntervalId = setInterval(function(){
+        if (send) {
+          res.send(data); //data found and sent to client, clearing interval time
+          clearInterval(topologyIntervalId);
+        }
+      }, 1000);
     })
     .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving tutorials."
+          err.message || "Some error occurred while retrieving topology."
       });
     });
 };

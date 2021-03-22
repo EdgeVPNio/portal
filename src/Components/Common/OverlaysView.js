@@ -25,9 +25,11 @@ class OverlaysView extends React.Component {
       isToggle: true
     }
     this.doOverlayUpdate = true;
+    this.doTopologyUpdate = true;
   }
 
   async getOverlaysData(intervalId) {
+
     var url = '/overlays?interval=' + intervalId
     console.log(url);
     
@@ -128,24 +130,41 @@ class OverlaysView extends React.Component {
     return overlayBtn
   }
 
-  selectOverlay = (overlayId) => {
+  setTopologyUpdate() {
+    console.log("Call at set topology update");
+    if (this.doTopologyUpdate) {
+      this.doTopologyUpdate = false;
+    } else {
+      this.doTopologyUpdate = true;
+    }
+  }
+
+  selectOverlayPolling = (overlayId, intervalId) => {
+    console.log("Polling called with" + overlayId + intervalId)
     this.setState({ selectedOverlay: overlayId })
     this.doOverlayUpdate = false;
-    var url = '/topology?overlayid=' + overlayId + '&interval='
-    console.log("selectOverlay url:" + url);
+    var intervalId;
+    var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId
 
     var topology = null
 
     fetch(url).then(res => {
-      console.log("at selectOverlay:" + res);
       return res.json();})
       .then(res => {
+        intervalId = res[0]._id;
         //logic to process the GET topology
-	console.log("Response at select is" +res);
         this.setState({topology : new Topology(res)});
+        if (this.doTopologyUpdate) {
+          this.selectOverlayPolling(overlayId, intervalId);
+        }
       }).catch(err => {
         console.log('Error occured on fetch topology process' + err);
+
     })
+  }
+
+  selectOverlay = (overlayId) => {
+    this.selectOverlayPolling(overlayId, );
   }
 
     /*try {
@@ -201,7 +220,7 @@ class OverlaysView extends React.Component {
             try {
               this.selectOverlay(selected[0])
             } catch {
-              //console.log('Error has been occured on select search result.')
+              console.log('Error has been occured on select search result.')
             }
           }}
           options={this.state.overlays !== null ? this.state.overlays.getOverlayName() : []}

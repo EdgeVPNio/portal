@@ -16,6 +16,7 @@ import successor_ic from '../../Images/Icons/successor_ic.svg'
 import longdistance_ic from '../../Images/Icons/longdistance_ic.svg'
 import not_reporting_ic from '../../Images/Icons/not_reporting_ic.svg'
 import GoogleMapReact from 'google-map-react'
+import OverlaysView from './OverlaysView'
 
 class OthersView extends React.Component {
   constructor(props) {
@@ -503,15 +504,17 @@ class OthersView extends React.Component {
   }
 
   handleRefresh = () => {
-    this.cy.zoom(0.8)
     if (!this.autoRefresh) {
+      // Setting auto refresh on
       document.getElementById('refreshBtn').style.opacity = '1';
       this.autoRefresh = true;
     } else {
+      // Setting auto refresh off
       document.getElementById('refreshBtn').style.opacity = '0.4';
       this.autoRefresh = false;
     }
-    document.getElementById('zoomSlider').value = this.cy.zoom()
+    console.log("Handled refresh, called update");
+    OverlaysView.setTopologyUpdate()
     this.cy.center()
   }
 
