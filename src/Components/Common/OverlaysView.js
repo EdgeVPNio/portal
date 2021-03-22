@@ -166,13 +166,12 @@ class OverlaysView extends React.Component {
   selectOverlay = (overlayId) => {
     this.topologyFirstTime = true;
     this.selectOverlayPolling(overlayId, );
+    topologyUpdateInterval = setInterval(function(){
+      if (OverlaysView.doTopologyUpdate && !this.topologyFirstTime) {
+        this.selectOverlayPolling(this.selectedOverlayId, )
+      }
+    }, 1000);
   }
-
-  topologyUpdateInterval = setInterval(function(){
-    if (OverlaysView.doTopologyUpdate && !this.topologyFirstTime) {
-      this.selectOverlayPolling(this.selectedOverlayId, )
-    }
-  }, 1000);
 
     /*try {
 
