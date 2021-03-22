@@ -129,7 +129,7 @@ class OverlaysView extends React.Component {
     return overlayBtn
   }
 
-  setTopologyUpdate() {
+  static setTopologyUpdate() {
     console.log("Call at set topology update");
     if (OverlaysView.doTopologyUpdate) {
       OverlaysView.doTopologyUpdate = false;
