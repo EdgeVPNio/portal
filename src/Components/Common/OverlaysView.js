@@ -11,8 +11,6 @@ import Header from './Header'
 import '../../CSS/Main.css'
 import Overlays from './Overlays.js'
 import Topology from './Topology.js'
-const { REACT_APP_GIT_HASH, REACT_APP_MY_ENV, NODE_ENV } = process.env;
-const API_PORT = NODE_ENV === 'production' ? window.API_PORT : process.env.REACT_APP_API_PORT;
 
 
 class OverlaysView extends React.Component {
@@ -26,6 +24,7 @@ class OverlaysView extends React.Component {
     }
     this.doOverlayUpdate = true;
     this.selectedOverlayId = null;
+    this.topologyFirstTime = false;
   }
 
   async getOverlaysData(intervalId) {
@@ -136,7 +135,6 @@ class OverlaysView extends React.Component {
       OverlaysView.doTopologyUpdate = false;
     } else {
       OverlaysView.doTopologyUpdate = true;
-      this.selectOverlay(this.selectedOverlayId);
     }
   }
 
@@ -166,8 +164,15 @@ class OverlaysView extends React.Component {
   }
 
   selectOverlay = (overlayId) => {
+    this.topologyFirstTime = true;
     this.selectOverlayPolling(overlayId, );
   }
+
+  topologyUpdateInterval = setInterval(function(){
+    if (OverlaysView.doTopologyUpdate && !this.topologyFirstTime) {
+      this.selectOverlayPolling(this.selectedOverlayId, )
+    }
+  }, 1000);
 
     /*try {
 
