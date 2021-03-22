@@ -25,6 +25,7 @@ class OverlaysView extends React.Component {
       isToggle: true
     }
     this.doOverlayUpdate = true;
+    this.selectedOverlayId = null;
   }
 
   async getOverlaysData(intervalId) {
@@ -135,6 +136,7 @@ class OverlaysView extends React.Component {
       OverlaysView.doTopologyUpdate = false;
     } else {
       OverlaysView.doTopologyUpdate = true;
+      this.selectOverlay(this.selectedOverlayId);
     }
   }
 
@@ -218,6 +220,7 @@ class OverlaysView extends React.Component {
           id="searchOverlay"
           onChange={(selected) => {
             try {
+              this.selectedOverlayId = selected[0];
               this.selectOverlay(selected[0])
             } catch {
               console.log('Error has been occured on select search result.')
