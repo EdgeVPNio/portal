@@ -83,7 +83,7 @@ class DataTransformer {
                             PeerId:topologyData[edgeId]['PeerId'],
                             CreatedTime:topologyData[edgeId]['CreatedTime'],
                             ConnectedTime:topologyData[edgeId]['ConnectedTime'],
-                            State:topologyData[edgeId]['ConnectedTime'],
+                            State:topologyData[edgeId]['State'],
                             Type:topologyData[edgeId]['Type'],
                             TapName:linkManagerData[nodeId][edgeId]['TapName'],
                             MAC:linkManagerData[nodeId][edgeId]['MAC']

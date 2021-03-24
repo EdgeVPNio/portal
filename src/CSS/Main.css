@@ -1,9 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Times+New+Roman');
 
-/* customize global */
+/* customize global 
 * {
     font-family: 'Roboto', sans-serif;
-}
+}*/
 
 #root {
     width           : 100vw;
@@ -17,6 +18,7 @@ header {
     width           : 100vw;
     background-color: #213758;
     color           : white;
+    font-family: 'Roboto', sans-serif;
 }
 
 /* customize title name */
@@ -35,6 +37,16 @@ header {
 #ipopTitle label {
     margin-right: -10%;
     margin-top: -8%;
+    font-family: 'Roboto', sans-serif;
+}
+
+#DetailsLabel {
+    font-family: 'Roboto', sans-serif;
+}
+
+#valueLabel {
+	font-family: 'Times New Roman', Times, serif;
+	color: #56c5bc;
 }
 
 #loading {
@@ -85,6 +97,7 @@ header {
     padding   : 4%;
     outline   : transparent;
     border    : transparent;
+    font-family: 'Roboto', sans-serif;
 }
 
 .overlayBtn>button:focus,
@@ -293,6 +306,7 @@ header {
 }
 
 .markerLabel {
+	font-family: 'Roboto', sans-serif;
     font-size  : medium;
     margin     : 0;
     padding    : 0;
@@ -384,3 +398,4 @@ header {
         -ms-transform: translateX(-6%);
             transform: translateX(-6%);
 }
+

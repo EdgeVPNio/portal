@@ -17,7 +17,7 @@ export default class Topology {
                 data: {
                     id: node.NodeId,
                     label: node.NodeName,
-                    state: "",
+                    state: node.State,
                     type: "",
                     coordinate: node.GeoCoordinates,
 		    color: '#8AA626'
@@ -27,7 +27,7 @@ export default class Topology {
             var nodeDetail = {
                 "name": node.NodeName,
                 "id": node.NodeId,
-                "state": '-',
+                "state": node.State,
                 "raw_data": node
             }
             nodeDetails[node.NodeId] = nodeDetail;

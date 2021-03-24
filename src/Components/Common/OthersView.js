@@ -104,7 +104,7 @@ class OthersView extends React.Component {
           <div className="DetailsLabel">State</div>
           {sourceNode.state}
 
-          <div className="DetailsLabel">City/State/Country</div>
+          <div className="DetailsLabel">Location</div>
           {"Unknown"}
           <hr style={{ backgroundColor: '#486186' }} />
           <br /><br />
@@ -128,16 +128,16 @@ class OthersView extends React.Component {
       }).then((location) => {
         var nodeContent = <div>
 
-          <h5>{sourceNode.name}</h5>
+	<h5>{sourceNode.name}</h5>
 
-          <div className="DetailsLabel">Node ID</div>
-          {sourceNode.id}
+          <div id="DetailsLabel">Node ID</div>
+          <label id="valueLabel">{sourceNode.id}</label>
 
           <div className="DetailsLabel">State</div>
-          {sourceNode.state}
+          <label id="valueLabel">{sourceNode.state}</label>
 
-          <div className="DetailsLabel">City/State/Country</div>
-          {location}
+          <div className="DetailsLabel">Location</div>
+          <label id="valueLabel">{location.slice(7, location.length)}</label>
           <hr style={{ backgroundColor: '#486186' }} />
           <br /><br />
 
@@ -154,17 +154,17 @@ class OthersView extends React.Component {
                     name={connectedNode.data().label}
                   >
                     <div className="DetailsLabel">Node ID</div>
-                    {connectedNode.data().id}
+                    <label id="valueLabel">{connectedNode.data().id}</label>
                     <div className="DetailsLabel">Tunnel ID</div>
-                    {connectedNodeDetail.id}
+                    <label id="valueLabel">{connectedNodeDetail.id}</label>
                     <div className="DetailsLabel">Interface Name</div>
-                    {connectedNodeDetail.name}
+                    <label id="valueLabel">{connectedNodeDetail.name}</label>
                     <div className="DetailsLabel">MAC</div>
-                    {connectedNodeDetail.MAC}
+                    <label id="valueLabel">{connectedNodeDetail.MAC}</label>
                     <div className="DetailsLabel">State</div>
-                    {connectedNodeDetail.state}
+                    <label id="valueLabel">{connectedNodeDetail.state.slice(7, connectedNodeDetail.state.length)}</label>
                     <div className="DetailsLabel">Tunnel Type</div>
-                    {connectedNodeDetail.type}
+                    <label id="valueLabel">{connectedNodeDetail.type.slice(6, connectedNodeDetail.type.length)}</label>
 
                   </CollapsibleButton>
 
@@ -189,6 +189,74 @@ class OthersView extends React.Component {
     //console.log(linkDetails);
     //console.log(sourceNodeDetails);
     //console.log(targetNodeDetails);
+    if(sourceNodeDetails.raw_data == " " && targetNodeDetails.raw_data == " ") {
+	    //both nodes of the edge are not reporting
+	    var linkContent = <div>
+		    <label id="valueLabel">{"Data not available"}</label>
+		    </div>
+	   ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
+	   return;
+    }
+
+    if(sourceNodeDetails.raw_data == " " || targetNodeDetails.raw_data == " ") {
+	//if either of nodes is not reporting
+	var linkContent = <div>
+              <h5>{linkDetails.name}</h5>
+
+              <div className="row">
+
+                <div className="col-10" style={{ paddingRight: '0' }}>
+
+                  <CollapsibleButton
+                    id={sourceNodeDetails.id + 'Btn'}
+                    className='sourceNodeBtn'
+                    key={sourceNodeDetails.id + 'Btn'}
+                    eventKey={sourceNodeDetails.id + 'Btn'}
+                    name={sourceNodeDetails.name}
+                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
+                  >
+
+                    <div className="DetailsLabel">Node ID</div>
+                    <label id="valueLabel">{sourceNodeDetails.id}</label>
+
+                  </CollapsibleButton>
+
+                  <CollapsibleButton
+                    id={targetNodeDetails.id + 'Btn'}
+                    className='targetNodeBtn'
+                    key={targetNodeDetails.id + 'Btn'}
+                    eventKey={targetNodeDetails.id + 'Btn'}
+                    name={targetNodeDetails.name}
+                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
+                  >
+
+                    <div className="DetailsLabel">Node ID</div>
+	            <label id="valueLabel">{targetNodeDetails.id}</label>
+
+                  </CollapsibleButton>
+
+                </div>
+
+                <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
+                  <button onClick={this.handleSwitch} id="switchBtn" />
+                </div>
+
+              </div>
+              <hr style={{ backgroundColor: '#486186' }} />
+              <div className="DetailsLabel">Tunnel ID</div>
+              <label id="valueLabel">{linkDetails.id}</label>
+              <div className="DetailsLabel">Interface Name</div>
+              <label id="valueLabel">{linkDetails.name}</label>
+              <div className="DetailsLabel">MAC</div>
+              <label id="valueLabel">{linkDetails.MAC}</label>
+              <div className="DetailsLabel">State</div>
+	      <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
+              <div className="DetailsLabel">Tunnel Type</div>
+              <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
+
+            </div >
+            ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
+    }
 
     const srcCoordinate = sourceNodeDetails.raw_data['GeoCoordinates'].split(',')
 
@@ -210,7 +278,7 @@ class OthersView extends React.Component {
               return '-'
             }
           }).then(targetLocation => {
-            let sourceNodeColor
+            /*let sourceNodeColor
             let targetNodeColor
             this.cy.elements('nodes').forEach((node) => {
               if (node.data().id == sourceNodeDetails.id) {
@@ -221,7 +289,7 @@ class OthersView extends React.Component {
               if (node.data().id == targetNodeDetails.id) {
                 targetNodeColor = node.css('background-color')
               }
-            })
+            })*/
             var linkContent = <div>
               <h5>{linkDetails.name}</h5>
 
@@ -235,17 +303,17 @@ class OthersView extends React.Component {
                     key={sourceNodeDetails.id + 'Btn'}
                     eventKey={sourceNodeDetails.id + 'Btn'}
                     name={sourceNodeDetails.name}
-                    style={{ marginBottom: '2.5%',backgroundColor:sourceNodeColor,border:`solid ${sourceNodeColor}` }}
+                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
                   >
 
                     <div className="DetailsLabel">Node ID</div>
-                    {sourceNodeDetails.id}
+                    <label id="valueLabel">{sourceNodeDetails.id}</label>
 
                     <div className="DetailsLabel">State</div>
-                    {sourceNodeDetails.state}
+                    <label id="valueLabel">{sourceNodeDetails.state}</label>
 
-                    <div className="DetailsLabel">City/State/Country</div>
-                    {sourceLocation}
+                    <div className="DetailsLabel">Location</div>
+                    <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label>
 
                   </CollapsibleButton>
 
@@ -255,17 +323,17 @@ class OthersView extends React.Component {
                     key={targetNodeDetails.id + 'Btn'}
                     eventKey={targetNodeDetails.id + 'Btn'}
                     name={targetNodeDetails.name}
-                    style={{ marginBottom: '2.5%',backgroundColor:targetNodeColor,border:`solid ${targetNodeColor}`}}
+                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
                   >
 
                     <div className="DetailsLabel">Node ID</div>
-                    {targetNodeDetails.id}
+                    <label id="valueLabel">{targetNodeDetails.id}</label>
 
                     <div className="DetailsLabel">State</div>
-                    {targetNodeDetails.state}
+                    <label id="valueLabel">{targetNodeDetails.state}</label>
 
-                    <div className="DetailsLabel">City/Country</div>
-                    {targetLocation}
+                    <div className="DetailsLabel">Location</div>
+                    <label id="valueLabel">{targetLocation.slice(7, targetLocation.length)}</label>
 
                   </CollapsibleButton>
 
@@ -278,15 +346,15 @@ class OthersView extends React.Component {
               </div>
               <hr style={{ backgroundColor: '#486186' }} />
               <div className="DetailsLabel">Tunnel ID</div>
-              {linkDetails.id}
+              <label id="valueLabel">{linkDetails.id}</label>
               <div className="DetailsLabel">Interface Name</div>
-              {linkDetails.name}
+              <label id="valueLabel">{linkDetails.name}</label>
               <div className="DetailsLabel">MAC</div>
-              {linkDetails.MAC}
+              <label id="valueLabel">{linkDetails.MAC}</label>
               <div className="DetailsLabel">State</div>
-              {linkDetails.State}
+              <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
               <div className="DetailsLabel">Tunnel Type</div>
-              {linkDetails.type}
+              <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
 
             </div >
             ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
@@ -794,6 +862,7 @@ class OthersView extends React.Component {
   }
 
   componentDidUpdate() {
+     this.renderTopology();
     /*if (this.cy != null && this.cy != undefined) {
       var nodes = this.cy.elements('nodes')
       nodes.toArray().forEach((node) => {
