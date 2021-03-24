@@ -99,13 +99,13 @@ class OthersView extends React.Component {
           <h5>{sourceNode.id.slice(sourceNode.id.length - 6)}</h5>
 
           <div className="DetailsLabel">Node ID</div>
-          {sourceNode.id}
+          <label id="valueLabel">{sourceNode.id}</label>
 
           <div className="DetailsLabel">State</div>
-          {sourceNode.state}
+          <label id="valueLabel">{sourceNode.state}</label>
 
           <div className="DetailsLabel">Location</div>
-          {"Unknown"}
+          <label id="valueLabel">{"Unknown"}</label>
           <hr style={{ backgroundColor: '#486186' }} />
           <br /><br />
 
