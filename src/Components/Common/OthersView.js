@@ -531,9 +531,9 @@ class OthersView extends React.Component {
             }
           } finally {
             if (e.target[0] !== this.cy) {
-              that.setState({ switchToggle: true, currentSelectedElement: e.target })
+              that.setState({ switchToggle: false, currentSelectedElement: e.target })
             } else {
-              that.setState({ switchToggle: false, currentSelectedElement: null })
+              that.setState({ switchToggle: true, currentSelectedElement: null })
             }
           }
         })
