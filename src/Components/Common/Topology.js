@@ -17,7 +17,7 @@ export default class Topology {
                 data: {
                     id: node.NodeId,
                     label: node.NodeName,
-                    state: node.State,
+                    state: "Connected",
                     type: "",
                     coordinate: node.GeoCoordinates,
 		    color: '#8AA626'
@@ -27,7 +27,7 @@ export default class Topology {
             var nodeDetail = {
                 "name": node.NodeName,
                 "id": node.NodeId,
-                "state": node.State,
+                "state": "Connected",
                 "raw_data": node
             }
             nodeDetails[node.NodeId] = nodeDetail;
@@ -73,7 +73,7 @@ export default class Topology {
                 var nodeDetail = {
                     "name": ' ',
                     "id": nodeId,
-                    "state": '-',
+                    "state": "Not Reporting",
                     "raw_data": ' '
                 }
                 nodeDetails[nodeId] = nodeDetail;
@@ -82,7 +82,7 @@ export default class Topology {
                     data: {
                         id: nodeId,
                         label: nodeId.slice(nodeId.length - 6),
-                        state: "",
+                        state: "Not Reporting",
                         type: "",
                         coordinate: "",
 			color: "#ADD8E6"
