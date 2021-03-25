@@ -24,7 +24,6 @@ class OverlaysView extends React.Component {
     }
     this.doOverlayUpdate = true;
     this.selectedOverlayId = null;
-    this.topologyFirstTime = false;
   }
 
   async getOverlaysData(intervalId) {
@@ -129,50 +128,60 @@ class OverlaysView extends React.Component {
     return overlayBtn
   }
 
-  static setTopologyUpdate() {
-    console.log("Call at set topology update");
-    if (OverlaysView.doTopologyUpdate) {
-      OverlaysView.doTopologyUpdate = false;
-    } else {
-      OverlaysView.doTopologyUpdate = true;
-    }
-  }
+  // static setTopologyUpdate() {
+  //   console.log("Call at set topology update");
+  //   if (OverlaysView.doTopologyUpdate) {
+  //     OverlaysView.doTopologyUpdate = false;
+  //   } else {
+  //     OverlaysView.doTopologyUpdate = true;
+  //   }
+  // }
 
-  selectOverlayPolling = (overlayId, intervalId) => {
-    console.log("Polling called with" + overlayId + intervalId)
+  // selectOverlayPolling = (overlayId, intervalId) => {
+  //   console.log("Polling called with" + overlayId + intervalId)
+  //   this.setState({ selectedOverlay: overlayId })
+  //   this.doOverlayUpdate = false;
+  //   var intervalId;
+  //   var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId
+
+  //   var topology = null
+
+  //   fetch(url).then(res => {
+  //     return res.json();})
+  //     .then(res => {
+  //       intervalId = res[0]._id;
+  //       //logic to process the GET topology
+  //       this.setState({topology : new Topology(res)});
+  //       if (OverlaysView.doTopologyUpdate) {
+  //         console.log("Called topology polling" + overlayId + intervalId)
+  //         this.selectOverlayPolling(overlayId, intervalId);
+  //       }
+  //     }).catch(err => {
+  //       console.log('Error occured on fetch topology process' + err);
+
+  //   })
+  // }
+
+  selectOverlay = (overlayId) => {
+    // this.topologyFirstTime = true;
+    // this.selectOverlayPolling(overlayId, );
+    // var topologyUpdateInterval = setInterval(function(){
+    //   if (this.topologyFirstTime) {
+    //     if (OverlaysView.doTopologyUpdate && !this.topologyFirstTime) {
+    //       this.selectOverlayPolling(this.selectedOverlayId, )
+    //     }
+    //   }
+    // }, 1000);
     this.setState({ selectedOverlay: overlayId })
-    this.doOverlayUpdate = false;
-    var intervalId;
-    var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId
-
-    var topology = null
-
+    var url = '/topology?overlayid=' + overlayId + '&interval='
     fetch(url).then(res => {
       return res.json();})
       .then(res => {
-        intervalId = res[0]._id;
         //logic to process the GET topology
         this.setState({topology : new Topology(res)});
-        if (OverlaysView.doTopologyUpdate) {
-          console.log("Called topology polling" + overlayId + intervalId)
-          this.selectOverlayPolling(overlayId, intervalId);
-        }
       }).catch(err => {
         console.log('Error occured on fetch topology process' + err);
-
     })
-  }
-
-  selectOverlay = (overlayId) => {
-    this.topologyFirstTime = true;
-    this.selectOverlayPolling(overlayId, );
-    var topologyUpdateInterval = setInterval(function(){
-      if (this.topologyFirstTime) {
-        if (OverlaysView.doTopologyUpdate && !this.topologyFirstTime) {
-          this.selectOverlayPolling(this.selectedOverlayId, )
-        }
-      }
-    }, 1000);
   }
 
     /*try {
@@ -261,4 +270,3 @@ class OverlaysView extends React.Component {
 }
 
 export default OverlaysView
-OverlaysView.doTopologyUpdate = true;

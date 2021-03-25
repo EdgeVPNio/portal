@@ -582,7 +582,6 @@ class OthersView extends React.Component {
       this.autoRefresh = false;
     }
     console.log("Handled refresh, called update");
-    OverlaysView.setTopologyUpdate()
     this.cy.center()
   }
 
