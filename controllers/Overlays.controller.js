@@ -41,38 +41,36 @@ exports.findAllIntervals = (req, res, dbInstance) => {
 /**
  *  Function to retrieve all Overlays present at a particular interval
  */ 
-exports.findOverlays = (req, res, dbInstance) => {
+ exports.findOverlays = (req, res, dbInstance) => {
 
-    const intervalId = parseFloat(req.query.interval);
-
-    dbInstance.getOverlays(overlayModel, intervalId)
-    .then(data => {
-      var send = true; //Flag to send data to client
-      //console.log("Data is " + data)
-      if (Object.keys(data).length == 0) {
-        send = false; //data not available yet, waiting for insert
-        //console.log("data not found");
-        const pipeline = [{'$match': {'operationType': 'insert'}}]; //watch for insert operation
-        const overlayChangeStream = dbInstance.getDb().db('Evio').collection('Overlays').watch(pipeline);
-
-        overlayChangeStream.on('change', newData => {
-            //console.log(newData);
-            data = [newData.fullDocument];
-            send = true;
-        });
-      }
-      //Logic to check every 1 second for insert on db
-        var overlayIntervalId = setInterval(function(){
-        if (send) {
-          res.send(data); //data found and sent to client, clearing interval time
-          clearInterval(overlayIntervalId);
-        }
-      }, 1000); //timeout on wait for 50 seconds
+  const intervalId = parseFloat(req.query.interval);
+  dbInstance.getOverlays(overlayModel, intervalId)
+  .then(data => {
+    //Flag to send data to client
+    //console.log("Data is " + data)
+    if (Object.keys(data).length == 0) {
+      console.log("Calling promise")
+      data = null;//data not available yet, waiting for insert
+      //console.log("data not found");
+      dbInstance.checkOverlayUpdate().then(res => {
+         console.log("Got result in check:", res); 
+	 data = res
     })
-    .catch(err => {
-      res.status(502).send({
-        message:
-          err.message || "Some error occurred while retrieving overlays."
-      });
+  }
+    var overlayInterval = setInterval(function() {
+      console.log("Inside interval", data)
+      if (data) {
+        console.log("Sending data", data)
+        res.send(data);
+        clearInterval(overlayInterval);
+      }
+    }, 1000)
+  })
+  .catch(err => {
+    res.status(502).send({
+      message:
+        err.message || "Some error occurred while retrieving overlays."
     });
+  });
 };
+

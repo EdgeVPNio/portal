@@ -115,6 +115,36 @@ class MongoDBImpl extends DataBaseInterface {
         //Most recent entry - intervalId not passed
         return tableName.find({"Topology": {$elemMatch: {"OverlayId":overlayId}}}).sort({"_id": -1}).limit(1);
     }
+
+    async checkOverlayUpdate() {
+        var data = null;
+        const pipeline = [{'$match': {'operationType': 'insert'}}]; //watch for insert operation
+        const overlayChangeStream = this.db.db('Evio').collection('Overlays').watch(pipeline);
+        overlayChangeStream.on('change', newData => {
+            console.log(newData);
+            data = [newData.fullDocument];
+            console.log("Inside mongo", data)
+	    return data;
+        });
+        async function streamReady(stream) {
+            return new Promise(ok => {
+                const i = setInterval(() => {
+                    if (data) {
+                        clearInterval(i);
+                        return ok()
+                    }
+                }, 100)
+            });
+        }
+	console.log("Awaiting data");
+        var newData = await streamReady(overlayChangeStream).then(res => {
+		console.log("Result got", data, res);
+		return data;
+	});
+	console.log("NewData", newData);
+	return newData;
+      }
 }
 
 module.exports = { MongoDBImpl }
+
