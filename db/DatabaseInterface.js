@@ -40,12 +40,8 @@ class DataBaseInterface {
         console.log("getTopology method not implemented by specific db");
     }
 
-    checkOverlayUpdate(tableName, intervalId) {
+    getOverlays(tableName, intervalId) {
         console.log("checkOverlayUpdate method not implemented by specific db");
-    }
-
-    checkTopologyUpdate() {
-        console.log("checkTopologyUpdate method not implemented by specific db");
     }
 
     close() {

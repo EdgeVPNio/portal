@@ -91,7 +91,7 @@ class MongoDBImpl extends DataBaseInterface {
      * @param {String} tableName Model to use to get the overlay.
      * @param {String} intervalId Interval identifier to query.
      */
-    async getOverlays(tableName, intervalId) {
+    async findOverlays(tableName, intervalId) {
         if (intervalId) {
             //Find the next available interval, greater than the previous one from client
             return tableName.find({ "_id": { $gt: intervalId } }).sort({ '_id': 1 }).limit(1);
@@ -116,9 +116,9 @@ class MongoDBImpl extends DataBaseInterface {
         return tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ "_id": -1 }).limit(1);
     }
 
-    async checkOverlayUpdate(tableName, intervalId) {
+    async getOverlays(tableName, intervalId) {
         var overlayData = null;
-        this.getOverlays(tableName, intervalId)
+        this.findOverlays(tableName, intervalId)
             .then(data => {
                 if (Object.keys(data).length === 0) {
                     console.log("No data found, setting data to null.")
