@@ -89,7 +89,7 @@ class MongoDBImpl extends DataBaseInterface {
      * Database call to get the high level Overlay information.
      * 
      * @param {String} tableName Model to use to get the overlay.
-     * @param {String} intervalId Interval identifier to query.
+     * @param {Float} intervalId Interval identifier to query.
      */
     async findOverlays(tableName, intervalId) {
         if (intervalId) {
@@ -104,10 +104,10 @@ class MongoDBImpl extends DataBaseInterface {
      * Database call to get the detailed topology information.
      * 
      * @param {String} tableName 
-     * @param {String} intervalId 
+     * @param {Float} intervalId 
      * @param {String} overlayId 
      */
-    async getTopology(tableName, intervalId, overlayId) {
+    async findTopology(tableName, intervalId, overlayId) {
         if (intervalId) {
             //Find the next available interval, greater than the previous one from client
             return tableName.find({ "_id": { $gt: intervalId } }, { "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ '_id': 1 }).limit(1);
@@ -116,6 +116,12 @@ class MongoDBImpl extends DataBaseInterface {
         return tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ "_id": -1 }).limit(1);
     }
 
+    /**
+     * Function to query Overlays collection, watch the collection for insert op every 1 second
+     * @param {string} tableName 
+     * @param {Float} intervalId 
+     * @returns inserted data to overlays collection
+     */
     async getOverlays(tableName, intervalId) {
         var overlayData = null;
         this.findOverlays(tableName, intervalId)
@@ -126,33 +132,79 @@ class MongoDBImpl extends DataBaseInterface {
                     const pipeline = [{ '$match': { 'operationType': 'insert' } }]; //watch for insert operation
                     const overlayChangeStream = this.db.db('Evio').collection('Overlays').watch(pipeline);
                     overlayChangeStream.on('change', changeData => {
-                        console.log("Found new data :", changeData);
+                        //console.log("Found new data :", changeData);
                         overlayData = [changeData.fullDocument];
-                        console.log("Set data to ", data)
+                        //console.log("Set data to ", data)
                     });
                 } else {
-		    console.log("Got data from DB not waitng. Data:", data);
+		            //console.log("Got data from DB not waitng. Data:", data);
                     overlayData = data;
                 }
             })
         async function streamReady() {
             return new Promise(ok => {
                 var overlayInterval = setInterval(function () {
-                    console.log("Data at setInterval is ", overlayData);
+                    //console.log("Data at setInterval is ", overlayData);
                     if (overlayData) {
                         clearInterval(overlayInterval)
                         return ok();
                     }
-                }, 100);
+                }, 1000);
             });
         }
         var newData = await streamReady()
         .then (data => {
-            console.log("Inside stream Ready ", data);
+            //console.log("Inside stream Ready ", data);
             return data;
         });
-        console.log("End of overlay DB call with ", newData, overlayData)
+        //console.log("End of overlay DB call with ", newData, overlayData)
         return overlayData;
+    }
+
+    /**
+     * Function to query Topology collection, watch the collection for insert op every 1 second
+     * @param {String} tableName 
+     * @param {Float} intervalId 
+     * @param {String} overlayId 
+     * @returns inserted data to topology collection
+     */
+    async getTopology(tableName, intervalId, overlayId) {
+        var topologyData = null;
+        this.findTopology(tableName, intervalId, overlayId)
+            .then(data => {
+                if (Object.keys(data).length === 0) {
+                    //console.log("No data found, setting data to null.")
+                    topologyData = null;
+                    const pipeline = [{ '$match': { 'operationType': 'insert' } }]; //watch for insert operation
+                    const topologyChangeStream = this.db.db('Evio').collection('Topology').watch(pipeline);
+                    topologyChangeStream.on('change', changeData => {
+                        //console.log("Found new data :", changeData);
+                        topologyData = [changeData.fullDocument];
+                        //console.log("Set data to ", data)
+                    });
+                } else {
+		            //console.log("Got data from DB not waitng. Data:", data);
+                    topologyData = data;
+                }
+            })
+        async function streamReady() {
+            return new Promise(ok => {
+                var topologyInterval = setInterval(function () {
+                    //console.log("Data at setInterval is ", topologyData);
+                    if (topologyData) {
+                        clearInterval(topologyInterval)
+                        return ok();
+                    }
+                }, 1000);
+            });
+        }
+        var newData = await streamReady()
+        .then (data => {
+            //console.log("Inside stream Ready ", data);
+            return data;
+        });
+        //console.log("End of topology DB call with ", newData, topologyData)
+        return topologyData;
     }
 }
 

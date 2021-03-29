@@ -44,11 +44,12 @@ exports.findAllIntervals = (req, res, dbInstance) => {
  exports.findOverlays = (req, res, dbInstance) => {
 
   const intervalId = parseFloat(req.query.interval);
-  dbInstance.getOverlays(overlayModel, intervalId).then(data => {
-          console.log("Response data being sent:", data);
+  dbInstance.getOverlays(overlayModel, intervalId)
+    .then(data => {
+          //console.log("Response data being sent:", data);
           res.send(data);
-  })
-  .catch(err => {
+    })
+    .catch(err => {
     res.status(502).send({
       message:
         err.message || "Some error occurred while retrieving overlays."
