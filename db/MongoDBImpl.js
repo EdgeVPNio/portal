@@ -142,7 +142,7 @@ class MongoDBImpl extends DataBaseInterface {
                         clearInterval(overlayInterval)
                         return overlayData;
                     }
-                }, 1000);
+                }, 100);
             });
         }
         var newData = await streamReady()

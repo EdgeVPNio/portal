@@ -51,7 +51,7 @@ exports.findAllIntervals = (req, res, dbInstance) => {
           res.send(data)
           clearInterval(overlaysInterval);
         }
-      });
+      }, 1000);
   })
   .catch(err => {
     res.status(502).send({
