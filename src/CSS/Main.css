@@ -21,11 +21,10 @@ header {
     font-family: 'Roboto', sans-serif;
 }
 
-/* customize title name */
-/*#ipopTitle {
-    margin-left : -3%;
-    margin-right: 3%;
-}*/
+h5 {
+    font-family: 'Times New Roman', Times, serif;
+	color: #56c5bc;
+}
 
 #ipopTitle img {
     margin-left : -20%;

@@ -12,6 +12,29 @@ export default class Topology {
         var nodesData = response[0].Topology[0].Nodes;
         for (var idx in nodesData) {
             var node = nodesData[idx];
+            if(node.Edges.length == 0) {
+                //No tunnels node
+                var nodeData = {
+                    group: "nodes",
+                    data: {
+                        id: node.NodeId,
+                        label: node.NodeName,
+                        state: "Connected",
+                        type: "",
+                        coordinate: node.GeoCoordinates,
+                        color: '#f2be22'
+                    }
+                }
+                nodes.push(nodeData);
+                var nodeDetail = {
+                    "name": node.NodeName,
+                    "id": node.NodeId,
+                    "state": "Connected",
+                    "raw_data": node
+                }
+                nodeDetails[node.NodeId] = nodeDetail;
+                continue;
+            }
             var nodeData = {
                 group: "nodes",
                 data: {

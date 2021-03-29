@@ -128,51 +128,10 @@ class OverlaysView extends React.Component {
     return overlayBtn
   }
 
-  // static setTopologyUpdate() {
-  //   console.log("Call at set topology update");
-  //   if (OverlaysView.doTopologyUpdate) {
-  //     OverlaysView.doTopologyUpdate = false;
-  //   } else {
-  //     OverlaysView.doTopologyUpdate = true;
-  //   }
-  // }
-
-  // selectOverlayPolling = (overlayId, intervalId) => {
-  //   console.log("Polling called with" + overlayId + intervalId)
-  //   this.setState({ selectedOverlay: overlayId })
-  //   this.doOverlayUpdate = false;
-  //   var intervalId;
-  //   var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId
-
-  //   var topology = null
-
-  //   fetch(url).then(res => {
-  //     return res.json();})
-  //     .then(res => {
-  //       intervalId = res[0]._id;
-  //       //logic to process the GET topology
-  //       this.setState({topology : new Topology(res)});
-  //       if (OverlaysView.doTopologyUpdate) {
-  //         console.log("Called topology polling" + overlayId + intervalId)
-  //         this.selectOverlayPolling(overlayId, intervalId);
-  //       }
-  //     }).catch(err => {
-  //       console.log('Error occured on fetch topology process' + err);
-
-  //   })
-  // }
 
   selectOverlay = (overlayId) => {
-    // this.topologyFirstTime = true;
-    // this.selectOverlayPolling(overlayId, );
-    // var topologyUpdateInterval = setInterval(function(){
-    //   if (this.topologyFirstTime) {
-    //     if (OverlaysView.doTopologyUpdate && !this.topologyFirstTime) {
-    //       this.selectOverlayPolling(this.selectedOverlayId, )
-    //     }
-    //   }
-    // }, 1000);
     this.setState({ selectedOverlay: overlayId })
+    this.doOverlayUpdate = false;
     var url = '/topology?overlayid=' + overlayId + '&interval='
     fetch(url).then(res => {
       return res.json();})
@@ -184,48 +143,6 @@ class OverlaysView extends React.Component {
     })
   }
 
-    /*try {
-
-      fetch(nodeURL).then(res => res.json()).then(nodesJSON => {
-        //console.log(nodesJSON);
-
-        fetch(linkURL).then(res => res.json()).then(linksJSON => {
-          //console.log(linksJSON);
-
-          topology = new Topology(nodesJSON[overlayId]['current_state'], linksJSON[overlayId]['current_state'])
-
-          var nodes = nodesJSON[overlayId]['current_state']
-
-          Object.keys(nodes).sort().forEach((nodeID) => {
-
-            // graphElement.push(JSON.parse(`{"group":"nodes","data": {"id": "${nodeID}","label": "${nodes[nodeID].NodeName}","state":"","type":""}}`))
-            topology.addNodeElement(nodeID)
-
-            var links = linksJSON[overlayId]['current_state'][nodeID]
-            try {
-
-              Object.keys(links).forEach(linkID => {
-                // graphElement.push(JSON.parse(`{"group":"edges","data": { "id":"${linkID}" ,"label":"${links[linkID]['InterfaceName']}","source": "${links[linkID]['SrcNodeId']}","target": "${links[linkID]['TgtNodeId']}","state":"","type":"${links[linkID]['Type']}"}}`))
-                topology.addLinkElement(nodeID, linkID)
-              })
-
-            } catch{
-                console.log(`${nodeID} has no tunnel.`)
-            }
-          })
-
-          return topology
-
-        }).then((topology) => {
-          this.setState({ topology: topology })
-        })
-
-      })
-
-    } catch{
-      // console.log('error has been occered on fetch node and tunnel process.')
-    }*/
-  //}
 
   render() {
     return (<div id="container" className="container-fluid" style={{ padding: '0' }} >
