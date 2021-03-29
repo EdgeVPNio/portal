@@ -10,7 +10,6 @@ import { Typeahead } from 'react-bootstrap-typeahead'
 import Header from './Header'
 import '../../CSS/Main.css'
 import Overlays from './Overlays.js'
-import Topology from './Topology.js'
 
 
 class OverlaysView extends React.Component {
@@ -19,11 +18,11 @@ class OverlaysView extends React.Component {
     this.state = {
       overlays: null,
       selectedOverlay: null,
-      topology: null,
       isToggle: true
     }
     this.doOverlayUpdate = true;
     this.selectedOverlayId = null;
+    this.selectOverlayFlag = false; //flag to switch views
   }
 
   async getOverlaysData(intervalId) {
@@ -84,10 +83,8 @@ class OverlaysView extends React.Component {
   renderMainContent = () => {
     if (this.state.overlays !== null) {
       if (this.state.selectedOverlay !== null) {
-        if (this.state.topology !== null) {
+        if (this.selectOverlayFlag) {
           return this.renderGraphContent()
-        } else {
-          return <Spinner id='loading' animation='border' variant='info' />
         }
       } else {
         return this.renderOverlaysContent()
@@ -98,7 +95,7 @@ class OverlaysView extends React.Component {
   }
 
   renderGraphContent = () => {
-    return <OthersView overlayName={this.state.selectedOverlay} topology={this.state.topology} />
+    return <OthersView overlayName={this.state.selectedOverlay} />
   }
 
   renderOverlaysContent = () => {
@@ -132,7 +129,8 @@ class OverlaysView extends React.Component {
   selectOverlay = (overlayId) => {
     this.setState({ selectedOverlay: overlayId })
     this.doOverlayUpdate = false;
-    var url = '/topology?overlayid=' + overlayId + '&interval='
+    this.selectOverlayFlag = true;
+    /*var url = '/topology?overlayid=' + overlayId + '&interval='
     fetch(url).then(res => {
       return res.json();})
       .then(res => {
@@ -140,7 +138,7 @@ class OverlaysView extends React.Component {
         this.setState({topology : new Topology(res)});
       }).catch(err => {
         console.log('Error occured on fetch topology process' + err);
-    })
+    })*/
   }
 
 
