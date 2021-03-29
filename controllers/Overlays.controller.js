@@ -45,13 +45,8 @@ exports.findAllIntervals = (req, res, dbInstance) => {
 
   const intervalId = parseFloat(req.query.interval);
   dbInstance.checkOverlayUpdate(overlayModel, intervalId).then(data => {
-      var overlaysInterval = setInterval(function() {
-        if (data) {
           console.log("Response data being sent:", data);
-          res.send(data)
-          clearInterval(overlaysInterval);
-        }
-      }, 1000);
+          res.send(data);
   })
   .catch(err => {
     res.status(502).send({

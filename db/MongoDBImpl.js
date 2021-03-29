@@ -131,6 +131,7 @@ class MongoDBImpl extends DataBaseInterface {
                         console.log("Set data to ", data)
                     });
                 } else {
+		    console.log("Got data from DB not waitng. Data:", data);
                     overlayData = data;
                 }
             })
@@ -140,18 +141,18 @@ class MongoDBImpl extends DataBaseInterface {
                     console.log("Data at setInterval is ", overlayData);
                     if (overlayData) {
                         clearInterval(overlayInterval)
-                        return overlayData;
+                        return ok();
                     }
                 }, 100);
             });
         }
         var newData = await streamReady()
         .then (data => {
-            console.log("Data after setInterval is ", data);
+            console.log("Inside stream Ready ", data);
             return data;
         });
-        console.log("End of overlay DB call with ", newData)
-        return newData;
+        console.log("End of overlay DB call with ", newData, overlayData)
+        return overlayData;
     }
 }
 
