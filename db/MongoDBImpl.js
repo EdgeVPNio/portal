@@ -117,30 +117,30 @@ class MongoDBImpl extends DataBaseInterface {
     }
 
     async checkOverlayUpdate(tableName, intervalId) {
-        var overlayData = this.getOverlays(tableName, intervalId)
+        var overlayData = null;
+        this.getOverlays(tableName, intervalId)
             .then(data => {
                 if (Object.keys(data).length === 0) {
                     console.log("No data found, setting data to null.")
-                    var data = null;
+                    overlayData = null;
                     const pipeline = [{ '$match': { 'operationType': 'insert' } }]; //watch for insert operation
                     const overlayChangeStream = this.db.db('Evio').collection('Overlays').watch(pipeline);
                     overlayChangeStream.on('change', changeData => {
                         console.log("Found new data :", changeData);
-                        data = [changeData.fullDocument];
+                        overlayData = [changeData.fullDocument];
                         console.log("Set data to ", data)
                     });
+                } else {
+                    overlayData = data;
                 }
-                return data;
             })
         var overlayInterval = setInterval(function () {
-            console.log("Data at setInterval is ", data);
+            console.log("Data at setInterval is ", overlayData);
             if (overlayData) {
                 clearInterval(overlayInterval)
                 return overlayData;
             }
         });
-        console.log("Overlay Data:", overlayData);
-        return overlayData;
     }
 }
 
