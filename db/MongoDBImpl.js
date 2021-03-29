@@ -145,7 +145,11 @@ class MongoDBImpl extends DataBaseInterface {
                 }, 1000);
             });
         }
-        var newData = await streamReady();
+        var newData = await streamReady()
+        .then (data => {
+            console.log("Data after setInterval is ", data);
+            return data;
+        });
         console.log("End of overlay DB call with ", newData)
         return newData;
     }
