@@ -22,17 +22,17 @@
 
 const mongoose = require('mongoose')
 const Model = require('./Model')
-const {DataBaseInterface} = require('./DatabaseInterface');
+const { DataBaseInterface } = require('./DatabaseInterface');
 const mongo = require('mongodb');
-const {overlayModel, topologyModel} = require('./Model');
-const {DataTransformer} = require('../controllers/DataTransformer')
+const { overlayModel, topologyModel } = require('./Model');
+const { DataTransformer } = require('../controllers/DataTransformer')
 
 class MongoDBImpl extends DataBaseInterface {
     // Stores the url and dbname and is available for every instance
     constructor(url, dbname) {
         super(url);
         // Once an instance is created the db connection is kept until the instance is alive.
-        this.connection = mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true})
+        this.connection = mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
         this.dbname = dbname;
         this.db = mongoose.connection.client;
     }
@@ -57,8 +57,8 @@ class MongoDBImpl extends DataBaseInterface {
         // The data is transformed to the required form and returned as an array of arrays.
         var transformedData = dataTrasformer.transformData(data);
         var overlaySaveData = new overlayModel({
-            _id:timestamp,
-            Overlays:transformedData[0] // Overlays array
+            _id: timestamp,
+            Overlays: transformedData[0] // Overlays array
         });
         // Overlay data is put into the db with the below call.
         overlaySaveData.save(function (err) {
@@ -66,7 +66,7 @@ class MongoDBImpl extends DataBaseInterface {
             //console.log("Saved Overlay data for timestamp: " + timestamp);
         });
         var topologySaveData = new topologyModel({
-            _id:timestamp,
+            _id: timestamp,
             Topology: transformedData[1] // Topology Array
         })
         // Topology data is put into the db with the below call.
@@ -82,7 +82,7 @@ class MongoDBImpl extends DataBaseInterface {
      * @param {String} tableName Model Name to use to find the intervals.
      */
     async getIntervals(tableName) {
-        return tableName.find({},{"Overlays":0});
+        return tableName.find({}, { "Overlays": 0 });
     }
 
     /**
@@ -92,12 +92,12 @@ class MongoDBImpl extends DataBaseInterface {
      * @param {String} intervalId Interval identifier to query.
      */
     async getOverlays(tableName, intervalId) {
-        if(intervalId) {
+        if (intervalId) {
             //Find the next available interval, greater than the previous one from client
-            return tableName.find({ "_id": { $gt: intervalId } }).sort({'_id':1}).limit(1);
+            return tableName.find({ "_id": { $gt: intervalId } }).sort({ '_id': 1 }).limit(1);
         }
         //Most recent entry - intervalId not passed
-        return tableName.find().sort({'_id':-1}).limit(1);
+        return tableName.find().sort({ '_id': -1 }).limit(1);
     }
 
     /**
@@ -108,42 +108,39 @@ class MongoDBImpl extends DataBaseInterface {
      * @param {String} overlayId 
      */
     async getTopology(tableName, intervalId, overlayId) {
-        if(intervalId) {
+        if (intervalId) {
             //Find the next available interval, greater than the previous one from client
-            return tableName.find({"_id":{ $gt: intervalId}}, {"Topology": {$elemMatch: {"OverlayId":overlayId}}}).sort({'_id':1}).limit(1);
+            return tableName.find({ "_id": { $gt: intervalId } }, { "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ '_id': 1 }).limit(1);
         }
         //Most recent entry - intervalId not passed
-        return tableName.find({"Topology": {$elemMatch: {"OverlayId":overlayId}}}).sort({"_id": -1}).limit(1);
+        return tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ "_id": -1 }).limit(1);
     }
 
-    async checkOverlayUpdate() {
-        var data = null;
-        const pipeline = [{'$match': {'operationType': 'insert'}}]; //watch for insert operation
-        const overlayChangeStream = this.db.db('Evio').collection('Overlays').watch(pipeline);
-        overlayChangeStream.on('change', newData => {
-            console.log(newData);
-            data = [newData.fullDocument];
-            console.log("Inside mongo", data)
-	    return data;
-        });
-        async function streamReady(stream) {
-            return new Promise(ok => {
-                const i = setInterval(() => {
+    async checkOverlayUpdate(tableName, intervalId) {
+        var overlayData = this.getOverlays(tableName, intervalId)
+            .then(data => {
+                if (data.keys.length === 0) {
+                    console.log("No data found, setting data to null.")
+                    var data = null;
+                    const pipeline = [{ '$match': { 'operationType': 'insert' } }]; //watch for insert operation
+                    const overlayChangeStream = this.db.db('Evio').collection('Overlays').watch(pipeline);
+                    overlayChangeStream.on('change', changeData => {
+                        console.log("Found new data :", changeData);
+                        data = [changeData.fullDocument];
+                        console.log("Set data to ", data)
+                    });
+                }
+                var overlayInterval = setInterval(function () {
+                    console.log("Data at setInterval is ", data);
                     if (data) {
-                        clearInterval(i);
-                        return ok()
+                        clearInterval(overlayInterval)
+                        return data;
                     }
-                }, 100)
-            });
-        }
-	console.log("Awaiting data");
-        var newData = await streamReady(overlayChangeStream).then(res => {
-		console.log("Result got", data, res);
-		return data;
-	});
-	console.log("NewData", newData);
-	return newData;
-      }
+                });
+            })
+        console.log("Overlay Data:", overlayData);
+        return overlayData;
+    }
 }
 
 module.exports = { MongoDBImpl }

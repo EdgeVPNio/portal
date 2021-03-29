@@ -44,27 +44,9 @@ exports.findAllIntervals = (req, res, dbInstance) => {
  exports.findOverlays = (req, res, dbInstance) => {
 
   const intervalId = parseFloat(req.query.interval);
-  dbInstance.getOverlays(overlayModel, intervalId)
-  .then(data => {
-    //Flag to send data to client
-    //console.log("Data is " + data)
-    if (Object.keys(data).length == 0) {
-      console.log("Calling promise")
-      data = null;//data not available yet, waiting for insert
-      //console.log("data not found");
-      dbInstance.checkOverlayUpdate().then(res => {
-         console.log("Got result in check:", res); 
-	 data = res
-    })
-  }
-    var overlayInterval = setInterval(function() {
-      console.log("Inside interval", data)
-      if (data) {
-        console.log("Sending data", data)
-        res.send(data);
-        clearInterval(overlayInterval);
-      }
-    }, 1000)
+  dbInstance.checkOverlayUpdate(overlayModel, intervalId).then(data => {
+      console.log("Response data being sent:", data);
+      res.send(data)
   })
   .catch(err => {
     res.status(502).send({
