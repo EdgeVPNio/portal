@@ -12,7 +12,7 @@ export default class Topology {
         var nodesData = response[0].Topology[0].Nodes;
         for (var idx in nodesData) {
             var node = nodesData[idx];
-            if(node.Edges.length == 0) {
+            if (node.Edges.length == 0) {
                 //No tunnels node
                 var nodeData = {
                     group: "nodes",
@@ -35,6 +35,7 @@ export default class Topology {
                 nodeDetails[node.NodeId] = nodeDetail;
                 continue;
             }
+            //Connected nodes
             var nodeData = {
                 group: "nodes",
                 data: {
@@ -43,7 +44,7 @@ export default class Topology {
                     state: "Connected",
                     type: "",
                     coordinate: node.GeoCoordinates,
-		    color: '#8AA626'
+                    color: '#8AA626'
                 }
             }
             nodes.push(nodeData);
@@ -56,6 +57,7 @@ export default class Topology {
             nodeDetails[node.NodeId] = nodeDetail;
             var edgesData = node.Edges;
             for (var edgeidx in edgesData) {
+                //Processing edges for each connected node
                 var edge = edgesData[edgeidx];
                 nodeSet.add(edge.PeerId);
                 var edgeData = {
@@ -82,7 +84,7 @@ export default class Topology {
                     target: edge.PeerId,
                     raw_data: edge
                 }
-                
+
                 if (!edgeDetails[edge.EdgeId]) {
                     edgeDetails[edge.EdgeId] = {};
                 }
@@ -108,7 +110,7 @@ export default class Topology {
                         state: "Not Reporting",
                         type: "",
                         coordinate: "",
-			color: "#ADD8E6"
+                        color: "#ADD8E6"
                     }
                 }
                 nodes.push(nodeData);
@@ -118,7 +120,8 @@ export default class Topology {
         //console.log("topology:", topology);
         //console.log("nodeDetails:", nodeDetails);
         //console.log("edgeDetails: ", edgeDetails);
-        nodes.sort(function(a, b) {
+        //Logic to display in sorted cyclic order on cytoscape ring
+        nodes.sort(function (a, b) {
             return a.data['id'].localeCompare(b.data['id']);
         })
         nodes.forEach(node => topology.push(node))
@@ -128,7 +131,6 @@ export default class Topology {
         }
 
         this.getNodeDetails = (id) => {
-
             return nodeDetails[id];
         }
 

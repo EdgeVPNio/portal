@@ -3,7 +3,7 @@ import 'react-tippy/dist/tippy.css'
 import { Spinner } from 'react-bootstrap'
 import { Tooltip } from 'react-tippy'
 import RightPanel from './RightPanel'
-import OthersView from './OthersView'
+import TopologyView from './TopologyView'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import CollapsibleButton from './CollapsibleButton'
 import { Typeahead } from 'react-bootstrap-typeahead'
@@ -20,36 +20,35 @@ class OverlaysView extends React.Component {
       selectedOverlay: null,
       isToggle: true
     }
-    this.doOverlayUpdate = true;
-    this.selectedOverlayId = null;
-    this.selectOverlayFlag = false; //flag to switch views
+    this.doOverlayUpdate = true; //flag to monitor GET Overlays polling
+    this.selectOverlayFlag = false; //flag to switch views (OverlaysView <-> TopologyView)
   }
 
+  /**
+   * Polling function on GET Overlays data - runs untill doOverlayUpdate is disabled
+   * @param {String} intervalId 
+   */
   async getOverlaysData(intervalId) {
 
     var url = '/overlays?interval=' + intervalId
-    console.log(url);
-    
+    //console.log(url);
+
     await fetch(url).then(res => {
-      console.log(res)
-      return res.json()})
-    .then(res => {
-      if(res.status == 502) {
-        //connection timeout error
-        console.log("waiting for new data");
-        this.getOverlaysData(intervalId);
-      }else{
+      //console.log(res)
+      return res.json()
+    })
+      .then(res => {
         //Got response, display the data
         //console.log("got response");
-        this.setState({overlays : new Overlays(res)});
+        this.setState({ overlays: new Overlays(res) });
         intervalId = res[0]._id;
         if (this.doOverlayUpdate) {
+          //flag disabled when switched to TopologyView
           this.getOverlaysData(intervalId);
         }
-      }
-    }).catch(err => {
-      console.log('error has been occured on fetch overlay process.' + err);
-    })
+      }).catch(err => {
+        console.log('error has been occured on fetch overlay process.' + err);
+      })
   }
 
   componentDidMount() {
@@ -95,7 +94,7 @@ class OverlaysView extends React.Component {
   }
 
   renderGraphContent = () => {
-    return <OthersView overlayName={this.state.selectedOverlay} />
+    return <TopologyView overlayName={this.state.selectedOverlay} />
   }
 
   renderOverlaysContent = () => {
@@ -130,15 +129,6 @@ class OverlaysView extends React.Component {
     this.setState({ selectedOverlay: overlayId })
     this.doOverlayUpdate = false;
     this.selectOverlayFlag = true;
-    /*var url = '/topology?overlayid=' + overlayId + '&interval='
-    fetch(url).then(res => {
-      return res.json();})
-      .then(res => {
-        //logic to process the GET topology
-        this.setState({topology : new Topology(res)});
-      }).catch(err => {
-        console.log('Error occured on fetch topology process' + err);
-    })*/
   }
 
 
@@ -150,7 +140,6 @@ class OverlaysView extends React.Component {
           id="searchOverlay"
           onChange={(selected) => {
             try {
-              this.selectedOverlayId = selected[0];
               this.selectOverlay(selected[0])
             } catch {
               console.log('Error has been occured on select search result.')
@@ -173,8 +162,6 @@ class OverlaysView extends React.Component {
         >
         </Typeahead>
       </Header>
-
-      {/* <button onClick={this.handleRightPanelToggle} id="overlayRightPanelBtn" /> */}
 
       <div id="mainContent" className="row" style={{ backgroundColor: '#101B2B', color: 'white', margin: 'auto' }}>
         {this.renderMainContent()}

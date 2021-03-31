@@ -19,7 +19,7 @@ import GoogleMapReact from 'google-map-react'
 import Topology from './Topology'
 import { Spinner } from 'react-bootstrap'
 
-class OthersView extends React.Component {
+class TopologyView extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -30,7 +30,6 @@ class OthersView extends React.Component {
       graphElement: [],
       dataReady: false,
       refresh: false,
-      // cytoscape: null,
       switchToggle: false,
       infoToggle: true,
       configToggle: true,
@@ -40,39 +39,45 @@ class OthersView extends React.Component {
       currentView: null,
       topology: null
     }
-    this.autoRefresh = true;
+    this.autoRefresh = true; //flag to monitor autoRefresh onClick of refresh button
   }
 
- async getTopology(overlayId, intervalId) {
+  /**
+   * Polling function on GET Topology data - runs untill autoRefresh is disabled
+   * @param {String} overlayId 
+   * @param {String} intervalId 
+   */
+  async getTopology(overlayId, intervalId) {
     var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId;
-    console.log("URL for topology:", url);
+    //console.log("URL for topology:", url);
 
     await fetch(url)
-    .then(res => {
-	console.log(res);
-	return res.json()})
-    .then(res => {
-      if (this.autoRefresh) {
-        this.setState({topology : new Topology(res)});
-	this.renderGraph();
-	this.prepareSearch();
-	intervalId = res[0]._id;
-        this.getTopology(overlayId, intervalId);
-      } 
-    })
-    .catch(err => {
-      console.log("Failed to fetch details due to ", err);
-      this.getTopology(overlayId, intervalId)
-    })
+      .then(res => {
+        //console.log(res);
+        return res.json()
+      })
+      .then(res => {
+        if (this.autoRefresh) {
+          this.setState({ topology: new Topology(res) });
+          this.renderGraph();
+          this.prepareSearch();
+          intervalId = res[0]._id;
+          this.getTopology(overlayId, intervalId);
+        }
+      })
+      .catch(err => {
+        console.log("Failed to fetch details due to ", err);
+        this.getTopology(overlayId, intervalId)
+      })
   }
 
   componentDidMount() {
     if (this.autoRefresh) {
-    	this.getTopology(this.props.overlayName);
-     } 
-
-     this.renderGraph();
-     this.prepareSearch();
+      this.getTopology(this.props.overlayName);
+    } else {
+      this.renderGraph();
+      this.prepareSearch();
+    }
   }
 
   prepareSearch() {
@@ -103,7 +108,6 @@ class OthersView extends React.Component {
         selected={this.state.selected}
         selectHintOnEnter
         placeholder={'select a node or tunnel'}
-        // renderToken={(option) => { return JSON.parse(option).data.label }}
         renderMenuItemChildren={(option) => {
           return (
             <div className='searchResult'>
@@ -122,43 +126,44 @@ class OthersView extends React.Component {
   renderNodeDetails = () => {
     var sourceNode = this.state.nodeDetails.sourceNode
     var connectedNodes = this.state.nodeDetails.connectedNodes
-    if(sourceNode.raw_data == " ") {
-	//Not reporting nodes
-	 var nodeContent = <div>
+    if (sourceNode.raw_data == " ") {
+      //Not reporting nodes
+      var nodeContent = <div>
 
-          <h5>{sourceNode.id.slice(sourceNode.id.length - 6)}</h5>
+        <h5>{sourceNode.id.slice(sourceNode.id.length - 6)}</h5>
 
-          <div className="DetailsLabel">Node ID</div>
-          <label id="valueLabel">{sourceNode.id}</label>
+        <div className="DetailsLabel">Node ID</div>
+        <label id="valueLabel">{sourceNode.id}</label>
 
-          <div className="DetailsLabel">State</div>
-          <label id="valueLabel">{sourceNode.state}</label>
+        <div className="DetailsLabel">State</div>
+        <label id="valueLabel">{sourceNode.state}</label>
 
-          <div className="DetailsLabel">Location</div>
-          <label id="valueLabel">{"Unknown"}</label>
-          <hr style={{ backgroundColor: '#486186' }} />
-          <br /><br />
+        <div className="DetailsLabel">Location</div>
+        <label id="valueLabel">{"Unknown"}</label>
+        <hr style={{ backgroundColor: '#486186' }} />
+        <br /><br />
 
-          </div>
+      </div>
 
 
-	ReactDOM.render(nodeContent, document.getElementById('rightPanelContent'))
-	return;
+      ReactDOM.render(nodeContent, document.getElementById('rightPanelContent'))
+      return;
     }
-    var coordinate = sourceNode.raw_data['GeoCoordinates'].split(',')
 
+    var coordinate = sourceNode.raw_data['GeoCoordinates'].split(',')
+    //GET location from coordinates passed from evio nodes through google API
     fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinate[0]},${coordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
       .then(res => res.json()).then((data) => {
         // //console.log(data)
         try {
           return data.results[data.results.length - 1].formatted_address
-        } catch{
+        } catch {
           return '-'
         }
       }).then((location) => {
         var nodeContent = <div>
 
-	<h5>{sourceNode.name}</h5>
+          <h5>{sourceNode.name}</h5>
 
           <div id="DetailsLabel">Node ID</div>
           <label id="valueLabel">{sourceNode.id}</label>
@@ -216,110 +221,96 @@ class OthersView extends React.Component {
     var sourceNodeDetails = this.state.linkDetails.sourceNodeDetails
     var targetNodeDetails = this.state.linkDetails.targetNodeDetails
 
-    //console.log(linkDetails);
-    //console.log(sourceNodeDetails);
-    //console.log(targetNodeDetails);
-    if(sourceNodeDetails.raw_data == " " && targetNodeDetails.raw_data == " ") {
-	    //both nodes of the edge are not reporting
-	    var linkContent = <div>
-		    <label id="valueLabel">{"Data not available"}</label>
-		    </div>
-	   ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
-	   return;
+    if (sourceNodeDetails.raw_data == " " && targetNodeDetails.raw_data == " ") {
+      //both nodes of the edge are not reporting
+      var linkContent = <div>
+        <label id="valueLabel">{"Data not available"}</label>
+      </div>
+      ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
+      return;
     }
 
-    if(sourceNodeDetails.raw_data == " " || targetNodeDetails.raw_data == " ") {
-	//if either of nodes is not reporting
-	var linkContent = <div>
-              <h5>{linkDetails.name}</h5>
+    if (sourceNodeDetails.raw_data == " " || targetNodeDetails.raw_data == " ") {
+      //if either of nodes is not reporting
+      var linkContent = <div>
+        <h5>{linkDetails.name}</h5>
 
-              <div className="row">
+        <div className="row">
 
-                <div className="col-10" style={{ paddingRight: '0' }}>
+          <div className="col-10" style={{ paddingRight: '0' }}>
 
-                  <CollapsibleButton
-                    id={sourceNodeDetails.id + 'Btn'}
-                    className='sourceNodeBtn'
-                    key={sourceNodeDetails.id + 'Btn'}
-                    eventKey={sourceNodeDetails.id + 'Btn'}
-                    name={sourceNodeDetails.name}
-                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
-                  >
+            <CollapsibleButton
+              id={sourceNodeDetails.id + 'Btn'}
+              className='sourceNodeBtn'
+              key={sourceNodeDetails.id + 'Btn'}
+              eventKey={sourceNodeDetails.id + 'Btn'}
+              name={sourceNodeDetails.name}
+              style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+            >
 
-                    <div className="DetailsLabel">Node ID</div>
-                    <label id="valueLabel">{sourceNodeDetails.id}</label>
+              <div className="DetailsLabel">Node ID</div>
+              <label id="valueLabel">{sourceNodeDetails.id}</label>
 
-                  </CollapsibleButton>
+            </CollapsibleButton>
 
-                  <CollapsibleButton
-                    id={targetNodeDetails.id + 'Btn'}
-                    className='targetNodeBtn'
-                    key={targetNodeDetails.id + 'Btn'}
-                    eventKey={targetNodeDetails.id + 'Btn'}
-                    name={targetNodeDetails.name}
-                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
-                  >
+            <CollapsibleButton
+              id={targetNodeDetails.id + 'Btn'}
+              className='targetNodeBtn'
+              key={targetNodeDetails.id + 'Btn'}
+              eventKey={targetNodeDetails.id + 'Btn'}
+              name={targetNodeDetails.name}
+              style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+            >
 
-                    <div className="DetailsLabel">Node ID</div>
-	            <label id="valueLabel">{targetNodeDetails.id}</label>
+              <div className="DetailsLabel">Node ID</div>
+              <label id="valueLabel">{targetNodeDetails.id}</label>
 
-                  </CollapsibleButton>
+            </CollapsibleButton>
 
-                </div>
+          </div>
 
-                <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
-                  <button onClick={this.handleSwitch} id="switchBtn" />
-                </div>
+          <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
+            <button onClick={this.handleSwitch} id="switchBtn" />
+          </div>
 
-              </div>
-              <hr style={{ backgroundColor: '#486186' }} />
-              <div className="DetailsLabel">Tunnel ID</div>
-              <label id="valueLabel">{linkDetails.id}</label>
-              <div className="DetailsLabel">Interface Name</div>
-              <label id="valueLabel">{linkDetails.name}</label>
-              <div className="DetailsLabel">MAC</div>
-              <label id="valueLabel">{linkDetails.MAC}</label>
-              <div className="DetailsLabel">State</div>
-	      <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
-              <div className="DetailsLabel">Tunnel Type</div>
-              <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
+        </div>
+        <hr style={{ backgroundColor: '#486186' }} />
+        <div className="DetailsLabel">Tunnel ID</div>
+        <label id="valueLabel">{linkDetails.id}</label>
+        <div className="DetailsLabel">Interface Name</div>
+        <label id="valueLabel">{linkDetails.name}</label>
+        <div className="DetailsLabel">MAC</div>
+        <label id="valueLabel">{linkDetails.MAC}</label>
+        <div className="DetailsLabel">State</div>
+        <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
+        <div className="DetailsLabel">Tunnel Type</div>
+        <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
 
-            </div >
-            ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
+      </div >
+      ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
     }
 
     const srcCoordinate = sourceNodeDetails.raw_data['GeoCoordinates'].split(',')
 
     const tgtCoordinate = targetNodeDetails.raw_data['GeoCoordinates'].split(',')
-
+    //GET location from coordinates passed for source evio node through google API
     fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${srcCoordinate[0]},${srcCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
       .then(res => res.json()).then(data => {
         try {
           return data.results[data.results.length - 1].formatted_address
-        } catch{
+        } catch {
           return '-'
         }
       }).then(sourceLocation => {
+        //GET location from coordinates passed for target evio node through google API
         fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${tgtCoordinate[0]},${tgtCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
           .then(res => res.json()).then(data => {
             try {
               return data.results[data.results.length - 1].formatted_address
-            } catch{
+            } catch {
               return '-'
             }
           }).then(targetLocation => {
-            /*let sourceNodeColor
-            let targetNodeColor
-            this.cy.elements('nodes').forEach((node) => {
-              if (node.data().id == sourceNodeDetails.id) {
-                sourceNodeColor = node.css('background-color')
-              }
-            })
-            this.cy.elements('nodes').forEach((node) => {
-              if (node.data().id == targetNodeDetails.id) {
-                targetNodeColor = node.css('background-color')
-              }
-            })*/
             var linkContent = <div>
               <h5>{linkDetails.name}</h5>
 
@@ -333,7 +324,7 @@ class OthersView extends React.Component {
                     key={sourceNodeDetails.id + 'Btn'}
                     eventKey={sourceNodeDetails.id + 'Btn'}
                     name={sourceNodeDetails.name}
-                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
+                    style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
                   >
 
                     <div className="DetailsLabel">Node ID</div>
@@ -353,7 +344,7 @@ class OthersView extends React.Component {
                     key={targetNodeDetails.id + 'Btn'}
                     eventKey={targetNodeDetails.id + 'Btn'}
                     name={targetNodeDetails.name}
-                    style={{ marginBottom: '2.5%',backgroundColor:'#8aa626',border:`solid #8aa626` }}
+                    style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
                   >
 
                     <div className="DetailsLabel">Node ID</div>
@@ -497,101 +488,96 @@ class OthersView extends React.Component {
 
   renderGraph = () => {
     if (this.state.topology === null) {
-	return <Spinner id='loading' animation='border' variant='info' />
+      return <Spinner id='loading' animation='border' variant='info' />
     } else {
-    this.setState({ currentView: 'Topology' })
-    ReactDOM.render(<Cytoscape id="cy"
-      cy={(cy) => {
-        this.cy = cy
+      this.setState({ currentView: 'Topology' })
+      ReactDOM.render(<Cytoscape id="cy"
+        cy={(cy) => {
+          this.cy = cy
 
-        this.setState({ cytoscape: cy })
+          this.setState({ cytoscape: cy })
 
-        this.cy.maxZoom(this.state.initMaxZoom)
-        this.cy.minZoom(this.state.initMinZoom)
-        this.cy.zoom(0.8)
-        this.cy.center()
+          this.cy.maxZoom(this.state.initMaxZoom)
+          this.cy.minZoom(this.state.initMinZoom)
+          this.cy.zoom(0.8)
+          this.cy.center()
 
-        var that = this
+          var that = this
 
-        if (this.state.currentSelectedElement !== null) {
-          if (this.state.currentSelectedElement.isNode()) {
-            var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
-            var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-            var notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-            selectedElement.select()
-            relatedElement.removeClass('transparent')
-            notRelatedElement.addClass('transparent')
-          } else if (this.state.currentSelectedElement.isEdge()) {
-            //    //console.log(this.state.currentSelectedElement)
-            var relatedElement2 = this.state.currentSelectedElement.connectedNodes().union(this.state.currentSelectedElement)
-            var notRelatedElement2 = this.cy.elements().difference(this.state.currentSelectedElement.connectedNodes()).not(this.state.currentSelectedElement)
-            // var relatedElement2 = selectedElement.connectedNodes().union(selectedElement);
-            // var notRelatedElement2 = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement);
-            this.state.currentSelectedElement.select()
-            relatedElement2.removeClass('transparent')
-            notRelatedElement2.addClass('transparent')
-          } 
-        }
-
-        this.cy.on('click', function (e) {
-          var selectedElement = e.target[0]
-          var relatedElement
-          var notRelatedElement
-          try {
-            if (document.getElementById('rightPanel').hidden === true) {
-              document.getElementById('overlayRightPanelBtn').click()
-            }
-            if (selectedElement.isNode()) {
-              that.setNodeDetails(selectedElement)
-              relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-              notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-            } else if (selectedElement.isEdge()) {
-              that.setLinkDetails(selectedElement)
-              relatedElement = selectedElement.connectedNodes().union(selectedElement)
-              notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
-            } 
-
-            if (document.getElementById('viewSelector').value !== 'Subgraph') {
+          if (this.state.currentSelectedElement !== null) {
+            if (this.state.currentSelectedElement.isNode()) {
+              var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
+              var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
+              var notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
+              selectedElement.select()
               relatedElement.removeClass('transparent')
               notRelatedElement.addClass('transparent')
-            }
-          } catch {
-            // //console.log(e.target[0]===this.cy);
-            if (e.target[0] === this.cy) {
-              // document.getElementById('rightPanelBtn').click()
-              ReactDOM.render(<></>, document.getElementById('rightPanelContent'))
-              that.cy.elements().removeClass('transparent')
-            }
-          } finally {
-            if (e.target[0] !== this.cy) {
-              that.setState({ switchToggle: false, currentSelectedElement: e.target })
-            } else {
-              that.setState({ switchToggle: true, currentSelectedElement: null })
+            } else if (this.state.currentSelectedElement.isEdge()) {
+              var relatedElement2 = this.state.currentSelectedElement.connectedNodes().union(this.state.currentSelectedElement)
+              var notRelatedElement2 = this.cy.elements().difference(this.state.currentSelectedElement.connectedNodes()).not(this.state.currentSelectedElement)
+              this.state.currentSelectedElement.select()
+              relatedElement2.removeClass('transparent')
+              notRelatedElement2.addClass('transparent')
             }
           }
-        })
-      }}
-      wheelSensitivity={0.1}
 
-      elements={this.state.topology.getAlltopology()}
+          this.cy.on('click', function (e) {
+            var selectedElement = e.target[0]
+            var relatedElement
+            var notRelatedElement
+            try {
+              if (document.getElementById('rightPanel').hidden === true) {
+                document.getElementById('overlayRightPanelBtn').click()
+              }
+              if (selectedElement.isNode()) {
+                that.setNodeDetails(selectedElement)
+                relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
+                notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
+              } else if (selectedElement.isEdge()) {
+                that.setLinkDetails(selectedElement)
+                relatedElement = selectedElement.connectedNodes().union(selectedElement)
+                notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
+              }
 
-      stylesheet={cytoscapeStyle}
+              if (document.getElementById('viewSelector').value !== 'Subgraph') {
+                relatedElement.removeClass('transparent')
+                notRelatedElement.addClass('transparent')
+              }
+            } catch {
+              if (e.target[0] === this.cy) {
+                ReactDOM.render(<></>, document.getElementById('rightPanelContent'))
+                that.cy.elements().removeClass('transparent')
+              }
+            } finally {
+              if (e.target[0] !== this.cy) {
+                that.setState({ switchToggle: false, currentSelectedElement: e.target })
+              } else {
+                that.setState({ switchToggle: true, currentSelectedElement: null })
+              }
+            }
+          })
+        }}
+        wheelSensitivity={0.1}
 
-      style={{ width: window.innerWidth, height: window.innerHeight }}
+        elements={this.state.topology.getAlltopology()}
 
-      layout={{ name: 'circle', clockwise: true}}
+        stylesheet={cytoscapeStyle}
 
-      
-    />, document.getElementById('midArea'))
+        style={{ width: window.innerWidth, height: window.innerHeight }}
 
-    ReactDOM.render(<select defaultValue="Topology" onChange={this.handleViewSelector} id="viewSelector" className="custom-select">
-      <option value="Topology">Topology</option>
-      <option value="Subgraph">Subgraph</option>
-      <option value="Map">Map</option>
-      <option value="Log">Log</option>
-      <option value="NetworkFlow">NetworkFlow</option>
-      <option value="TunnelUtilization">TunnelUtilization</option>
-    </select>, document.getElementById('viewBar'))
+        layout={{ name: 'circle', clockwise: true }}
+
+
+      />, document.getElementById('midArea'))
+
+      ReactDOM.render(<select defaultValue="Topology" onChange={this.handleViewSelector} id="viewSelector" className="custom-select">
+        <option value="Topology">Topology</option>
+        <option value="Subgraph">Subgraph</option>
+        <option value="Map">Map</option>
+        <option value="Log">Log</option>
+        <option value="NetworkFlow">NetworkFlow</option>
+        <option value="TunnelUtilization">TunnelUtilization</option>
+      </select>, document.getElementById('viewBar'))
     }
   }
 
@@ -615,8 +601,7 @@ class OthersView extends React.Component {
       document.getElementById('refreshBtn').style.opacity = '0.4';
       this.autoRefresh = false;
     }
-    console.log("Handled refresh, called update");
-    //this.cy.center()
+    console.log("Handled refresh, called update with refresh set to", this.autoRefresh);
     this.getTopology(this.props.overlayName);
   }
 
@@ -665,7 +650,7 @@ class OthersView extends React.Component {
   }
 
   handleBackToHome = () => {
-      window.location.reload(true)
+    window.location.reload(true)
   }
 
   renderSubgraph = () => {
@@ -756,8 +741,6 @@ class OthersView extends React.Component {
             var unmappedElement = selectedElement.connectedNodes().filter((element) => {
               return that.hasCoordinate(element) === false
             })
-            //console.log(selectedElement)
-            // console.log(relatedElement)
             var centerPoint, map
             if (relatedElement.length !== 0) {
               centerPoint = this.midpoint(parseFloat(relatedElement[0].data().coordinate.split(',')[0]), parseFloat(relatedElement[0].data().coordinate.split(',')[1]), parseFloat(relatedElement[1].data().coordinate.split(',')[0]), parseFloat(relatedElement[1].data().coordinate.split(',')[1]))
@@ -814,8 +797,6 @@ class OthersView extends React.Component {
             resolve(true)
           } catch (e) {
             console.log(e)
-            // alert("You have to select a node.")
-            // document.getElementById("viewSelector").value = this.state.currentView;
             reject(false)
           }
         })
@@ -896,150 +877,7 @@ class OthersView extends React.Component {
   }
 
   componentDidUpdate() {
-  //   this.renderTopology();
-    /*if (this.cy != null && this.cy != undefined) {
-      var nodes = this.cy.elements('nodes')
-      nodes.toArray().forEach((node) => {
-        if (node.incomers().length == 0 && node.outgoers().length == 0) {
-          node.addClass('noTunnel')
-        }
-      })
-    }
-
-    if (this.state.currentView === 'Map') {
-      document.getElementById('elementBreadcrumb').hidden = true
-      document.getElementById('overlayBreadcrumb').hidden = true
-      document.getElementById('homeBtn').hidden = true
-      document.getElementById('refreshBtn').hidden = true
-      document.getElementById('configBtn').hidden = true
-      document.getElementById('infoBtn').hidden = true
-      document.getElementById('plusBtn').hidden = true
-      document.getElementById('minusBtn').hidden = true
-      document.getElementById('zoomSlider').hidden = true
-      var selectedElement = this.state.currentSelectedElement
-      if (this.state.currentSelectedElement.isNode()) {
-        try {
-          var nodeRelatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement).filter(element => {
-            return element.isNode() && this.hasCoordinate(element)
-          })
-          //console.log(nodeRelatedElement)
-          var nodeMap
-          if (nodeRelatedElement.length !== 0) {
-
-            nodeMap = <GoogleMapReact
-              bootstrapURLKeys={{
-                key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                language: 'en'
-              }}
-              center={{ lat: parseFloat(selectedElement.data().coordinate.split(',')[0]), lng: parseFloat(selectedElement.data().coordinate.split(',')[1]) }}
-              defaultZoom={8}
-            >
-
-              {nodeRelatedElement.map(node => {
-                if (node.data().id === this.state.currentSelectedElement.data().id) {
-                  return <button onClick={this.handleMakerClicked.bind(this, node)} key={node.data().id + 'Marker'} id={node.data().id + 'Marker'} className="nodeMarker selected" lat={parseFloat(node.data().coordinate.split(',')[0])} lng={parseFloat(node.data().coordinate.split(',')[1])}>
-                    <label className="markerLabel">
-                      {node.data().label}
-                    </label>
-                  </button>
-                } else {
-                  return <button onClick={this.handleMakerClicked.bind(this, node)} key={node.data().id + 'Marker'} id={node.data().id + 'Marker'} className="nodeMarker" lat={parseFloat(node.data().coordinate.split(',')[0])} lng={parseFloat(node.data().coordinate.split(',')[1])}>
-                    <label className="markerLabel">
-                      {node.data().label}
-                    </label>
-                  </button>
-                }
-              })}
-
-            </GoogleMapReact>
-          } else {
-            nodeMap = <GoogleMapReact
-              bootstrapURLKeys={{
-                key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                language: 'en'
-              }}
-              center={{ lat: parseFloat('15.8700'), lng: parseFloat('100.9925') }}
-              defaultZoom={8}
-            >
-            </GoogleMapReact>
-          }
-          // alert('The visualizer can t find any coordinate of connected node.')
-          ReactDOM.render(nodeMap, document.getElementById('midArea'))
-        } catch (e) {
-          //console.log(e)
-          alert('You have to select a node.')
-          document.getElementById('viewSelector').value = this.state.currentView
-        }
-      } else if (this.state.currentSelectedElement.isEdge()) {
-        try {
-          var edgeRelatedElement = selectedElement.connectedNodes().filter((element) => {
-            return this.hasCoordinate(element)
-          })
-          var unmappedElement = selectedElement.connectedNodes().filter((element) => {
-            return this.hasCoordinate(element) === false
-          })
-          //console.log(edgeRelatedElement)
-          var centerPoint, edgeMap
-          if (edgeRelatedElement.length !== 0) {
-
-            centerPoint = this.midpoint(parseFloat(edgeRelatedElement[0].data().coordinate.split(',')[0]), parseFloat(edgeRelatedElement[0].data().coordinate.split(',')[1]), parseFloat(edgeRelatedElement[1].data().coordinate.split(',')[0]), parseFloat(edgeRelatedElement[1].data().coordinate.split(',')[1]))
-            edgeMap = <GoogleMapReact
-              bootstrapURLKeys={{
-                key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                language: 'en'
-              }}
-              center={{ lat: centerPoint[0], lng: centerPoint[1] }}
-              defaultZoom={10}
-            >
-
-              {edgeRelatedElement.map(node => {
-                return <button onClick={this.handleMakerClicked.bind(this, node)} key={node.data().id + 'Marker'} id={node.data().id + 'Marker'} className="nodeMarker selected" lat={parseFloat(node.data().coordinate.split(',')[0])} lng={parseFloat(node.data().coordinate.split(',')[1])}>
-                  <label className="markerLabel">
-                    {node.data().label}
-                  </label>
-                </button>
-              })}
-
-            </GoogleMapReact>
-          } else {
-            centerPoint = [parseFloat('15.8700'), parseFloat('100.9925')]
-            edgeMap = <GoogleMapReact
-              bootstrapURLKeys={{
-                key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                language: 'en'
-              }}
-              center={{ lat: centerPoint[0], lng: centerPoint[1] }}
-              defaultZoom={10}
-            >
-              <Card id="non-coordinate-card">
-                <Card.Header>
-                  Unmapped nodes.
-                  </Card.Header>
-                <Card.Body>
-                  {unmappedElement.map(node => {
-                    return <button onClick={this.handleMakerClicked.bind(this, node)} key={node.data().id + 'Marker'} id={node.data().id + 'Marker'} className="nodeMarker">
-                      <label className="markerLabel">
-                        {node.data().label}
-                      </label>
-                    </button>
-                  })}
-                </Card.Body>
-              </Card>
-            </GoogleMapReact>
-
-
-
-            // alert('The visualizer can t find any coordinate of connected node.')
-          }
-
-          ReactDOM.render(edgeMap, document.getElementById('midArea'))
-        } catch (e) {
-          //console.log(e)
-          // alert("You have to select a node.")
-          // document.getElementById("viewSelector").value = this.state.currentView;
-        }
-      }
-    }*/
+    
   }
 
   handleViewSelector = (e) => {
@@ -1181,15 +1019,9 @@ class OthersView extends React.Component {
       <RightPanel rightPanelTopic="Details"></RightPanel>
 
     </>
-  /*  if (this.state.topology !== null) {
-      // this.prepareSearch();
-      this.renderGraph();
-    } else {
-      return <Spinner id='loading' animation='border' variant='info' />
-    }*/
   }
 }
 
-export default OthersView
+export default TopologyView
 
 

@@ -1,10 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&family=Merriweather&display=swap');
 
-/* customize global 
-* {
-    font-family: 'Roboto', sans-serif;
-}*/
 
 #root {
     width           : 100vw;

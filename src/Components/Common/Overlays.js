@@ -30,10 +30,5 @@ export default class Overlays {
     this.getNumberOfLinks = (overlay) => {
       return overlayList.find(element => element.name === overlay).numberOfLinks
     }
-    // this.getOverlayDescription = (overlay) => {
-    //   return "EVio"
-    // }
-
-
   }
 }
