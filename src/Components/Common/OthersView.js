@@ -16,7 +16,8 @@ import successor_ic from '../../Images/Icons/successor_ic.svg'
 import longdistance_ic from '../../Images/Icons/longdistance_ic.svg'
 import not_reporting_ic from '../../Images/Icons/not_reporting_ic.svg'
 import GoogleMapReact from 'google-map-react'
-import OverlaysView from './OverlaysView'
+import Topology from './Topology'
+import { Spinner } from 'react-bootstrap'
 
 class OthersView extends React.Component {
   constructor(props) {
@@ -36,19 +37,48 @@ class OthersView extends React.Component {
       nodeDetails: null,
       linkDetails: null,
       currentSelectedElement: null,
-      currentView: null
+      currentView: null,
+      topology: null
     }
     this.autoRefresh = true;
   }
 
-  componentDidMount() {
-    //document.getElementById('rightPanelBtn').click()
-    this.renderGraph()
-    //console.log(this.props.topology)
+ async getTopology(overlayId, intervalId) {
+    var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId;
+    console.log("URL for topology:", url);
 
+    await fetch(url)
+    .then(res => {
+	console.log(res);
+	return res.json()})
+    .then(res => {
+      if (this.autoRefresh) {
+        this.setState({topology : new Topology(res)});
+	this.renderGraph();
+	this.prepareSearch();
+	intervalId = res[0]._id;
+        this.getTopology(overlayId, intervalId);
+      } 
+    })
+    .catch(err => {
+      console.log("Failed to fetch details due to ", err);
+      this.getTopology(overlayId, intervalId)
+    })
+  }
+
+  componentDidMount() {
+    if (this.autoRefresh) {
+    	this.getTopology(this.props.overlayName);
+     } 
+
+     this.renderGraph();
+     this.prepareSearch();
+  }
+
+  prepareSearch() {
     var perpareSearchElement = new Promise((resolve, reject) => {
       try {
-        var searchElement = this.props.topology.getAlltopology().map((element) => { return JSON.stringify(element) })
+        var searchElement = this.state.topology.getAlltopology().map((element) => { return JSON.stringify(element) })
         resolve(searchElement)
       } catch (e) {
         reject(e)
@@ -86,7 +116,7 @@ class OthersView extends React.Component {
         }}
       >
       </Typeahead>, document.getElementById('searchBar'))
-    })
+    });
   }
 
   renderNodeDetails = () => {
@@ -144,7 +174,7 @@ class OthersView extends React.Component {
           <div id="connectedNode" style={{ overflow: 'auto' }}>
             {connectedNodes.map(connectedNode => {
               try {
-                var connectedNodeDetail = this.props.topology.getConnectedNodeDetails(sourceNode.id, connectedNode.data().id)
+                var connectedNodeDetail = this.state.topology.getConnectedNodeDetails(sourceNode.id, connectedNode.data().id)
                 var connectedNodeBtn =
                   <CollapsibleButton
                     id={connectedNode.data().id + 'Btn'}
@@ -389,9 +419,9 @@ class OthersView extends React.Component {
     var promise = new Promise(function (resolve, reject) {
       try {
         if (that.state.switchToggle) {
-          linkDetails = that.props.topology.getLinkDetails(that.state.currentSelectedElement.data().target, that.state.currentSelectedElement.data().id)
+          linkDetails = that.state.topology.getLinkDetails(that.state.currentSelectedElement.data().target, that.state.currentSelectedElement.data().id)
         } else {
-          linkDetails = that.props.topology.getLinkDetails(that.state.currentSelectedElement.data().source, that.state.currentSelectedElement.data().id)
+          linkDetails = that.state.topology.getLinkDetails(that.state.currentSelectedElement.data().source, that.state.currentSelectedElement.data().id)
         }
         resolve(linkDetails)
       } catch {
@@ -415,7 +445,7 @@ class OthersView extends React.Component {
     var promise = new Promise(function (resolve, reject) {
       try {
 
-        var sourceNode = that.props.topology.getNodeDetails(node.data().id)
+        var sourceNode = that.state.topology.getNodeDetails(node.data().id)
 
         var connectedNodes = that.cy.elements(node.incomers().union(node.outgoers())).filter((element) => {
           return element.isNode()
@@ -440,15 +470,15 @@ class OthersView extends React.Component {
     var that = this
     var promise = new Promise(function (resolve, reject) {
       try {
-        var linkDetails = that.props.topology.getLinkDetails(link.data().source, link.data().id)
+        var linkDetails = that.state.topology.getLinkDetails(link.data().source, link.data().id)
 
         var sourceNode = link.data().source
 
         var targetNode = link.data().target
 
-        var sourceNodeDetails = that.props.topology.getNodeDetails(link.data().source)
+        var sourceNodeDetails = that.state.topology.getNodeDetails(link.data().source)
 
-        var targetNodeDetails = that.props.topology.getNodeDetails(link.data().target)
+        var targetNodeDetails = that.state.topology.getNodeDetails(link.data().target)
 
         that.setState({ linkDetails: { linkDetails: linkDetails, sourceNode: sourceNode, targetNode: targetNode, sourceNodeDetails: sourceNodeDetails, targetNodeDetails: targetNodeDetails } })
 
@@ -466,6 +496,9 @@ class OthersView extends React.Component {
   }
 
   renderGraph = () => {
+    if (this.state.topology === null) {
+	return <Spinner id='loading' animation='border' variant='info' />
+    } else {
     this.setState({ currentView: 'Topology' })
     ReactDOM.render(<Cytoscape id="cy"
       cy={(cy) => {
@@ -540,7 +573,7 @@ class OthersView extends React.Component {
       }}
       wheelSensitivity={0.1}
 
-      elements={this.props.topology.getAlltopology()}
+      elements={this.state.topology.getAlltopology()}
 
       stylesheet={cytoscapeStyle}
 
@@ -559,6 +592,7 @@ class OthersView extends React.Component {
       <option value="NetworkFlow">NetworkFlow</option>
       <option value="TunnelUtilization">TunnelUtilization</option>
     </select>, document.getElementById('viewBar'))
+    }
   }
 
   elementFilter = (element, props) => {
@@ -582,7 +616,8 @@ class OthersView extends React.Component {
       this.autoRefresh = false;
     }
     console.log("Handled refresh, called update");
-    this.cy.center()
+    //this.cy.center()
+    this.getTopology(this.props.overlayName);
   }
 
   zoomIn = () => {
@@ -861,7 +896,7 @@ class OthersView extends React.Component {
   }
 
   componentDidUpdate() {
-     this.renderTopology();
+  //   this.renderTopology();
     /*if (this.cy != null && this.cy != undefined) {
       var nodes = this.cy.elements('nodes')
       nodes.toArray().forEach((node) => {
@@ -1018,6 +1053,7 @@ class OthersView extends React.Component {
   }
 
 
+
   render() {
     return <>
       <div id="leftTools">
@@ -1145,8 +1181,15 @@ class OthersView extends React.Component {
       <RightPanel rightPanelTopic="Details"></RightPanel>
 
     </>
+  /*  if (this.state.topology !== null) {
+      // this.prepareSearch();
+      this.renderGraph();
+    } else {
+      return <Spinner id='loading' animation='border' variant='info' />
+    }*/
   }
 }
 
 export default OthersView
+
 

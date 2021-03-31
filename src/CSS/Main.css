@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css?family=Times+New+Roman');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&family=Merriweather&display=swap');
 
 /* customize global 
 * {
@@ -22,7 +22,7 @@ header {
 }
 
 h5 {
-    font-family: 'Times New Roman', Times, serif;
+    font-family: 'IBM Plex Sans', sans-serif;
 	color: #56c5bc;
 }
 
@@ -44,7 +44,7 @@ h5 {
 }
 
 #valueLabel {
-	font-family: 'Times New Roman', Times, serif;
+	font-family: 'IBM Plex Sans', sans-serif;
 	color: #56c5bc;
 }
 
