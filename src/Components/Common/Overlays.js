@@ -4,7 +4,7 @@ export default class Overlays {
     var overlayList = []
     //Add every overlay from retrieved overlays for a given interval into overlayList
     overlays.forEach(obj => obj['Overlays'].forEach(overlay => {
-      console.log(overlay)
+      //console.log(overlay)
       const overlayStr = { name: overlay.OverlayId, numberOfNodes: overlay.NumNodes, numberOfLinks: overlay.NumEdges }
       overlayList.push(overlayStr)
     }))

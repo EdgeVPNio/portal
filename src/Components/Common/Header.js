@@ -1,5 +1,4 @@
 import React from 'react'
-import ipop_ic from '../../Images/Icons/ipop_ic.svg'
 import evio_logo from '../../Images/Icons/evio.svg'
 
 class Header extends React.Component {

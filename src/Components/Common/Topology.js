@@ -1,7 +1,6 @@
 export default class Topology {
 
     constructor(response) {
-        var res = response;
         var topology = [];
         var nodes = [];
         var nodeDetails = {};
@@ -12,9 +11,9 @@ export default class Topology {
         var nodesData = response[0].Topology[0].Nodes;
         for (var idx in nodesData) {
             var node = nodesData[idx];
-            if (node.Edges.length == 0) {
-                //No tunnels node
-                var nodeData = {
+            if (node.Edges.length === 0) {
+                //No tunnels node - NT
+                var nodeDataNT = {
                     group: "nodes",
                     data: {
                         id: node.NodeId,
@@ -25,18 +24,18 @@ export default class Topology {
                         color: '#f2be22'
                     }
                 }
-                nodes.push(nodeData);
-                var nodeDetail = {
+                nodes.push(nodeDataNT);
+                var nodeDetailNT = {
                     "name": node.NodeName,
                     "id": node.NodeId,
                     "state": "Connected",
                     "raw_data": node
                 }
-                nodeDetails[node.NodeId] = nodeDetail;
+                nodeDetails[node.NodeId] = nodeDetailNT;
                 continue;
             }
-            //Connected nodes
-            var nodeData = {
+            //Connected nodes - CN
+            var nodeDataCN = {
                 group: "nodes",
                 data: {
                     id: node.NodeId,
@@ -47,14 +46,14 @@ export default class Topology {
                     color: '#8AA626'
                 }
             }
-            nodes.push(nodeData);
-            var nodeDetail = {
+            nodes.push(nodeDataCN);
+            var nodeDetailCN = {
                 "name": node.NodeName,
                 "id": node.NodeId,
                 "state": "Connected",
                 "raw_data": node
             }
-            nodeDetails[node.NodeId] = nodeDetail;
+            nodeDetails[node.NodeId] = nodeDetailCN;
             var edgesData = node.Edges;
             for (var edgeidx in edgesData) {
                 //Processing edges for each connected node
@@ -94,15 +93,15 @@ export default class Topology {
 
         for (var nodeId of nodeSet) {
             if (!nodeDetails[nodeId]) {
-                //not reported nodes
-                var nodeDetail = {
+                //not reported nodes -NR
+                var nodeDetailNR = {
                     "name": ' ',
                     "id": nodeId,
                     "state": "Not Reporting",
                     "raw_data": ' '
                 }
-                nodeDetails[nodeId] = nodeDetail;
-                var nodeData = {
+                nodeDetails[nodeId] = nodeDetailNR;
+                var nodeDataNR = {
                     group: "nodes",
                     data: {
                         id: nodeId,
@@ -113,7 +112,7 @@ export default class Topology {
                         color: "#ADD8E6"
                     }
                 }
-                nodes.push(nodeData);
+                nodes.push(nodeDataNR);
                 notConnectedSet.add(nodeId);
             }
         }
@@ -143,7 +142,7 @@ export default class Topology {
 
             Object.keys(edgeDetails).forEach(edgeId => {
                 Object.keys(edgeDetails[edgeId]).forEach(nodeId => {
-                    if (!notConnectedSet.has(nodeId) && nodeId == src && edgeDetails[edgeId][nodeId].target == tgt) {
+                    if (!notConnectedSet.has(nodeId) && nodeId === src && edgeDetails[edgeId][nodeId].target === tgt) {
                         connectedNodeDetails = edgeDetails[edgeId][nodeId];
                     }
                 })

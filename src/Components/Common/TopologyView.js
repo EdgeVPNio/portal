@@ -126,7 +126,7 @@ class TopologyView extends React.Component {
   renderNodeDetails = () => {
     var sourceNode = this.state.nodeDetails.sourceNode
     var connectedNodes = this.state.nodeDetails.connectedNodes
-    if (sourceNode.raw_data == " ") {
+    if (sourceNode.raw_data === " ") {
       //Not reporting nodes
       var nodeContent = <div>
 
@@ -221,16 +221,16 @@ class TopologyView extends React.Component {
     var sourceNodeDetails = this.state.linkDetails.sourceNodeDetails
     var targetNodeDetails = this.state.linkDetails.targetNodeDetails
 
-    if (sourceNodeDetails.raw_data == " " && targetNodeDetails.raw_data == " ") {
-      //both nodes of the edge are not reporting
-      var linkContent = <div>
+    if (sourceNodeDetails.raw_data === " " && targetNodeDetails.raw_data === " ") {
+      //both nodes of the edge are not reporting - NR
+      var linkContentNR = <div>
         <label id="valueLabel">{"Data not available"}</label>
       </div>
-      ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
+      ReactDOM.render(linkContentNR, document.getElementById('rightPanelContent'))
       return;
     }
 
-    if (sourceNodeDetails.raw_data == " " || targetNodeDetails.raw_data == " ") {
+    if (sourceNodeDetails.raw_data === " " || targetNodeDetails.raw_data === " ") {
       //if either of nodes is not reporting
       var linkContent = <div>
         <h5>{linkDetails.name}</h5>
