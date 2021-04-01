@@ -113,7 +113,7 @@ class MongoDBImpl extends DataBaseInterface {
             return tableName.find({ "_id": { $gt: intervalId } }, { "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ '_id': 1 }).limit(1);
         }
         //Most recent entry - intervalId not passed
-        return tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ "_id": -1 }).limit(1);
+        return tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } } }, {"Topology.$": 1}).sort({ "_id": -1 }).limit(1);
     }
 
     /**
