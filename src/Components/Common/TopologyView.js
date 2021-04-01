@@ -490,86 +490,87 @@ class TopologyView extends React.Component {
     if (this.state.topology === null) {
       return <Spinner id='loading' animation='border' variant='info' />
     } else {
-      this.setState({ currentView: 'Topology' })
-      ReactDOM.render(<Cytoscape id="cy"
-        cy={(cy) => {
-          this.cy = cy
+      if (this.state.currentView !== 'Map') {
+        this.setState({ currentView: 'Topology' })
+        ReactDOM.render(<Cytoscape id="cy"
+          cy={(cy) => {
+            this.cy = cy
 
-          this.setState({ cytoscape: cy })
+            this.setState({ cytoscape: cy })
 
-          this.cy.maxZoom(this.state.initMaxZoom)
-          this.cy.minZoom(this.state.initMinZoom)
-          this.cy.zoom(0.8)
-          this.cy.center()
+            this.cy.maxZoom(this.state.initMaxZoom)
+            this.cy.minZoom(this.state.initMinZoom)
+            this.cy.zoom(0.8)
+            this.cy.center()
 
-          var that = this
+            var that = this
 
-          if (this.state.currentSelectedElement !== null) {
-            if (this.state.currentSelectedElement.isNode()) {
-              var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
-              var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-              var notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-              selectedElement.select()
-              relatedElement.removeClass('transparent')
-              notRelatedElement.addClass('transparent')
-            } else if (this.state.currentSelectedElement.isEdge()) {
-              var relatedElement2 = this.state.currentSelectedElement.connectedNodes().union(this.state.currentSelectedElement)
-              var notRelatedElement2 = this.cy.elements().difference(this.state.currentSelectedElement.connectedNodes()).not(this.state.currentSelectedElement)
-              this.state.currentSelectedElement.select()
-              relatedElement2.removeClass('transparent')
-              notRelatedElement2.addClass('transparent')
-            }
-          }
-
-          this.cy.on('click', function (e) {
-            var selectedElement = e.target[0]
-            var relatedElement
-            var notRelatedElement
-            try {
-              if (document.getElementById('rightPanel').hidden === true) {
-                document.getElementById('overlayRightPanelBtn').click()
-              }
-              if (selectedElement.isNode()) {
-                that.setNodeDetails(selectedElement)
-                relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-                notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-              } else if (selectedElement.isEdge()) {
-                that.setLinkDetails(selectedElement)
-                relatedElement = selectedElement.connectedNodes().union(selectedElement)
-                notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
-              }
-
-              if (document.getElementById('viewSelector').value !== 'Subgraph') {
+            if (this.state.currentSelectedElement !== null) {
+              if (this.state.currentSelectedElement.isNode()) {
+                var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
+                var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
+                var notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
+                selectedElement.select()
                 relatedElement.removeClass('transparent')
                 notRelatedElement.addClass('transparent')
-              }
-            } catch {
-              if (e.target[0] === this.cy) {
-                ReactDOM.render(<></>, document.getElementById('rightPanelContent'))
-                that.cy.elements().removeClass('transparent')
-              }
-            } finally {
-              if (e.target[0] !== this.cy) {
-                that.setState({ switchToggle: false, currentSelectedElement: e.target })
-              } else {
-                that.setState({ switchToggle: true, currentSelectedElement: null })
+              } else if (this.state.currentSelectedElement.isEdge()) {
+                var relatedElement2 = this.state.currentSelectedElement.connectedNodes().union(this.state.currentSelectedElement)
+                var notRelatedElement2 = this.cy.elements().difference(this.state.currentSelectedElement.connectedNodes()).not(this.state.currentSelectedElement)
+                this.state.currentSelectedElement.select()
+                relatedElement2.removeClass('transparent')
+                notRelatedElement2.addClass('transparent')
               }
             }
-          })
-        }}
-        wheelSensitivity={0.1}
 
-        elements={this.state.topology.getAlltopology()}
+            this.cy.on('click', function (e) {
+              var selectedElement = e.target[0]
+              var relatedElement
+              var notRelatedElement
+              try {
+                if (document.getElementById('rightPanel').hidden === true) {
+                  document.getElementById('overlayRightPanelBtn').click()
+                }
+                if (selectedElement.isNode()) {
+                  that.setNodeDetails(selectedElement)
+                  relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
+                  notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
+                } else if (selectedElement.isEdge()) {
+                  that.setLinkDetails(selectedElement)
+                  relatedElement = selectedElement.connectedNodes().union(selectedElement)
+                  notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
+                }
 
-        stylesheet={cytoscapeStyle}
+                if (document.getElementById('viewSelector').value !== 'Subgraph') {
+                  relatedElement.removeClass('transparent')
+                  notRelatedElement.addClass('transparent')
+                }
+              } catch {
+                if (e.target[0] === this.cy) {
+                  ReactDOM.render(<></>, document.getElementById('rightPanelContent'))
+                  that.cy.elements().removeClass('transparent')
+                }
+              } finally {
+                if (e.target[0] !== this.cy) {
+                  that.setState({ switchToggle: false, currentSelectedElement: e.target })
+                } else {
+                  that.setState({ switchToggle: true, currentSelectedElement: null })
+                }
+              }
+            })
+          }}
+          wheelSensitivity={0.1}
 
-        style={{ width: window.innerWidth, height: window.innerHeight }}
+          elements={this.state.topology.getAlltopology()}
 
-        layout={{ name: 'circle', clockwise: true }}
+          stylesheet={cytoscapeStyle}
+
+          style={{ width: window.innerWidth, height: window.innerHeight }}
+
+          layout={{ name: 'circle', clockwise: true }}
 
 
-      />, document.getElementById('midArea'))
-
+        />, document.getElementById('midArea'))
+      }
       ReactDOM.render(<select defaultValue="Topology" onChange={this.handleViewSelector} id="viewSelector" className="custom-select">
         <option value="Topology">Topology</option>
         <option value="Subgraph">Subgraph</option>
@@ -689,6 +690,7 @@ class TopologyView extends React.Component {
     if (this.state.currentView === 'Subgraph') {
       this.cy.elements().removeClass('subgraph')
     } else if (this.state.currentView === 'Map') {
+      this.setState({ currentView: 'Topology' })
       this.renderGraph()
     }
   }
@@ -876,9 +878,6 @@ class TopologyView extends React.Component {
     }
   }
 
-  componentDidUpdate() {
-    
-  }
 
   handleViewSelector = (e) => {
     switch (e.target.value) {
