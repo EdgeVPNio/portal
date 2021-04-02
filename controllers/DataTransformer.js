@@ -68,10 +68,10 @@ class DataTransformer {
                     GeoCoordinates:data[timeStampId]['GeoCoordinate'],
                     Edges:[]
                 };
+                if(!highLevelOverlayData['Nodes'].includes(nodeObject.NodeId)) {
+                    highLevelOverlayData['Nodes'].push(nodeObject.NodeId);
+                }
                 for (var nodeId in linkManagerData) {
-                    if(!highLevelOverlayData['Nodes'].includes(nodeId)) {
-                        highLevelOverlayData['Nodes'].push(nodeId);
-                    }
                     nodeObject['NodeId'] = nodeId;
                     var edgeData = linkManagerData[nodeId]
                     for (var edgeId in edgeData) {
@@ -90,6 +90,9 @@ class DataTransformer {
                         }
                         nodeObject['Edges'].push(edgeObject);
                     }
+                    overlayData['Nodes'].push(nodeObject);
+                }
+                if (Object.keys(nodeObject).length !== 0) {
                     overlayData['Nodes'].push(nodeObject);
                 }
                 topologyDict[overlayId] = overlayData;
@@ -112,3 +115,4 @@ class DataTransformer {
 }
 
 module.exports = { DataTransformer }
+

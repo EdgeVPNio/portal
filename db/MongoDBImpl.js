@@ -110,7 +110,7 @@ class MongoDBImpl extends DataBaseInterface {
     async findTopology(tableName, intervalId, overlayId) {
         if (intervalId) {
             //Find the next available interval, greater than the previous one from client
-            return tableName.find({ "_id": { $gt: intervalId } }, { "Topology": { $elemMatch: { "OverlayId": overlayId } } }).sort({ '_id': 1 }).limit(1);
+            return tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } }, "_id": { $gt: intervalId } }, {"Topology.$": 1}).sort({ '_id': 1 }).limit(1);
         }
         //Most recent entry - intervalId not passed
         return tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } } }, {"Topology.$": 1}).sort({ "_id": -1 }).limit(1);
@@ -179,7 +179,7 @@ class MongoDBImpl extends DataBaseInterface {
                     const topologyChangeStream = this.db.db('Evio').collection('Topology').watch(pipeline);
                     topologyChangeStream.on('change', changeData => {
                         //console.log("Found new data :", changeData);
-                        topologyData = [changeData.fullDocument];
+                        topologyData = tableName.find({ "Topology": { $elemMatch: { "OverlayId": overlayId } }, "_id": { $gt: intervalId } }, {"Topology.$": 1}).sort({ '_id': 1 }).limit(1);
                         //console.log("Set data to ", data)
                     });
                 } else {

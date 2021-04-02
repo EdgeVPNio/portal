@@ -63,7 +63,7 @@ export default class Topology {
                     group: "edges",
                     data: {
                         id: edge.EdgeId,
-                        label: edge.TapName,
+                        label: edge.EdgeId.slice(0, 7),
                         source: node.NodeId,
                         target: edge.PeerId,
                         state: edge.State,
@@ -73,7 +73,7 @@ export default class Topology {
                 }
                 topology.push(edgeData);
                 var edgeDetail = {
-                    name: edge.TapName,
+                    name: edge.TapName.slice(0, 10),
                     id: edge.EdgeId,
                     MAC: edge.MAC,
                     state: edge.State,
@@ -105,7 +105,7 @@ export default class Topology {
                     group: "nodes",
                     data: {
                         id: nodeId,
-                        label: nodeId.slice(nodeId.length - 6),
+                        label: nodeId.slice(0, 7),
                         state: "Not Reporting",
                         type: "",
                         coordinate: "",

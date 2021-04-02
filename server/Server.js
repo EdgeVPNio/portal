@@ -85,6 +85,7 @@ setInterval(function(){
     var timeStamp = Date.now()
     var dataCopy = Data;
     Data = {}
+    console.log("Data in PUT is:", dataCopy);
     if (!Object.keys(dataCopy).length == 0) {
       dbInstance.insertInto(dataCopy, timeStamp);
     }
