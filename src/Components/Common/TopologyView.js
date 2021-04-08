@@ -53,7 +53,7 @@ class TopologyView extends React.Component {
 
     await fetch(url)
       .then(res => {
-        //console.log(res);
+        console.log(res);
         return res.json()
       })
       .then(res => {
@@ -130,7 +130,7 @@ class TopologyView extends React.Component {
       //Not reporting nodes
       var nodeContent = <div>
 
-        <h5>{sourceNode.id.slice(sourceNode.id.length - 6)}</h5>
+        <h5>{sourceNode.name}</h5>
 
         <div className="DetailsLabel">Node ID</div>
         <label id="valueLabel">{sourceNode.id}</label>
@@ -889,7 +889,23 @@ class TopologyView extends React.Component {
     }
   }
 
+  handleRedrawGraph = () => {
+    //var prevTopology = this.state.topology;
+    //var copytopology = JSON.parse(JSON.stringify(prevTopology));
+    //this.setState({ topology : null});
+    //this.setState({ copyTopology : copytopology });
+    //this.cy.zoom(0.5)
+    //this.cy.center()
+    //this.cy.style({ width: window.innerWidth, height: window.innerHeight });
+    //this.cy.wheelSensitivity(0.1);
+    this.cy.layout({ name: 'circle' }).run();
+    this.cy.zoom(0.8);
+    this.cy.center();
 
+    //this.renderNewGraph();
+    //  window.location.reload(true)
+    //this.componentDidMount();
+  }
 
   render() {
     return <>
@@ -901,7 +917,7 @@ class TopologyView extends React.Component {
         </button>
 
         <button id="overlayBreadcrumb" className="leftToolsBtn">
-          <div className="breadcrumbLabel">
+          <div className="breadcrumbLabel" onClick={this.handleRedrawGraph} >
             Overlay : {this.props.overlayName}
           </div>
         </button>
