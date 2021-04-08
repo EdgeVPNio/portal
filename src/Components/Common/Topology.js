@@ -73,7 +73,7 @@ export default class Topology {
                 }
                 topology.push(edgeData);
                 var edgeDetail = {
-                    name: edge.TapName.slice(0, 10),
+                    name: edge.TapName,
                     id: edge.EdgeId,
                     MAC: edge.MAC,
                     state: edge.State,
@@ -95,7 +95,7 @@ export default class Topology {
             if (!nodeDetails[nodeId]) {
                 //not reported nodes -NR
                 var nodeDetailNR = {
-                    "name": ' ',
+                    "name": nodeId.slice(0, 7),
                     "id": nodeId,
                     "state": "Not Reporting",
                     "raw_data": ' '
@@ -123,6 +123,7 @@ export default class Topology {
         nodes.sort(function (a, b) {
             return a.data['id'].localeCompare(b.data['id']);
         })
+	 //   console.log("nodes:",nodes)
         nodes.forEach(node => topology.push(node))
 
         this.getAlltopology = () => {

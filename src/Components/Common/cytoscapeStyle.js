@@ -1,8 +1,8 @@
 var cytoscapeStyle = [{
   selector: 'node',
   style: {
-    width: '60%',
-    height: '60%',
+    width: '65%',
+    height: '65%',
     label: 'data(label)',
     'text-valign': 'center',
     'background-color': 'data(color)',
