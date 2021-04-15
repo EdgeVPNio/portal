@@ -2,7 +2,7 @@
   "name": "evio-portal",
   "version": "1.0.0",
   "description": "Web portal for network administration and visualization",
-  "proxy":"http://localhost",
+  "proxy": "http://localhost",
   "main": "server/Server.js",
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "express": "^4.17.1",
     "google-map-react": "^2.1.9",
     "google-maps-react": "^2.0.6",
+    "influx": "^5.8.0",
     "jquery": "^3.5.1",
     "mongodb": "^3.6.4",
     "mongoose": "^5.11.17",

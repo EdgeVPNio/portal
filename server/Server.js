@@ -1,5 +1,5 @@
 /* EdgeVPNio
-* Copyright 2020, University of Florida
+* Copyright 2021, University of Florida
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ const {MongoDBImpl} = require('../db/MongoDBImpl')
 const overlays = require("../controllers/Overlays.controller.js");
 const topology = require("../controllers/Topology.controller.js");
 const dotenv = require('dotenv')
+const {InfluxDBImpl} = require('../db/InfluxDBImpl')
 
 const app = express()
 
@@ -49,6 +50,7 @@ var Data = {}
 //As the object dbInstance is built, Evio db is connected from constructor, check for the type of database.
 if (process.env.DB == "mongo") {
   var dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio')
+  var dbInstance2 = new InfluxDBImpl('Evio');
 }
 
 app.set('views', path.join(__dirname, '../build'));
@@ -88,6 +90,7 @@ setInterval(function(){
     console.log("Data in PUT is:", dataCopy);
     if (!Object.keys(dataCopy).length == 0) {
       dbInstance.insertInto(dataCopy, timeStamp);
+      dbInstance2.insertInto(dataCopy, timeStamp);
     }
 }, 30000)
 
