@@ -37,7 +37,8 @@ class TopologyView extends React.Component {
       linkDetails: null,
       currentSelectedElement: null,
       currentView: null,
-      topology: null
+      topology: null,
+      count: 0 //counter to render right panel for first time at renderGraph
     }
     this.autoRefresh = true; //flag to monitor autoRefresh onClick of refresh button
   }
@@ -50,6 +51,10 @@ class TopologyView extends React.Component {
   async getTopology(overlayId, intervalId) {
     var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId;
     //console.log("URL for topology:", url);
+    if(this.state.count === 0) {
+      //first render of topology graph
+      document.getElementById('rightPanel').hidden = true;
+    }
 
     await fetch(url)
       .then(res => {
@@ -532,10 +537,18 @@ class TopologyView extends React.Component {
                 }
                 if (selectedElement.isNode()) {
                   that.setNodeDetails(selectedElement)
+                  //render right panel on node selection
+                  if (document.getElementById('rightPanel').hidden === true) {
+                      document.getElementById('rightPanel').hidden = false;
+                  }  
                   relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
                   notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
                 } else if (selectedElement.isEdge()) {
                   that.setLinkDetails(selectedElement)
+                  //render right panel on edge selection
+                  if (document.getElementById('rightPanel').hidden === true) {
+                    document.getElementById('rightPanel').hidden = false;
+                  } 
                   relatedElement = selectedElement.connectedNodes().union(selectedElement)
                   notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
                 }
@@ -985,12 +998,10 @@ class TopologyView extends React.Component {
                   </div>
                   <div className="col">
                     <select defaultValue={this.state.setMinZoom} onChange={this.handleSetMinZoom} id="minZoomSelector" value={this.state.minZoom}>
-                      <option id="0.2">0.2</option>
-                      <option id="1">1</option>
-                      <option id="2">2</option>
-                      <option id="3">3</option>
-                      <option id="5">5</option>
-                      <option id="10">10</option>
+                      <option id="0.1">0.1</option>
+                      <option id="0.3">0.3</option>
+                      <option id="0.5">0.5</option>
+                      <option id="0.9">0.9</option>
                     </select>
                   </div>
                 </div>
@@ -1001,10 +1012,9 @@ class TopologyView extends React.Component {
                   <div className="col">
                     <select defaultValue={this.state.setMaxZoom} onChange={this.handleSetMaxZoom} id="maxZoomSelector" value={this.state.maxZoom}>
                       <option>2</option>
+                      <option>3</option>
                       <option>5</option>
                       <option>10</option>
-                      <option>15</option>
-                      <option>20</option>
                     </select>
                   </div>
                 </div>

@@ -276,7 +276,7 @@ h5 {
 }
 
 #zoomSlider {
-    position   : absolute;
+    position   : relative;
     margin-left: -14.2vh;
     margin-top : 15.5vh;
     -webkit-transform  : rotate(-90deg);
@@ -286,7 +286,7 @@ h5 {
 }
 
 #minusBtn {
-    margin-top      : 34.2vh;
+    margin-top      : 15.5vh;
     background-image: url('../Images/Icons/minus_ic.svg');
     background-size : cover;
 }

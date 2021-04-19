@@ -17,8 +17,7 @@ class OverlaysView extends React.Component {
     super(props)
     this.state = {
       overlays: null,
-      selectedOverlay: null,
-      isToggle: true
+      selectedOverlay: null
     }
     this.doOverlayUpdate = true; //flag to monitor GET Overlays polling
     this.selectOverlayFlag = false; //flag to switch views (OverlaysView <-> TopologyView)
@@ -55,28 +54,6 @@ class OverlaysView extends React.Component {
     if (this.doOverlayUpdate) {
       this.getOverlaysData();
     }
-  }
-
-  // toggle overlay right panel
-  handleRightPanelToggle = () => {
-    var rightPanelEvent = new Promise((resolve, reject) => {
-      try {
-        this.setState(prevState => {
-          return { isToggle: !prevState.isToggle }
-        })
-        resolve()
-      } catch (e) {
-        //console.log(e)
-      }
-    })
-
-    rightPanelEvent.then(() => {
-      if (this.state.isToggle) {
-        document.getElementById('rightPanel').hidden = false
-      } else {
-        document.getElementById('rightPanel').hidden = true
-      }
-    })
   }
 
   renderMainContent = () => {
