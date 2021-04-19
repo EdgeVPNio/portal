@@ -532,9 +532,6 @@ class TopologyView extends React.Component {
               var relatedElement
               var notRelatedElement
               try {
-                if (document.getElementById('rightPanel').hidden === true) {
-                  document.getElementById('overlayRightPanelBtn').click()
-                }
                 if (selectedElement.isNode()) {
                   that.setNodeDetails(selectedElement)
                   //render right panel on node selection
