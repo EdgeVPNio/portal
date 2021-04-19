@@ -51,10 +51,6 @@ class TopologyView extends React.Component {
   async getTopology(overlayId, intervalId) {
     var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId;
     //console.log("URL for topology:", url);
-    if(this.state.count === 0) {
-      //first render of topology graph
-      document.getElementById('rightPanel').hidden = true;
-    }
 
     await fetch(url)
       .then(res => {
@@ -77,6 +73,10 @@ class TopologyView extends React.Component {
   }
 
   componentDidMount() {
+    if(this.state.count === 0) {
+      //first render of topology graph - rightPanel disabled by default
+      document.getElementById('rightPanel').hidden = true;
+    }
     if (this.autoRefresh) {
       this.getTopology(this.props.overlayName);
     } else {
