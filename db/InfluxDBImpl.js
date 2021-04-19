@@ -63,13 +63,29 @@ class InfluxDBImpl extends DataBaseInterface {
                 _id: timestamp,
                 Overlays: JSON.stringify(transformedData[0])
         }
-        var writePoint = {
+        var dataTobeWritten = [];
+        var overlaysWritePoint = {
                 "measurement":"Overlays",
                 "tags": overlaysData._id,
                 "time": overlaysData._id,
                 "fields": overlaysData
         };
-        this.db.writePoints([writePoint])
+        dataTobeWritten.push(overlaysWritePoint);
+        for (var num in transformedData[1]) {
+                var topologyData = {
+                        _id: timestamp,
+                        Topology: JSON.stringify(transformedData[1][num])
+                }
+                var topologyWritePoint = {
+                        "measurement":"Topology",
+                        "tags": [topologyData._id, transformedData[1][num]['OverlayId']],
+                        "time": topologyData._id,
+                        "OverlayId": transformedData[1][num]['OverlayId'],
+                        "fields": topologyData
+                };
+                dataTobeWritten.push(topologyWritePoint);   
+        }
+        this.db.writePoints(dataTobeWritten)
         .then(() => {
                 //console.log('FINISHED')
         })
