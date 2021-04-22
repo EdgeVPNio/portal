@@ -68,7 +68,8 @@ export default class Topology {
                         target: edge.PeerId,
                         state: edge.State,
                         type: edge.Type,
-                        color: this.getLinkColor(edge.Type)
+                        color: this.getLinkColor(edge.Type),
+                        style: this.getLinkStyle(edge.State)
                     }
                 }
                 topology.push(edgeData);
@@ -172,6 +173,20 @@ export default class Topology {
             default: break
         }
         return linkColor;
+    }
+
+    getLinkStyle(state) {
+        var linkStyle;
+        switch (state) {
+            case 'CEStateCreated':
+                linkStyle = 'dotted'
+                break
+            case 'CEStateConnected':
+                linkStyle = 'solid'
+                break
+            default: break
+        }
+        return linkStyle;
     }
 
 }

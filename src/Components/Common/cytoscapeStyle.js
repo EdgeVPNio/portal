@@ -34,6 +34,7 @@ var cytoscapeStyle = [{
   selector: 'edge',
   style: {
     'line-color': 'data(color)',
+    'line-style': 'data(style)',
     width: '5%',
     'z-index': '3',
     'overlay-opacity': '0',
