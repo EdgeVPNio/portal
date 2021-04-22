@@ -178,11 +178,18 @@ export default class Topology {
     getLinkStyle(state) {
         var linkStyle;
         switch (state) {
+            case 'CEStateInitialized':
+            case 'CEStatePreAuth':
+            case 'CEStateAuthorized':
             case 'CEStateCreated':
                 linkStyle = 'dotted'
                 break
             case 'CEStateConnected':
                 linkStyle = 'solid'
+                break
+            case 'CEStateDisconnected':
+            case 'CEStateDeleting':
+                linkStyle = 'dashed'
                 break
             default: break
         }
