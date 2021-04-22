@@ -23,9 +23,9 @@ class TopologyView extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      initMinZoom: 0.2,
+      initMinZoom: 0.1,
       initMaxZoom: 2,
-      setMinZoom: 0.2,
+      setMinZoom: 0.1,
       setMaxZoom: 2,
       graphElement: [],
       dataReady: false,
@@ -503,8 +503,8 @@ class TopologyView extends React.Component {
 
             this.setState({ cytoscape: cy })
 
-            this.cy.maxZoom(this.state.initMaxZoom)
-            this.cy.minZoom(this.state.initMinZoom)
+            this.cy.maxZoom(this.state.setMaxZoom)
+            this.cy.minZoom(this.state.setMinZoom)
             this.cy.zoom(0.8)
             this.cy.center()
 
@@ -656,7 +656,7 @@ class TopologyView extends React.Component {
       if (this.cy.zoom() > parseFloat(e.target.value)) {
         this.cy.zoom(parseFloat(e.target.value))
       }
-      this.setState({ setMinZoom: e.target.value })
+      this.setState({ setMaxZoom: e.target.value })
     }
   }
 
