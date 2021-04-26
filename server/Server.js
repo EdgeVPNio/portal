@@ -49,8 +49,9 @@ if(process.env.PORT) {
 var Data = {}
 //As the object dbInstance is built, Evio db is connected from constructor, check for the type of database.
 if (process.env.DB == "mongo") {
-  var dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio')
-  var dbInstance2 = new InfluxDBImpl('Evio');
+  var dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio');
+} else if (process.env.DB == "influx") {
+  var dbInstance = new InfluxDBImpl('Evio');
 }
 
 app.set('views', path.join(__dirname, '../build'));
@@ -90,7 +91,6 @@ setInterval(function(){
     //console.log("Data in PUT is:", dataCopy);
     if (!Object.keys(dataCopy).length == 0) {
       dbInstance.insertInto(dataCopy, timeStamp);
-      dbInstance2.insertInto(dataCopy, timeStamp);
     }
 }, 30000)
 
