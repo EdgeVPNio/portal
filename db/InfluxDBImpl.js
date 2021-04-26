@@ -169,10 +169,10 @@ class InfluxDBImpl extends DataBaseInterface {
                                                 clearInterval(overlaysInterval)
                                                 return ok();
                                         } else {
-                                                overlaysData = that.db.query('select _id from ${tableName} WHERE _id > ${intervalId} ORDER BY time DESC LIMIT 1')
+                                                overlaysData = that.db.query('select _id from ' + tableName + ' WHERE _id > ' + intervalId + ' ORDER BY time DESC LIMIT 1')
                                                         .then(intervalId => {
                                                                 if (intervalId) {
-                                                                        return that.db.query('select Overlays from ${tableName} ORDER BY time DESC LIMIT 1');
+                                                                        return that.db.query('select Overlays from ' + tableName + ' ORDER BY time DESC LIMIT 1');
                                                                 } else {
                                                                         return null;
                                                                 }
@@ -219,11 +219,11 @@ class InfluxDBImpl extends DataBaseInterface {
                                         if (topologyData) {
                                                 clearInterval(topologyInterval)
                                                 return ok();
-                                        } else {
-                                                topologyData = that.db.query('select _id from ${tableName} WHERE _id > ${intervalId} AND OverlayId=${overlayId} ORDER BY time DESC LIMIT 1')
+                                        } else { 
+                                                topologyData = that.db.query('select _id from ' + tableName + ' WHERE _id > ' + intervalId + ' AND OverlayId=' + overlayId + ' ORDER BY time DESC LIMIT 1')
                                                         .then(intervalId => {
                                                                 if (intervalId) {
-                                                                        return that.db.query('select Topology from ${tableName} WHERE OverlayId=${overlayId} ORDER BY time DESC LIMIT 1');
+                                                                        return that.db.query('select Topology from ' + tableName + ' WHERE OverlayId=' + overlayId + ' ORDER BY time DESC LIMIT 1');
                                                                 } else {
                                                                         return null;
                                                                 }
