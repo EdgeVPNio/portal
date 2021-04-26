@@ -29,7 +29,13 @@ exports.findTopology = (req, res, dbInstance) => {
     const overlayId = req.query.overlayid;
     const intervalId = parseFloat(req.query.interval);
     var send = false;
-    dbInstance.getTopology(topologyModel, intervalId, overlayId)
+    var tableName = null;
+    if (process.env.DB == 'mongo') {
+      tableName = topologyModel;
+    } else if (process.env.DB == 'influx') {
+      tableName = 'Topology'
+    }
+    dbInstance.getTopology(tableName, intervalId, overlayId)
       .then(data => {
         //console.log("Response data being sent:", data);
         res.send(data);

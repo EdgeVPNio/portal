@@ -25,8 +25,13 @@ const {overlayModel, topologyModel} = require('../db/Model');
  * Function to retrieve all Intervals from the database
  */
 exports.findAllIntervals = (req, res, dbInstance) => {
-  
-    dbInstance.getIntervals(overlayModel)
+    var tableName = null;
+    if (process.env.DB == 'mongo') {
+      tableName = overlayModel;
+    } else if (process.env.DB == 'influx') {
+      tableName = 'Overlays'
+    }
+    dbInstance.getIntervals(tableName)
       .then(data => {
         res.send(data);
       })
@@ -44,7 +49,13 @@ exports.findAllIntervals = (req, res, dbInstance) => {
  exports.findOverlays = (req, res, dbInstance) => {
 
   const intervalId = parseFloat(req.query.interval);
-  dbInstance.getOverlays(overlayModel, intervalId)
+  var tableName = null;
+    if (process.env.DB == 'mongo') {
+      tableName = overlayModel;
+    } else if (process.env.DB == 'influx') {
+      tableName = 'Overlays'
+    }
+  dbInstance.getOverlays(tableName, intervalId)
     .then(data => {
           //console.log("Response data being sent:", data);
           res.send(data);
