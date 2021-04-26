@@ -183,7 +183,7 @@ class InfluxDBImpl extends DataBaseInterface {
                 }
                 this.findOverlays(tableName, intervalId)
                         .then(data => {
-                                if (Object.keys(data).length === 0) {
+                                if (data && Object.keys(data).length === 0) {
                                         console.log("No data found, setting data to null.")
                                         overlaysData = null;
                                         //setinterval to check the topology table for new entry every 3 sec
@@ -234,7 +234,7 @@ class InfluxDBImpl extends DataBaseInterface {
                 }
                 this.findTopology(tableName, intervalId, overlayId)
                         .then(data => {
-                                if (Object.keys(data).length === 0) {
+                                if (data && Object.keys(data).length === 0) {
                                         console.log("No data found, setting data to null.")
                                         topologyData = null;
                                         //setinterval to check the topology table for new entry every 3 sec
