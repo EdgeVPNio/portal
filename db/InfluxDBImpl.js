@@ -30,7 +30,7 @@ class InfluxDBImpl extends DataBaseInterface {
         constructor(dbname) {
                 super('');
                 // Once an instance is created the db connection is kept until the instance is alive.
-                this.db = new InfluxDB({ host: 'influxdb', database: dbname });
+                this.db = new InfluxDB({ host: process.env.DB_URI, database: dbname });
                 this.dbname = dbname;
                 this.db.getDatabaseNames()
                         .then(names => {
