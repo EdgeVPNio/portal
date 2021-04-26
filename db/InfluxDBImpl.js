@@ -122,12 +122,24 @@ class InfluxDBImpl extends DataBaseInterface {
                 if (intervalId) {
                         //Find the next available interval, greater than the previous one from client
                         return this.db.query(`select Overlays from ${tableName} WHERE _id > ${intervalId} ORDER BY time ASC LIMIT 1`)
-                                .then(jsonStr => JSON.parse(jsonStr))
+                                .then(jsonStr => {
+                                        if (jsonStr[0]['Overlays']) {
+                                        return JSON.parse(jsonStr[0]['Overlays']);
+                                        } else {
+                                                return null;
+                                        }
+                                })
                                 .catch(error => console.log("Error while querying InfluxDB:", error));
                 }
                 //Most recent entry - intervalId not passed
                 return this.db.query(`select Overlays from ${tableName} ORDER BY time DESC LIMIT 1`)
-                        .then(jsonStr => JSON.parse(jsonStr))
+                        .then(jsonStr => {
+                                        if (jsonStr[0]['Overlays']) {
+                                        return JSON.parse(jsonStr[0]['Overlays']);
+                                        } else {
+                                                return null;
+                                        }
+                                })
                         .catch(error => console.log("Error while querying InfluxDB:", error));
         }
 
@@ -142,12 +154,24 @@ class InfluxDBImpl extends DataBaseInterface {
                 if (intervalId) {
                         //Find the next available interval, greater than the previous one from client
                         return this.db.query(`select Toplogy from ${tableName} WHERE _id > ${intervalId} AND OverlayId=${overlayId} ORDER BY time ASC LIMIT 1`)
-                                .then(jsonStr => JSON.parse(jsonStr))
+                                .then(jsonStr => {
+                                        if (jsonStr[0]['Topology']) {
+                                        return JSON.parse(jsonStr[0]['Topology']);
+                                        } else {
+                                                return null;
+                                        }
+                                })
                                 .catch(error => console.log("Error while querying InfluxDB:", error));
                 }
                 //Most recent entry - intervalId not passed
                 return this.db.query(`select Topology from ${tableName} WHERE OverlayId=${overlayId} ORDER BY time DESC LIMIT 1`)
-                        .then(jsonStr => JSON.parse(jsonStr))
+                        .then(jsonStr => {
+                                        if (jsonStr[0]['Topology']) {
+                                        return JSON.parse(jsonStr[0]['Topology']);
+                                        } else {
+                                                return null;
+                                        }
+                                })
                         .catch(error => console.log("Error while querying InfluxDB:", error));
         }
 
