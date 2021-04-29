@@ -42,7 +42,8 @@ class InfluxDBImpl extends DataBaseInterface {
                         .then(noResp => {
                                 return this.db.createRetentionPolicy('EvioPolicy', {
                                         duration: process.env.expireTime,
-                                        replication: 1
+                                        replication: 1,
+                                        isDefault: true
                                 })
                         });
         }
@@ -75,21 +76,25 @@ class InfluxDBImpl extends DataBaseInterface {
                         "measurement": "Overlays",
                         "tags": overlaysData._id,
                         "time": overlaysData._id,
+                        "_id": timestamp,
                         "fields": overlaysData
                 };
                 dataTobeWritten.push(overlaysWritePoint);
                 for (var num in transformedData[1]) {
                         var topologyData = {
                                 _id: timestamp,
+                                OverlayId: transformedData[1][num]['OverlayId'],
                                 Topology: JSON.stringify(transformedData[1][num])
                         }
                         var topologyWritePoint = {
                                 "measurement": "Topology",
-                                "tags": [topologyData._id, transformedData[1][num]['OverlayId']],
+                                "tags": { '_id': topologyData._id },
                                 "time": topologyData._id,
+                                "_id": timestamp,
                                 "OverlayId": transformedData[1][num]['OverlayId'],
                                 "fields": topologyData
                         };
+                        console.log("Topology write point:", topologyWritePoint);
                         dataTobeWritten.push(topologyWritePoint);
                 }
                 this.db.writePoints(dataTobeWritten)
@@ -121,25 +126,37 @@ class InfluxDBImpl extends DataBaseInterface {
         async findOverlays(tableName, intervalId) {
                 if (intervalId) {
                         //Find the next available interval, greater than the previous one from client
-                        return this.db.query(`select Overlays from ${tableName} WHERE _id > ${intervalId} ORDER BY time ASC LIMIT 1`)
+                        return this.db.query(`select * from ${tableName} WHERE _id > ${intervalId} ORDER BY time ASC LIMIT 1`)
                                 .then(jsonStr => {
-                                        if (jsonStr[0]['Overlays']) {
-                                        return JSON.parse(jsonStr[0]['Overlays']);
-                                        } else {
+                                        //console.log("JSON string is:", jsonStr);
+                                        if (typeof jsonStr[0] === 'undefined') {
+                                                //console.log("data not found,start polling");
                                                 return null;
+                                        } else {
+                                                var overlaysObj = {
+                                                        _id: jsonStr[0]['_id'],
+                                                        Overlays: JSON.parse(jsonStr[0]['Overlays'])
+                                                }
+                                                return [overlaysObj];
                                         }
                                 })
                                 .catch(error => console.log("Error while querying InfluxDB:", error));
                 }
                 //Most recent entry - intervalId not passed
-                return this.db.query(`select Overlays from ${tableName} ORDER BY time DESC LIMIT 1`)
+                return this.db.query(`select * from ${tableName} ORDER BY time DESC LIMIT 1`)
                         .then(jsonStr => {
-                                        if (jsonStr[0]['Overlays']) {
-                                        return JSON.parse(jsonStr[0]['Overlays']);
-                                        } else {
-                                                return null;
+                                //console.log("JSON string is:", jsonStr);
+                                if (typeof jsonStr[0] === 'undefined') {
+                                        //console.log("data not found,start polling");
+                                        return null;
+                                } else {
+                                        var overlaysObj = {
+                                                _id: jsonStr[0]['_id'],
+                                                Overlays: JSON.parse(jsonStr[0]['Overlays'])
                                         }
-                                })
+                                        return [overlaysObj];
+                                }
+                        })
                         .catch(error => console.log("Error while querying InfluxDB:", error));
         }
 
@@ -151,27 +168,38 @@ class InfluxDBImpl extends DataBaseInterface {
              * @param {String} overlayId 
              */
         async findTopology(tableName, intervalId, overlayId) {
+                //console.log("Querying table:", tableName, overlayId);
                 if (intervalId) {
                         //Find the next available interval, greater than the previous one from client
-                        return this.db.query(`select Toplogy from ${tableName} WHERE _id > ${intervalId} AND OverlayId=${overlayId} ORDER BY time ASC LIMIT 1`)
+                        return this.db.query(`select * from ` + tableName + ` WHERE (_id > ` + intervalId + ` AND OverlayId = \'` + overlayId + `\') ORDER BY time ASC LIMIT 1`)
                                 .then(jsonStr => {
-                                        if (jsonStr[0]['Topology']) {
-                                        return JSON.parse(jsonStr[0]['Topology']);
-                                        } else {
+                                        //console.log("jsonStr: Topology with id", jsonStr);
+                                        if (typeof jsonStr[0] === 'undefined') {
                                                 return null;
+                                        } else {
+                                                var topoObj = {
+                                                        _id: jsonStr[0]['_id'],
+                                                        Topology: [JSON.parse(jsonStr[0]['Topology'])]
+                                                }
+                                                return [topoObj];
                                         }
                                 })
                                 .catch(error => console.log("Error while querying InfluxDB:", error));
                 }
                 //Most recent entry - intervalId not passed
-                return this.db.query(`select Topology from ${tableName} WHERE OverlayId=${overlayId} ORDER BY time DESC LIMIT 1`)
+                return this.db.query(`select * from ` + tableName + ` WHERE OverlayId = \'` + overlayId + `\' ORDER BY time DESC LIMIT 1`)
                         .then(jsonStr => {
-                                        if (jsonStr[0]['Topology']) {
-                                        return JSON.parse(jsonStr[0]['Topology']);
-                                        } else {
-                                                return null;
+                                //console.log("jsonStr: Topology without id", jsonStr);
+                                if (typeof jsonStr[0] === 'undefined') {
+                                        return null;
+                                } else {
+                                        var topoObj = {
+                                                _id: jsonStr[0]['_id'],
+                                                Topology: [JSON.parse(jsonStr[0]['Topology'])]
                                         }
-                                })
+                                        return [topoObj];
+                                }
+                        })
                         .catch(error => console.log("Error while querying InfluxDB:", error));
         }
 
@@ -182,7 +210,7 @@ class InfluxDBImpl extends DataBaseInterface {
         * @param {String} overlayId 
         * @returns inserted data to topology collection
         */
-         async getOverlays(tableName, intervalId) {
+        async getOverlays(tableName, intervalId) {
                 var that = this;
                 var overlaysData = null;
                 async function streamReady() {
@@ -191,12 +219,21 @@ class InfluxDBImpl extends DataBaseInterface {
                                         //console.log("Data at setInterval is ", overlaysData);
                                         if (overlaysData) {
                                                 clearInterval(overlaysInterval)
+                                                //console.log("data set,exiting poll");
                                                 return ok();
                                         } else {
-                                                overlaysData = that.db.query('select _id from ' + tableName + ' WHERE _id > ' + intervalId + ' ORDER BY time DESC LIMIT 1')
-                                                        .then(intervalId => {
-                                                                if (intervalId) {
-                                                                        return that.db.query('select Overlays from ' + tableName + ' ORDER BY time DESC LIMIT 1');
+                                                that.db.query('select _id from ' + tableName + ' WHERE _id > ' + intervalId + ' ORDER BY time DESC LIMIT 1')
+                                                        .then(intervalIdData => {
+                                                                //console.log("Got interval id inside stream ready as:", intervalIdData, intervalIdData['groupRows']);
+                                                                if (intervalIdData['groupRows'].length > 0) {
+                                                                        overlaysData = that.db.query('select * from ' + tableName + ' ORDER BY time DESC LIMIT 1')
+                                                                                .then(jsonStr => {
+                                                                                        var overlaysObj = {
+                                                                                                _id: jsonStr[0]['_id'],
+                                                                                                Overlays: JSON.parse(jsonStr[0]['Overlays'])
+                                                                                        }
+                                                                                        return [overlaysObj];
+                                                                                });
                                                                 } else {
                                                                         return null;
                                                                 }
@@ -207,11 +244,9 @@ class InfluxDBImpl extends DataBaseInterface {
                 }
                 this.findOverlays(tableName, intervalId)
                         .then(data => {
-                                if (data && Object.keys(data).length === 0) {
-                                        console.log("No data found, setting data to null.")
+                                if (data === null || Object.keys(data).length === 0) {
+                                        //console.log("No data found, setting data to null.")
                                         overlaysData = null;
-                                        //setinterval to check the topology table for new entry every 3 sec
-                                        //querying only for intervalId
                                 } else {
                                         //console.log("Got data from DB not waitng. Data:", data);
                                         overlaysData = data;
@@ -222,7 +257,7 @@ class InfluxDBImpl extends DataBaseInterface {
                                 //console.log("Inside stream Ready ", data);
                                 return data;
                         });
-                //console.log("End of topology DB call with ", newData, topologyData)
+                //console.log("End of overlay DB call with ", newData, overlaysData)
                 return overlaysData;
         }
 
@@ -243,11 +278,21 @@ class InfluxDBImpl extends DataBaseInterface {
                                         if (topologyData) {
                                                 clearInterval(topologyInterval)
                                                 return ok();
-                                        } else { 
-                                                topologyData = that.db.query('select _id from ' + tableName + ' WHERE _id > ' + intervalId + ' AND OverlayId=' + overlayId + ' ORDER BY time DESC LIMIT 1')
-                                                        .then(intervalId => {
-                                                                if (intervalId) {
-                                                                        return that.db.query('select Topology from ' + tableName + ' WHERE OverlayId=' + overlayId + ' ORDER BY time DESC LIMIT 1');
+                                        } else {
+                                                that.db.query('select _id from ' + tableName + ' WHERE (_id > ' + intervalId + ' AND OverlayId = \'' + overlayId + '\') ORDER BY time DESC LIMIT 1')
+                                                        .then(intervalIdData => {
+                                                                //console.log("intervalIdData: ", intervalIdData);
+                                                                if (intervalIdData['groupRows'].length > 0) {
+                                                                        //console.log("Got interval data");
+                                                                        topologyData = that.db.query('select * from ' + tableName + ' WHERE OverlayId = \'' + overlayId + '\' ORDER BY time DESC LIMIT 1')
+                                                                                .then(jsonStr => {
+                                                                                        //console.log("Got topology data in setInterval", jsonStr);
+                                                                                        var topoObj = {
+                                                                                                _id: jsonStr[0]['_id'],
+                                                                                                Topology: [JSON.parse(jsonStr[0]['Topology'])]
+                                                                                        }
+                                                                                        return [topoObj];
+                                                                                });
                                                                 } else {
                                                                         return null;
                                                                 }
@@ -258,11 +303,10 @@ class InfluxDBImpl extends DataBaseInterface {
                 }
                 this.findTopology(tableName, intervalId, overlayId)
                         .then(data => {
-                                if (data && Object.keys(data).length === 0) {
-                                        console.log("No data found, setting data to null.")
+                                //console.log("Data got from find is:", data);
+                                if (data === null || Object.keys(data).length === 0) {
+                                        //console.log("No data found, setting data to null.")
                                         topologyData = null;
-                                        //setinterval to check the topology table for new entry every 3 sec
-                                        //querying only for intervalId
 
                                 } else {
                                         //console.log("Got data from DB not waitng. Data:", data);
@@ -279,3 +323,4 @@ class InfluxDBImpl extends DataBaseInterface {
         }
 }
 module.exports = { InfluxDBImpl }
+
