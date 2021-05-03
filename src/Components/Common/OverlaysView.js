@@ -76,7 +76,7 @@ class OverlaysView extends React.Component {
 
   renderOverlaysContent = () => {
     const overlays = this.state.overlays.getOverlayName().map((overlay) => {
-      return <Tooltip className='overlayTooltips' sticky={true} key={overlay} duration='500' animation='scale' interactive position='bottom' arrow={true} open={true}
+      return <Tooltip className='overlayTooltips' key={overlay} duration='500' animation='scale' interactive position='bottom' arrow={true} open={true}
         html={(<div>{overlay}</div>)}>
         <button onClick={this.selectOverlay.bind(this, overlay)} id={overlay} className='overlay' />
       </Tooltip>
