@@ -2,7 +2,7 @@
 
 function help()
 {
-    echo 'Enter start or stop as argument'
+    echo 'Enter start/stop as argument'
 }
 
 function options
@@ -21,6 +21,7 @@ function stop()
 {
     ps aux | grep -v grep | grep "Server.js" | awk '{print $2}' | xargs kill -9
 }
+
 
 cmd=$1
 if [[ -z $cmd ]] ; then

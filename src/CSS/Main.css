@@ -3,6 +3,8 @@
 
 
 #root {
+    min-width       : 50%;
+    min-height      : 50%;
     width           : 100vw;
     height          : 100vh;
     background-color: #101B2B;
@@ -187,11 +189,11 @@ h5 {
 
 #leftTools {
     position : absolute;
-    top      : 50%;
+    top      : 210px;
     -webkit-transform: translatey(-50%);
         -ms-transform: translatey(-50%);
             transform: translatey(-50%);
-    left     : 0.5%;
+    left     : 10px;
     width    : -webkit-fit-content;
     width    : -moz-fit-content;
     width    : fit-content;
@@ -286,7 +288,6 @@ h5 {
 }
 
 #minusBtn {
-    margin-top      : 15.5vh;
     background-image: url('../Images/Icons/minus_ic.svg');
     background-size : cover;
 }
@@ -394,3 +395,26 @@ h5 {
             transform: translateX(-6%);
 }
 
+/*.side-bar {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid;
+    border-radius: 0;
+    border-color: rgba(64, 194, 133, 0.693);
+    background-color: #3f716e;
+    transition: 0.8s ease;
+}
+
+.toggle-menu {
+    height: 50px;
+    border-top-left-radius: 10rem;
+    border-bottom-left-radius: 9rem;
+    width: 10px;
+    position: absolute;
+    outline: none;
+    z-index: 1;
+    background-color: rgba(64, 194, 133, 0.693);
+    border-color: rgba(64, 194, 133, 0.693);
+    border-right: 0;
+}*/

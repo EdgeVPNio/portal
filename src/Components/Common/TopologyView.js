@@ -23,8 +23,7 @@ class TopologyView extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      initMinZoom: 0.1,
-      initMaxZoom: 2,
+      zoomValue: 0.8,
       setMinZoom: 0.1,
       setMaxZoom: 2,
       graphElement: [],
@@ -61,7 +60,7 @@ class TopologyView extends React.Component {
         if (this.autoRefresh) {
           this.setState({ topology: new Topology(res) });
           this.renderGraph();
-          this.prepareSearch();
+          //this.prepareSearch();
           intervalId = res[0]._id;
           this.getTopology(overlayId, intervalId);
         }
@@ -81,7 +80,7 @@ class TopologyView extends React.Component {
       this.getTopology(this.props.overlayName);
     } else {
       this.renderGraph();
-      this.prepareSearch();
+      //this.prepareSearch();
     }
   }
 
@@ -505,7 +504,7 @@ class TopologyView extends React.Component {
 
             this.cy.maxZoom(this.state.setMaxZoom)
             this.cy.minZoom(this.state.setMinZoom)
-            this.cy.zoom(0.8)
+            this.cy.zoom(this.state.zoomValue)
             this.cy.center()
 
             var that = this
@@ -581,14 +580,14 @@ class TopologyView extends React.Component {
 
         />, document.getElementById('midArea'))
       }
-      ReactDOM.render(<select defaultValue="Topology" onChange={this.handleViewSelector} id="viewSelector" className="custom-select">
+      /*ReactDOM.render(<select defaultValue="Topology" onChange={this.handleViewSelector} id="viewSelector" className="custom-select">
         <option value="Topology">Topology</option>
         <option value="Subgraph">Subgraph</option>
         <option value="Map">Map</option>
         <option value="Log">Log</option>
         <option value="NetworkFlow">NetworkFlow</option>
         <option value="TunnelUtilization">TunnelUtilization</option>
-      </select>, document.getElementById('viewBar'))
+      </select>, document.getElementById('viewBar'))*/
     }
   }
 
@@ -617,15 +616,17 @@ class TopologyView extends React.Component {
   }
 
   zoomIn = () => {
-    var currentZoom = this.cy.zoom()
-    this.cy.zoom(currentZoom + 0.1)
-    document.getElementById('zoomSlider').value = (this.cy.zoom())
+    var InitZoomValue = this.cy.zoom() + 0.1
+    this.cy.zoom(InitZoomValue)
+    this.setState({ zoomValue: InitZoomValue })
+    //document.getElementById('zoomSlider').value = (this.cy.zoom())
   }
 
   zoomOut = () => {
-    var currentZoom = this.cy.zoom()
-    this.cy.zoom(currentZoom - 0.1)
-    document.getElementById('zoomSlider').value = (this.cy.zoom())
+    var InitZoomValue = this.cy.zoom() - 0.1
+    this.cy.zoom(InitZoomValue)
+    this.setstate({ zoomValue: InitZoomValue })
+    //document.getElementById('zoomSlider').value = (this.cy.zoom())
   }
 
   handleZoomSlider = (e) => {
@@ -633,13 +634,13 @@ class TopologyView extends React.Component {
   }
 
   handleWheel = (e) => {
-    document.getElementById('zoomSlider').value = (this.cy.zoom())
+    this.setstate({ zoomValue: this.cy.zoom() })
   }
 
   handleSetMinZoom = (e) => {
     try {
       this.cy.minZoom(parseFloat(e.target.value))
-      document.getElementById('zoomSlider').min = parseFloat(e.target.value)
+      //document.getElementById('zoomSlider').min = parseFloat(e.target.value)
     } finally {
       if (this.cy.zoom() < parseFloat(e.target.value)) {
         this.cy.zoom(parseFloat(e.target.value))
@@ -651,7 +652,7 @@ class TopologyView extends React.Component {
   handleSetMaxZoom = (e) => {
     try {
       this.cy.maxZoom(parseFloat(e.target.value))
-      document.getElementById('zoomSlider').max = parseFloat(e.target.value)
+      //document.getElementById('zoomSlider').max = parseFloat(e.target.value)
     } finally {
       if (this.cy.zoom() > parseFloat(e.target.value)) {
         this.cy.zoom(parseFloat(e.target.value))
@@ -1022,10 +1023,6 @@ class TopologyView extends React.Component {
         </div>
         <div>
           <button onClick={this.zoomIn} id="plusBtn" className="leftToolsBtn"></button>
-        </div>
-        <div>
-          <input id="zoomSlider" onChange={this.handleZoomSlider} type="range" min={this.state.initMinZoom}
-            max={this.state.initMaxZoom} step={0.1} defaultValue={0.8}></input>
         </div>
         <div>
           <button onClick={this.zoomOut} id="minusBtn" className="leftToolsBtn"></button>
