@@ -625,7 +625,7 @@ class TopologyView extends React.Component {
   zoomOut = () => {
     var InitZoomValue = this.cy.zoom() - 0.1
     this.cy.zoom(InitZoomValue)
-    this.setstate({ zoomValue: InitZoomValue })
+    this.setState({ zoomValue: InitZoomValue })
     //document.getElementById('zoomSlider').value = (this.cy.zoom())
   }
 
@@ -634,7 +634,7 @@ class TopologyView extends React.Component {
   }
 
   handleWheel = (e) => {
-    this.setstate({ zoomValue: this.cy.zoom() })
+    this.setState({ zoomValue: this.cy.zoom() })
   }
 
   handleSetMinZoom = (e) => {
@@ -910,7 +910,7 @@ class TopologyView extends React.Component {
     //this.cy.style({ width: window.innerWidth, height: window.innerHeight });
     //this.cy.wheelSensitivity(0.1);
     this.cy.layout({ name: 'circle' }).run();
-    this.cy.zoom(0.8);
+    this.cy.zoom(this.state.zoomValue)
     this.cy.center();
 
     //this.renderNewGraph();
