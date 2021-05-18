@@ -24,17 +24,18 @@ h5 {
 	color: #56c5bc;
 }
 
-#ipopTitle img {
-    margin-left : -20%;
+/*#ipopTitle img {
+    margin-left : 20%;
     margin-right: -15%;
     margin-top: -14%;
     margin-bottom: -15%;
 }
-
-#ipopTitle label {
-    margin-right: -10%;
-    margin-top: -8%;
+*/
+#evioTitle label {
+    text-align: center;
     font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: white;
 }
 
 #DetailsLabel {
@@ -88,6 +89,8 @@ h5 {
 .overlayBtn>button,
 .connectedNodeBtn>button,
 .sourceNodeBtn>button,
+.detailsNodeBtn>button,
+.detailsLinkBtn>button,
 .targetNodeBtn>button {
     text-align: left;
     width     : 100%;
@@ -99,6 +102,8 @@ h5 {
 
 .overlayBtn>button:focus,
 .connectedNodeBtn>button:focus,
+.detailsNodeBtn>button:focus,
+.detailsLinkBtn>button:focus,
 .sourceNodeBtn>button:focus,
 .targetNodeBtn>button:focus {
     -webkit-box-shadow: none;
@@ -157,6 +162,8 @@ h5 {
 
 .overlayBtn,
 .connectedNodeBtn,
+.detailsNodeBtn,
+.detailsLinkBtn,
 .transmissionCard {
     border-radius   : 3px;
     border          : solid #486186;
@@ -404,9 +411,9 @@ h5 {
     border-color: rgba(64, 194, 133, 0.693);
     background-color: #3f716e;
     transition: 0.8s ease;
-}
+}*/
 
-.toggle-menu {
+/*.toggle-menu {
     height: 50px;
     border-top-left-radius: 10rem;
     border-bottom-left-radius: 9rem;
@@ -418,3 +425,85 @@ h5 {
     border-color: rgba(64, 194, 133, 0.693);
     border-right: 0;
 }*/
+
+#App {
+  font-family: sans-serif;
+
+  /* Give app full page to work with */
+  height: 100vh;
+}
+
+/* Individual item */
+.bm-item {
+  /*display: inline-block;*/
+
+  /* Our sidebar item styling */
+  text-decoration: none;
+  /*margin-bottom: 10px;*/
+  /*color: #ffffff;*/
+  /*transition: color 0.2s;*/
+}
+
+/* Change color on hover */
+/*.bm-item:hover {
+  color: white;
+}
+
+/* The rest copied directly from react-burger-menu docs */
+
+/* Position and sizing of burger button */
+.bm-burger-button {
+  position: fixed;
+  width: 70px;
+  height: 70px;
+  right: 15px;
+  top: 10px;
+  border-radius: 55%;
+  border: 3px solid black;
+  box-shadow: 0 5px 5px #888888;
+  transition: transform .7s ease-in-out;
+}
+
+.bm-burger-button:hover {
+  width: 75px;
+  height: 75px;
+  transform: rotate(360deg);
+ }
+
+/* Color/shape of burger icon bars */
+.bm-burger-bars {
+  /*background: #ddf3f1;*/
+}
+
+/* Position and sizing of clickable cross button */
+.bm-cross-button {
+  height: 24px;
+  width: 24px;
+}
+
+/* Color/shape of close button cross */
+.bm-cross {
+  background: #bdc3c7;
+}
+
+/* General sidebar styles */
+.bm-menu {
+  background: #213758;
+  padding: 1em 1em 0;
+  font-size: 1.15em;
+}
+
+/* Morph shape necessary with bubble or elastic */
+.bm-morph-shape {
+  /*fill: #373a47;*/
+}
+
+/* Wrapper for item list */
+.bm-item-list {
+  /*color: #b8b7ad;*/
+}
+
+/* Styling of overlay */
+.bm-overlay {
+  /*background: rgba(0, 0, 0, 0.3);*/
+}

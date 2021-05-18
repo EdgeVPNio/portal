@@ -1,6 +1,5 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import RightPanel from './RightPanel'
 import Card from 'react-bootstrap/Card'
 import Cytoscape from 'react-cytoscapejs'
 import CollapsibleButton from './CollapsibleButton'
@@ -18,6 +17,7 @@ import not_reporting_ic from '../../Images/Icons/not_reporting_ic.svg'
 import GoogleMapReact from 'google-map-react'
 import Topology from './Topology'
 import { Spinner } from 'react-bootstrap'
+import SideBar from "./Sidebar";
 
 class TopologyView extends React.Component {
   constructor(props) {
@@ -60,7 +60,7 @@ class TopologyView extends React.Component {
         if (this.autoRefresh) {
           this.setState({ topology: new Topology(res) });
           this.renderGraph();
-          //this.prepareSearch();
+          this.prepareSearch();
           intervalId = res[0]._id;
           this.getTopology(overlayId, intervalId);
         }
@@ -72,15 +72,15 @@ class TopologyView extends React.Component {
   }
 
   componentDidMount() {
-    if(this.state.count === 0) {
+    /*if(this.state.count === 0) {
       //first render of topology graph - rightPanel disabled by default
       document.getElementById('rightPanel').hidden = true;
-    }
+    }*/
     if (this.autoRefresh) {
       this.getTopology(this.props.overlayName);
     } else {
       this.renderGraph();
-      //this.prepareSearch();
+      this.prepareSearch();
     }
   }
 
@@ -104,7 +104,7 @@ class TopologyView extends React.Component {
           } catch (e) {
             //console.log(e)
             this.cy.elements().removeClass('transparent')
-            ReactDOM.render(<></>, document.getElementById('rightPanelContent'))
+            ReactDOM.render(<></>, document.getElementById('sideBarContent'))
           }
         }}
         labelKey={(option) => { return (`${JSON.parse(option).data.label}`) }}
@@ -132,7 +132,14 @@ class TopologyView extends React.Component {
     var connectedNodes = this.state.nodeDetails.connectedNodes
     if (sourceNode.raw_data === " ") {
       //Not reporting nodes
-      var nodeContent = <div>
+      var nodeContent = 
+      <CollapsibleButton
+	    id={sourceNode.id + 'Btn'}
+	    className='detailsNodeBtn'
+	    key={sourceNode.id + 'Btn'}
+	    name={'Details'}
+	    >
+      <div>
 
         <h5>{sourceNode.name}</h5>
 
@@ -148,9 +155,10 @@ class TopologyView extends React.Component {
         <br /><br />
 
       </div>
+      </CollapsibleButton>
 
 
-      ReactDOM.render(nodeContent, document.getElementById('rightPanelContent'))
+      ReactDOM.render(nodeContent, document.getElementById('sideBarContent'))
       return;
     }
 
@@ -165,7 +173,16 @@ class TopologyView extends React.Component {
           return '-'
         }
       }).then((location) => {
-        var nodeContent = <div>
+        var nodeContent = 
+
+	<CollapsibleButton
+            id={sourceNode.id + 'Btn'}
+            className='detailsNodeBtn'
+            key={sourceNode.id + 'Btn'}
+            name={'Details'}
+            >
+	
+	<div>
 
           <h5>{sourceNode.name}</h5>
 
@@ -216,7 +233,8 @@ class TopologyView extends React.Component {
           </div>
 
         </div>
-        ReactDOM.render(nodeContent, document.getElementById('rightPanelContent'))
+	</CollapsibleButton>
+        ReactDOM.render(nodeContent, document.getElementById('sideBarContent'))
       })
   }
 
@@ -227,16 +245,33 @@ class TopologyView extends React.Component {
 
     if (sourceNodeDetails.raw_data === " " && targetNodeDetails.raw_data === " ") {
       //both nodes of the edge are not reporting - NR
-      var linkContentNR = <div>
+      var linkContentNR = 
+
+       <CollapsibleButton
+            id={'notReportingBtn'}
+            className='detailsLinkBtn'
+            key={'notReportingBtn'}
+            name={'Details'}
+            >
+      <div>
         <label id="valueLabel">{"Data not available"}</label>
       </div>
-      ReactDOM.render(linkContentNR, document.getElementById('rightPanelContent'))
+      </CollapsibleButton>
+      ReactDOM.render(linkContentNR, document.getElementById('sideBarContent'))
       return;
     }
 
     if (sourceNodeDetails.raw_data === " " || targetNodeDetails.raw_data === " ") {
       //if either of nodes is not reporting
-      var linkContent = <div>
+      var linkContent = 
+
+       <CollapsibleButton
+            id={linkDetails.name + 'Btn'}
+            className='detailsLinkBtn'
+            key={linkDetails.name + 'Btn'}
+            name={'Details'}
+            >
+      <div>
         <h5>{linkDetails.name}</h5>
 
         <div className="row">
@@ -291,7 +326,8 @@ class TopologyView extends React.Component {
         <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
 
       </div >
-      ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
+      </CollapsibleButton>
+      ReactDOM.render(linkContent, document.getElementById('sideBarContent'))
     }
 
     const srcCoordinate = sourceNodeDetails.raw_data['GeoCoordinates'].split(',')
@@ -315,7 +351,16 @@ class TopologyView extends React.Component {
               return '-'
             }
           }).then(targetLocation => {
-            var linkContent = <div>
+            var linkContent = 
+
+	    <CollapsibleButton
+              id={linkDetails.name + 'Btn'}
+              className='detailsLinkBtn'
+              key={linkDetails.name + 'Btn'}
+              name={'Details'}
+            >
+	    
+	     <div>
               <h5>{linkDetails.name}</h5>
 
               <div className="row">
@@ -382,7 +427,8 @@ class TopologyView extends React.Component {
               <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
 
             </div >
-            ReactDOM.render(linkContent, document.getElementById('rightPanelContent'))
+	    </CollapsibleButton>
+            ReactDOM.render(linkContent, document.getElementById('sideBarContent'))
           })
       })
   }
@@ -555,7 +601,7 @@ class TopologyView extends React.Component {
                 }
               } catch {
                 if (e.target[0] === this.cy) {
-                  ReactDOM.render(<></>, document.getElementById('rightPanelContent'))
+                  ReactDOM.render(<></>, document.getElementById('sideBarContent'))
                   that.cy.elements().removeClass('transparent')
                 }
               } finally {
@@ -1035,7 +1081,7 @@ class TopologyView extends React.Component {
         </div>
       </section>
 
-      <RightPanel rightPanelTopic="Details"></RightPanel>
+      <SideBar></SideBar>
 
     </>
   }
