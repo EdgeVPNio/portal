@@ -40,6 +40,7 @@ var cytoscapeStyle = [{
     'overlay-opacity': '0',
     'border-color': 'red',
     'border-width': '5px',
+    'line-dash-pattern': [6, 3]
   }
 }, {
   selector: 'edge.transparent',

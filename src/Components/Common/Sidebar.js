@@ -12,14 +12,14 @@ class Sidebar extends React.Component {
   render() {
   return (
     // Pass on our props
-    <Menu right isOpen= { true }customBurgerIcon={ <img src={evio_logo} alt=" " /> } width={380}>
+    <Menu right isOpen= { true } customBurgerIcon={ <img src={evio_logo} alt=" " /> } width={410} disableAutoFocus>
      <div id='evioLabel' style={{ textAlign:"center", top: "0px"}}>
 	<img src={evio_logo} alt={"Evio Logo"} width={"40px"} height={"25px"}/>
         <label id='evioTitle'>
           EdgeVPN.io Visualizer
       </label>
      </div>
-     <div id='searchBar' style={{ padding: "8px", margin: 0 }}>
+     <div id='searchBar' style={{ padding: "8px", margin: 0}}>
         {this.props.children}
       </div>
       <div id="sideBarContent" style={{ padding: "8px"}}>

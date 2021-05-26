@@ -402,6 +402,27 @@ h5 {
             transform: translateX(-6%);
 }
 
+.navBarRow {
+	display: inline-block;
+	margin-top: 15px;
+}
+
+.navBarBtn {
+	display: inline-block;
+	height: 50px;
+	width: 50px;
+	border-radius: 6px;
+	border: 3px solid #213758;
+        box-shadow: 0 5px 5px #888888;
+	transition: all 0.3s ease 0s;
+}
+
+.navBarBtn:hover {
+	background-color: #56c5bc;
+	border-radius: 50px;
+	transition: all 0.3s ease 0s;
+}
+
 /*.side-bar {
     height: 100% !important;
     display: flex;
@@ -489,7 +510,7 @@ h5 {
 /* General sidebar styles */
 .bm-menu {
   background: #213758;
-  padding: 1em 1em 0;
+  padding: 0.3em 0.3em 0;
   font-size: 1.15em;
 }
 

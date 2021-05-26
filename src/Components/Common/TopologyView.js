@@ -18,6 +18,9 @@ import GoogleMapReact from 'google-map-react'
 import Topology from './Topology'
 import { Spinner } from 'react-bootstrap'
 import SideBar from "./Sidebar";
+import { SiGraphql } from 'react-icons/si';
+import { BiNetworkChart} from 'react-icons/bi';
+import { GrMapLocation } from 'react-icons/gr';
 
 class TopologyView extends React.Component {
   constructor(props) {
@@ -95,7 +98,7 @@ class TopologyView extends React.Component {
     })
 
     perpareSearchElement.then((searchElement) => {
-      ReactDOM.render(<Typeahead
+      ReactDOM.render(<div><Typeahead
         id='searchOverlay'
         onChange={(selected) => {
           try {
@@ -123,7 +126,13 @@ class TopologyView extends React.Component {
           )
         }}
       >
-      </Typeahead>, document.getElementById('searchBar'))
+      </Typeahead>
+	<div class="navBarRow">
+	      <button title="Topology" class="navBarBtn" onClick={ this.handleViewSelector.bind(this, "Topology") }> <SiGraphql fontSize="1.5em"/> </button>
+	      <button title="SubGraph" class="navBarBtn" onClick={ this.handleViewSelector.bind(this, "Subgraph") }> <BiNetworkChart fontSize="1.5em"/> </button>
+	      <button title="Map" class="navBarBtn" onClick={ this.handleViewSelector.bind(this, "Map") }> <GrMapLocation fontSize="1.5em"/> </button>
+	</div>
+     </div>, document.getElementById('searchBar'))
     });
   }
 
@@ -138,6 +147,7 @@ class TopologyView extends React.Component {
 	    className='detailsNodeBtn'
 	    key={sourceNode.id + 'Btn'}
 	    name={'Details'}
+	    isOpen
 	    >
       <div>
 
@@ -180,6 +190,7 @@ class TopologyView extends React.Component {
             className='detailsNodeBtn'
             key={sourceNode.id + 'Btn'}
             name={'Details'}
+	    isOpen
             >
 	
 	<div>
@@ -252,6 +263,7 @@ class TopologyView extends React.Component {
             className='detailsLinkBtn'
             key={'notReportingBtn'}
             name={'Details'}
+	    isOpen
             >
       <div>
         <label id="valueLabel">{"Data not available"}</label>
@@ -358,6 +370,7 @@ class TopologyView extends React.Component {
               className='detailsLinkBtn'
               key={linkDetails.name + 'Btn'}
               name={'Details'}
+	      isOpen
             >
 	    
 	     <div>
@@ -555,7 +568,7 @@ class TopologyView extends React.Component {
 
             var that = this
 
-            if (this.state.currentSelectedElement !== null) {
+           if (this.state.currentSelectedElement !== null) {
               if (this.state.currentSelectedElement.isNode()) {
                 var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
                 var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
@@ -579,27 +592,18 @@ class TopologyView extends React.Component {
               try {
                 if (selectedElement.isNode()) {
                   that.setNodeDetails(selectedElement)
-                  //render right panel on node selection
-                  if (document.getElementById('rightPanel').hidden === true) {
-                      document.getElementById('rightPanel').hidden = false;
-                  }  
                   relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
                   notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
                 } else if (selectedElement.isEdge()) {
                   that.setLinkDetails(selectedElement)
-                  //render right panel on edge selection
-                  if (document.getElementById('rightPanel').hidden === true) {
-                    document.getElementById('rightPanel').hidden = false;
-                  } 
                   relatedElement = selectedElement.connectedNodes().union(selectedElement)
                   notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
                 }
 
-                if (document.getElementById('viewSelector').value !== 'Subgraph') {
-                  relatedElement.removeClass('transparent')
-                  notRelatedElement.addClass('transparent')
-                }
-              } catch {
+		relatedElement.removeClass('transparent')
+		notRelatedElement.addClass('transparent')
+	      } catch(error) {
+		console.log("Inside Catch: ", error);
                 if (e.target[0] === this.cy) {
                   ReactDOM.render(<></>, document.getElementById('sideBarContent'))
                   that.cy.elements().removeClass('transparent')
@@ -612,7 +616,7 @@ class TopologyView extends React.Component {
                 }
               }
             })
-          }}
+	  }}
           wheelSensitivity={0.1}
 
           elements={this.state.topology.getAlltopology()}
@@ -626,14 +630,6 @@ class TopologyView extends React.Component {
 
         />, document.getElementById('midArea'))
       }
-      /*ReactDOM.render(<select defaultValue="Topology" onChange={this.handleViewSelector} id="viewSelector" className="custom-select">
-        <option value="Topology">Topology</option>
-        <option value="Subgraph">Subgraph</option>
-        <option value="Map">Map</option>
-        <option value="Log">Log</option>
-        <option value="NetworkFlow">NetworkFlow</option>
-        <option value="TunnelUtilization">TunnelUtilization</option>
-      </select>, document.getElementById('viewBar'))*/
     }
   }
 
@@ -743,7 +739,6 @@ class TopologyView extends React.Component {
     document.getElementById('infoBtn').hidden = false
     document.getElementById('plusBtn').hidden = false
     document.getElementById('minusBtn').hidden = false
-    document.getElementById('zoomSlider').hidden = false
     if (this.state.currentView === 'Subgraph') {
       this.cy.elements().removeClass('subgraph')
     } else if (this.state.currentView === 'Map') {
@@ -937,7 +932,7 @@ class TopologyView extends React.Component {
 
 
   handleViewSelector = (e) => {
-    switch (e.target.value) {
+    switch (e) {
       case 'Subgraph': this.renderSubgraph(); break
       case 'Topology': this.renderTopology(); break
       case 'Map': this.renderMap(); break

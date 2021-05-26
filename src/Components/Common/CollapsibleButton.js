@@ -5,18 +5,20 @@ import Accordion from 'react-bootstrap/Accordion'
 import Button from 'react-bootstrap/Button'
 import DowmArrow from '../../Images/Icons/down-arrow-ic.svg'
 import UpArrow from '../../Images/Icons/up-arrow-ic.svg'
+
 class CollapsibleButton extends React.Component {
 
   constructor(props) {
     super(props)
     this.state = {
-      isToggle: false
+      isToggle: this.props.isOpen,
+      accordionStyle: this.props.isOpen ? "block" : "none"
     }
   }
 
   handleOnClick = () => {
     this.setState(prevState => {
-      return { isToggle: !prevState.isToggle }
+      return { isToggle: !prevState.isToggle, accordionStyle: prevState.accordionStyle === "block" ? "none" : "block" }
     })
   }
 
@@ -28,12 +30,12 @@ class CollapsibleButton extends React.Component {
             {this.props.name}
           </div>
           <div className="col" style={{ textAlign: "right" }}>
-            {this.state.isToggle?<img className="arrow" src={UpArrow} alt="up-arrow" />:<img className="arrow" src={DowmArrow} alt="down-arrow" />}
+            {this.state.isToggle ? <img className="arrow" src={UpArrow} alt="up-arrow" /> : <img className="arrow" src={DowmArrow} alt="down-arrow" /> }
           </div>
         </div>
       </Accordion.Toggle>
-      <Accordion.Collapse as={Card.Body} eventKey={this.props.name} style={{ backgroundColor: '#213758', padding: '1%' }}>
-        <div className="collapseContent">{this.props.children}</div>
+      <Accordion.Collapse as={Card.Body} eventKey={this.props.name} style={{ backgroundColor: '#213758', padding: '1%', display: this.state.accordionStyle, overflowWrap: "break-word"}}>
+	<div className="collapseContent"> {this.props.children} </div>
       </Accordion.Collapse>
     </Accordion>)
   }
