@@ -59,6 +59,7 @@ h5 {
     height: 100vh;
 }
 
+
 #overlayList {
     width : -webkit-fit-content;
     width : -moz-fit-content;
@@ -447,7 +448,7 @@ h5 {
     border-right: 0;
 }*/
 
-#App {
+#SidePanel {
   font-family: sans-serif;
 
   /* Give app full page to work with */

@@ -16,6 +16,7 @@
   "dependencies": {
     "@nivo/line": "^0.67.0",
     "@popperjs/core": "^2.8.3",
+    "@reduxjs/toolkit": "^1.5.1",
     "bootstrap": "^4.6.0",
     "css-loader": "^4.3.0",
     "cytoscape": "^3.18.0",
@@ -42,6 +43,7 @@
     "react-icons": "^4.2.0",
     "react-plotly.js": "^2.5.1",
     "react-popper": "^2.2.4",
+    "react-redux": "^7.2.4",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.0",
     "react-select": "^4.1.0",

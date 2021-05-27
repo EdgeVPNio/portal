@@ -3,11 +3,15 @@ import App from './App'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { HashRouter } from "react-router-dom";
+import store from './redux/evioStore'
+import { Provider } from 'react-redux'
 import * as serviceWorker from './serviceWorker'
 
 ReactDOM.render(
     <HashRouter>
-        <App />
+	<Provider store={store}>
+	   <App />
+	</Provider>
     </HashRouter>, 
 document.getElementById('root')
 );
