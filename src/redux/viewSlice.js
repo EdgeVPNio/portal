@@ -1,17 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const initialState = "OverlaysView"; 
+const initialState = { current: "OverlaysView" }; 
 
 const viewSlice = createSlice({
-  name: 'currentView',
+  name: 'view',
   initialState,
   reducers: {
-    changeView(state, action) {
-      state.currentView = action.payload
+    setView(state, action) {
+      state.current = action.payload
     },
   },
 })
 
-export const { changeView } = viewSlice.actions
+export const { setView } = viewSlice.actions
 
 export default viewSlice.reducer

@@ -1,20 +1,18 @@
 import TopologyView from './TopologyView'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux';
 import OverlaysView from './OverlaysView'
+import { Spinner } from 'react-bootstrap';
 
-
-
-
-export const CurrentView = (e) => {
-	const curView = useSelector((state) => state.currentView);
-	const selectedOverlayId = useSelector((state) => state.selectedOverlayId);
-	if (curView === 'OverlaysView') {
-		return <OverlaysView />;
-	}
-	else if (curView === 'TopologyView') {
-		return <TopologyView overlayName={selectedOverlayId}/>;
-	}
-	else {
-		return <OverlaysView />;
+export const CurrentView = () => {
+	const curView = useSelector((state) => state.view.current);
+	const selectedOverlayId = useSelector((state) => state.overlayId.current);
+	//const selectedNodeId = useSelector((state) => state.nodeId.current);
+	//const selectedTunnelId = useSelector((state) => state.tunnelId.current);
+	switch(curView) {
+		case 'OverlaysView' : return <OverlaysView />;
+		case 'TopologyView' : return <TopologyView overlayName={selectedOverlayId}/>;
+		default : return <Spinner id='loading' animation='border' variant='info' />;
 	}
 }
+
+

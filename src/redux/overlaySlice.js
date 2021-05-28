@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const initialState = "";
+//const initialState = {};
 
 const overlaySlice = createSlice({
-  name: 'selectedOverlayId',
-  initialState,
+  name: 'overlayId',
+  initialState: {current : ""},
   reducers: {
     setOverlayId(state, action) {
-      state.selectedOverlayId = action.payload
+      state.current = action.payload
     },
   },
 })

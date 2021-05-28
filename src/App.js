@@ -7,25 +7,25 @@ import SideBar from "./Components/Common/Sidebar";
 import { Typeahead } from 'react-bootstrap-typeahead';
 
 class ParentView extends React.Component {
-				constructor(props) {
-								super(props)
-								this.state = {
-								}
-				}
-
-				render() {
-								return (
-												<div id="container" className="container-fluid" style={{ padding: '0' }} >
-													<div id="mainContent" className="row" style={{ backgroundColor: '#101B2B', color: 'white', margin: 'auto' }}>
-															<CurrentView />
-															<div id="SidePanel">
-																<SideBar> 
-																	<Typeahead placeholder={'Search by identifier'} />
-																</SideBar>
-															</div>
-													</div>
-												</div>);
-				}
+	constructor(props) {
+		super(props)
+		this.state = {
+		}
+	}
+	
+	render() {
+		return (
+			<div id="container" className="container-fluid" style={{ padding: '0' }} >
+				<div id="mainContent" className="row" style={{ backgroundColor: '#101B2B', color: 'white', margin: 'auto' }}>
+					<CurrentView />
+					<div id="SidePanel">
+						<SideBar>
+							<Typeahead placeholder={'Search by identifier'} />
+						</SideBar>
+					</div>
+				</div>
+			</div>);
+	}
 }
 
 export default ParentView;

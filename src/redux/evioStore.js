@@ -2,10 +2,12 @@ import { configureStore } from '@reduxjs/toolkit'
 
 import viewReducer from './viewSlice'
 import overlayIdReducer from './overlaySlice'
+import topologyReducer from './topologySlice'
 
 export default configureStore({
   reducer: {
-    currentView: viewReducer,
-    selectedOverlayId: overlayIdReducer,
+    view: viewReducer,
+    overlayId: overlayIdReducer,
+    topology: topologyReducer
   },
 })

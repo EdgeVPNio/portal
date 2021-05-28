@@ -19,8 +19,11 @@ import Topology from './Topology'
 import { Spinner } from 'react-bootstrap'
 import SideBar from "./Sidebar";
 import { SiGraphql } from 'react-icons/si';
-import { BiNetworkChart} from 'react-icons/bi';
+import { BiNetworkChart } from 'react-icons/bi';
 import { GrMapLocation } from 'react-icons/gr';
+import { useDispatch, useSelector, connect } from 'react-redux';
+import { setTopology } from '../../redux/topologySlice'
+import { setView } from '../../redux/viewSlice';
 
 class TopologyView extends React.Component {
   constructor(props) {
@@ -38,8 +41,8 @@ class TopologyView extends React.Component {
       nodeDetails: null,
       linkDetails: null,
       currentSelectedElement: null,
-      currentView: null,
-      topology: null,
+      //currentView: null,
+      //topology: null,
       count: 0 //counter to render right panel for first time at renderGraph
     }
     this.autoRefresh = true; //flag to monitor autoRefresh onClick of refresh button
@@ -61,7 +64,8 @@ class TopologyView extends React.Component {
       })
       .then(res => {
         if (this.autoRefresh) {
-          this.setState({ topology: new Topology(res) });
+          this.props.setTopology(new Topology(res))
+          //this.setState({ topology: new Topology(res) });
           this.renderGraph();
           this.prepareSearch();
           intervalId = res[0]._id;
@@ -75,10 +79,6 @@ class TopologyView extends React.Component {
   }
 
   componentDidMount() {
-    /*if(this.state.count === 0) {
-      //first render of topology graph - rightPanel disabled by default
-      document.getElementById('rightPanel').hidden = true;
-    }*/
     if (this.autoRefresh) {
       this.getTopology(this.props.overlayName);
     } else {
@@ -90,7 +90,7 @@ class TopologyView extends React.Component {
   prepareSearch() {
     var perpareSearchElement = new Promise((resolve, reject) => {
       try {
-        var searchElement = this.state.topology.getAlltopology().map((element) => { return JSON.stringify(element) })
+        var searchElement = this.props.currentTopology.getAlltopology().map((element) => { return JSON.stringify(element) })
         resolve(searchElement)
       } catch (e) {
         reject(e)
@@ -98,41 +98,42 @@ class TopologyView extends React.Component {
     })
 
     perpareSearchElement.then((searchElement) => {
-      ReactDOM.render(<div><Typeahead
-        id='searchOverlay'
-        onChange={(selected) => {
-          try {
-            this.cy.elements().getElementById(JSON.parse(selected).data.id).trigger('click')
-            this.cy.elements().getElementById(JSON.parse(selected).data.id).select()
-          } catch (e) {
-            //console.log(e)
-            this.cy.elements().removeClass('transparent')
-            ReactDOM.render(<></>, document.getElementById('sideBarContent'))
-          }
-        }}
-        labelKey={(option) => { return (`${JSON.parse(option).data.label}`) }}
-        options={searchElement}
-        selected={this.state.selected}
-        selectHintOnEnter
-        placeholder={'select a node or tunnel'}
-        renderMenuItemChildren={(option) => {
-          return (
-            <div className='searchResult'>
-              <div className='resultLabel'>
-                <b>{JSON.parse(option).data.label}</b>
+      ReactDOM.render(<div>
+        <Typeahead
+          id='searchOverlay'
+          onChange={(selected) => {
+            try {
+              this.cy.elements().getElementById(JSON.parse(selected).data.id).trigger('click')
+              this.cy.elements().getElementById(JSON.parse(selected).data.id).select()
+            } catch (e) {
+              //console.log(e)
+              this.cy.elements().removeClass('transparent')
+              ReactDOM.render(<></>, document.getElementById('sideBarContent'))
+            }
+          }}
+          labelKey={(option) => { return (`${JSON.parse(option).data.label}`) }}
+          options={searchElement}
+          selected={this.state.selected}
+          selectHintOnEnter
+          placeholder={'select a node or tunnel'}
+          renderMenuItemChildren={(option) => {
+            return (
+              <div className='searchResult'>
+                <div className='resultLabel'>
+                  <b>{JSON.parse(option).data.label}</b>
+                </div>
+                <small className='resultLabel'>{`ID : ${JSON.parse(option).data.id}`}</small><br />
               </div>
-              <small className='resultLabel'>{`ID : ${JSON.parse(option).data.id}`}</small><br />
-            </div>
-          )
-        }}
-      >
-      </Typeahead>
-	<div class="navBarRow">
-	      <button title="Topology" class="navBarBtn" onClick={ this.handleViewSelector.bind(this, "Topology") }> <SiGraphql fontSize="1.5em"/> </button>
-	      <button title="SubGraph" class="navBarBtn" onClick={ this.handleViewSelector.bind(this, "Subgraph") }> <BiNetworkChart fontSize="1.5em"/> </button>
-	      <button title="Map" class="navBarBtn" onClick={ this.handleViewSelector.bind(this, "Map") }> <GrMapLocation fontSize="1.5em"/> </button>
-	</div>
-     </div>, document.getElementById('searchBar'))
+            )
+          }}
+        >
+        </Typeahead>
+        <div class="navBarRow">
+          <button title="Topology" class="navBarBtn" onClick={this.handleViewSelector.bind(this, "Topology")}> <SiGraphql fontSize="1.5em" /> </button>
+          <button title="SubGraph" class="navBarBtn" onClick={this.handleViewSelector.bind(this, "Subgraph")}> <BiNetworkChart fontSize="1.5em" /> </button>
+          <button title="Map" class="navBarBtn" onClick={this.handleViewSelector.bind(this, "Map")}> <GrMapLocation fontSize="1.5em" /> </button>
+        </div>
+      </div>, document.getElementById('searchBar'))
     });
   }
 
@@ -141,31 +142,31 @@ class TopologyView extends React.Component {
     var connectedNodes = this.state.nodeDetails.connectedNodes
     if (sourceNode.raw_data === " ") {
       //Not reporting nodes
-      var nodeContent = 
-      <CollapsibleButton
-	    id={sourceNode.id + 'Btn'}
-	    className='detailsNodeBtn'
-	    key={sourceNode.id + 'Btn'}
-	    name={'Details'}
-	    isOpen
-	    >
-      <div>
+      var nodeContent =
+        <CollapsibleButton
+          id={sourceNode.id + 'Btn'}
+          className='detailsNodeBtn'
+          key={sourceNode.id + 'Btn'}
+          name={'Details'}
+          isOpen
+        >
+          <div>
 
-        <h5>{sourceNode.name}</h5>
+            <h5>{sourceNode.name}</h5>
 
-        <div className="DetailsLabel">Node ID</div>
-        <label id="valueLabel">{sourceNode.id}</label>
+            <div className="DetailsLabel">Node ID</div>
+            <label id="valueLabel">{sourceNode.id}</label>
 
-        <div className="DetailsLabel">State</div>
-        <label id="valueLabel">{sourceNode.state}</label>
+            <div className="DetailsLabel">State</div>
+            <label id="valueLabel">{sourceNode.state}</label>
 
-        <div className="DetailsLabel">Location</div>
-        <label id="valueLabel">{"Unknown"}</label>
-        <hr style={{ backgroundColor: '#486186' }} />
-        <br /><br />
+            <div className="DetailsLabel">Location</div>
+            <label id="valueLabel">{"Unknown"}</label>
+            <hr style={{ backgroundColor: '#486186' }} />
+            <br /><br />
 
-      </div>
-      </CollapsibleButton>
+          </div>
+        </CollapsibleButton>
 
 
       ReactDOM.render(nodeContent, document.getElementById('sideBarContent'))
@@ -183,68 +184,67 @@ class TopologyView extends React.Component {
           return '-'
         }
       }).then((location) => {
-        var nodeContent = 
-
-	<CollapsibleButton
+        var nodeContent =
+          <CollapsibleButton
             id={sourceNode.id + 'Btn'}
             className='detailsNodeBtn'
             key={sourceNode.id + 'Btn'}
             name={'Details'}
-	    isOpen
-            >
-	
-	<div>
+            isOpen
+          >
 
-          <h5>{sourceNode.name}</h5>
+            <div>
 
-          <div id="DetailsLabel">Node ID</div>
-          <label id="valueLabel">{sourceNode.id}</label>
+              <h5>{sourceNode.name}</h5>
 
-          <div className="DetailsLabel">State</div>
-          <label id="valueLabel">{sourceNode.state}</label>
+              <div id="DetailsLabel">Node ID</div>
+              <label id="valueLabel">{sourceNode.id}</label>
 
-          <div className="DetailsLabel">Location</div>
-          <label id="valueLabel">{location.slice(7, location.length)}</label>
-          <hr style={{ backgroundColor: '#486186' }} />
-          <br /><br />
+              <div className="DetailsLabel">State</div>
+              <label id="valueLabel">{sourceNode.state}</label>
 
-          <div id="connectedNode" style={{ overflow: 'auto' }}>
-            {connectedNodes.map(connectedNode => {
-              try {
-                var connectedNodeDetail = this.state.topology.getConnectedNodeDetails(sourceNode.id, connectedNode.data().id)
-                var connectedNodeBtn =
-                  <CollapsibleButton
-                    id={connectedNode.data().id + 'Btn'}
-                    className='connectedNodeBtn'
-                    key={connectedNode.data().id + 'Btn'}
-                    eventKey={connectedNode.data().label}
-                    name={connectedNode.data().label}
-                  >
-                    <div className="DetailsLabel">Node ID</div>
-                    <label id="valueLabel">{connectedNode.data().id}</label>
-                    <div className="DetailsLabel">Tunnel ID</div>
-                    <label id="valueLabel">{connectedNodeDetail.id}</label>
-                    <div className="DetailsLabel">Interface Name</div>
-                    <label id="valueLabel">{connectedNodeDetail.name}</label>
-                    <div className="DetailsLabel">MAC</div>
-                    <label id="valueLabel">{connectedNodeDetail.MAC}</label>
-                    <div className="DetailsLabel">State</div>
-                    <label id="valueLabel">{connectedNodeDetail.state.slice(7, connectedNodeDetail.state.length)}</label>
-                    <div className="DetailsLabel">Tunnel Type</div>
-                    <label id="valueLabel">{connectedNodeDetail.type.slice(6, connectedNodeDetail.type.length)}</label>
+              <div className="DetailsLabel">Location</div>
+              <label id="valueLabel">{location.slice(7, location.length)}</label>
+              <hr style={{ backgroundColor: '#486186' }} />
+              <br /><br />
 
-                  </CollapsibleButton>
+              <div id="connectedNode" style={{ overflow: 'auto' }}>
+                {connectedNodes.map(connectedNode => {
+                  try {
+                    var connectedNodeDetail = this.props.currentTopology.getConnectedNodeDetails(sourceNode.id, connectedNode.data().id)
+                    var connectedNodeBtn =
+                      <CollapsibleButton
+                        id={connectedNode.data().id + 'Btn'}
+                        className='connectedNodeBtn'
+                        key={connectedNode.data().id + 'Btn'}
+                        eventKey={connectedNode.data().label}
+                        name={connectedNode.data().label}
+                      >
+                        <div className="DetailsLabel">Node ID</div>
+                        <label id="valueLabel">{connectedNode.data().id}</label>
+                        <div className="DetailsLabel">Tunnel ID</div>
+                        <label id="valueLabel">{connectedNodeDetail.id}</label>
+                        <div className="DetailsLabel">Interface Name</div>
+                        <label id="valueLabel">{connectedNodeDetail.name}</label>
+                        <div className="DetailsLabel">MAC</div>
+                        <label id="valueLabel">{connectedNodeDetail.MAC}</label>
+                        <div className="DetailsLabel">State</div>
+                        <label id="valueLabel">{connectedNodeDetail.state.slice(7, connectedNodeDetail.state.length)}</label>
+                        <div className="DetailsLabel">Tunnel Type</div>
+                        <label id="valueLabel">{connectedNodeDetail.type.slice(6, connectedNodeDetail.type.length)}</label>
 
-                return connectedNodeBtn
-              } catch (e) {
-                //console.log(e)
-                return false
-              }
-            })}
-          </div>
+                      </CollapsibleButton>
 
-        </div>
-	</CollapsibleButton>
+                    return connectedNodeBtn
+                  } catch (e) {
+                    //console.log(e)
+                    return false
+                  }
+                })}
+              </div>
+
+            </div>
+          </CollapsibleButton>
         ReactDOM.render(nodeContent, document.getElementById('sideBarContent'))
       })
   }
@@ -256,89 +256,89 @@ class TopologyView extends React.Component {
 
     if (sourceNodeDetails.raw_data === " " && targetNodeDetails.raw_data === " ") {
       //both nodes of the edge are not reporting - NR
-      var linkContentNR = 
+      var linkContentNR =
 
-       <CollapsibleButton
-            id={'notReportingBtn'}
-            className='detailsLinkBtn'
-            key={'notReportingBtn'}
-            name={'Details'}
-	    isOpen
-            >
-      <div>
-        <label id="valueLabel">{"Data not available"}</label>
-      </div>
-      </CollapsibleButton>
+        <CollapsibleButton
+          id={'notReportingBtn'}
+          className='detailsLinkBtn'
+          key={'notReportingBtn'}
+          name={'Details'}
+          isOpen
+        >
+          <div>
+            <label id="valueLabel">{"Data not available"}</label>
+          </div>
+        </CollapsibleButton>
       ReactDOM.render(linkContentNR, document.getElementById('sideBarContent'))
       return;
     }
 
     if (sourceNodeDetails.raw_data === " " || targetNodeDetails.raw_data === " ") {
       //if either of nodes is not reporting
-      var linkContent = 
+      var linkContent =
 
-       <CollapsibleButton
-            id={linkDetails.name + 'Btn'}
-            className='detailsLinkBtn'
-            key={linkDetails.name + 'Btn'}
-            name={'Details'}
-            >
-      <div>
-        <h5>{linkDetails.name}</h5>
+        <CollapsibleButton
+          id={linkDetails.name + 'Btn'}
+          className='detailsLinkBtn'
+          key={linkDetails.name + 'Btn'}
+          name={'Details'}
+        >
+          <div>
+            <h5>{linkDetails.name}</h5>
 
-        <div className="row">
+            <div className="row">
 
-          <div className="col-10" style={{ paddingRight: '0' }}>
+              <div className="col-10" style={{ paddingRight: '0' }}>
 
-            <CollapsibleButton
-              id={sourceNodeDetails.id + 'Btn'}
-              className='sourceNodeBtn'
-              key={sourceNodeDetails.id + 'Btn'}
-              eventKey={sourceNodeDetails.id + 'Btn'}
-              name={sourceNodeDetails.name}
-              style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
-            >
+                <CollapsibleButton
+                  id={sourceNodeDetails.id + 'Btn'}
+                  className='sourceNodeBtn'
+                  key={sourceNodeDetails.id + 'Btn'}
+                  eventKey={sourceNodeDetails.id + 'Btn'}
+                  name={sourceNodeDetails.name}
+                  style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                >
 
-              <div className="DetailsLabel">Node ID</div>
-              <label id="valueLabel">{sourceNodeDetails.id}</label>
+                  <div className="DetailsLabel">Node ID</div>
+                  <label id="valueLabel">{sourceNodeDetails.id}</label>
 
-            </CollapsibleButton>
+                </CollapsibleButton>
 
-            <CollapsibleButton
-              id={targetNodeDetails.id + 'Btn'}
-              className='targetNodeBtn'
-              key={targetNodeDetails.id + 'Btn'}
-              eventKey={targetNodeDetails.id + 'Btn'}
-              name={targetNodeDetails.name}
-              style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
-            >
+                <CollapsibleButton
+                  id={targetNodeDetails.id + 'Btn'}
+                  className='targetNodeBtn'
+                  key={targetNodeDetails.id + 'Btn'}
+                  eventKey={targetNodeDetails.id + 'Btn'}
+                  name={targetNodeDetails.name}
+                  style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                >
 
-              <div className="DetailsLabel">Node ID</div>
-              <label id="valueLabel">{targetNodeDetails.id}</label>
+                  <div className="DetailsLabel">Node ID</div>
+                  <label id="valueLabel">{targetNodeDetails.id}</label>
 
-            </CollapsibleButton>
+                </CollapsibleButton>
 
-          </div>
+              </div>
 
-          <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
-            <button onClick={this.handleSwitch} id="switchBtn" />
-          </div>
+              <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
+                <button onClick={this.handleSwitch} id="switchBtn" />
+              </div>
 
-        </div>
-        <hr style={{ backgroundColor: '#486186' }} />
-        <div className="DetailsLabel">Tunnel ID</div>
-        <label id="valueLabel">{linkDetails.id}</label>
-        <div className="DetailsLabel">Interface Name</div>
-        <label id="valueLabel">{linkDetails.name}</label>
-        <div className="DetailsLabel">MAC</div>
-        <label id="valueLabel">{linkDetails.MAC}</label>
-        <div className="DetailsLabel">State</div>
-        <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
-        <div className="DetailsLabel">Tunnel Type</div>
-        <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
+            </div>
+            <hr style={{ backgroundColor: '#486186' }} />
+            <div className="DetailsLabel">Tunnel ID</div>
+            <label id="valueLabel">{linkDetails.id}</label>
+            <div className="DetailsLabel">Interface Name</div>
+            <label id="valueLabel">{linkDetails.name}</label>
+            <div className="DetailsLabel">MAC</div>
+            <label id="valueLabel">{linkDetails.MAC}</label>
+            <div className="DetailsLabel">State</div>
+            <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
+            <div className="DetailsLabel">Tunnel Type</div>
+            <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
 
-      </div >
-      </CollapsibleButton>
+          </div >
+        </CollapsibleButton>
       ReactDOM.render(linkContent, document.getElementById('sideBarContent'))
     }
 
@@ -363,84 +363,84 @@ class TopologyView extends React.Component {
               return '-'
             }
           }).then(targetLocation => {
-            var linkContent = 
+            var linkContent =
 
-	    <CollapsibleButton
-              id={linkDetails.name + 'Btn'}
-              className='detailsLinkBtn'
-              key={linkDetails.name + 'Btn'}
-              name={'Details'}
-	      isOpen
-            >
-	    
-	     <div>
-              <h5>{linkDetails.name}</h5>
+              <CollapsibleButton
+                id={linkDetails.name + 'Btn'}
+                className='detailsLinkBtn'
+                key={linkDetails.name + 'Btn'}
+                name={'Details'}
+                isOpen
+              >
 
-              <div className="row">
+                <div>
+                  <h5>{linkDetails.name}</h5>
 
-                <div className="col-10" style={{ paddingRight: '0' }}>
+                  <div className="row">
 
-                  <CollapsibleButton
-                    id={sourceNodeDetails.id + 'Btn'}
-                    className='sourceNodeBtn'
-                    key={sourceNodeDetails.id + 'Btn'}
-                    eventKey={sourceNodeDetails.id + 'Btn'}
-                    name={sourceNodeDetails.name}
-                    style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
-                  >
+                    <div className="col-10" style={{ paddingRight: '0' }}>
 
-                    <div className="DetailsLabel">Node ID</div>
-                    <label id="valueLabel">{sourceNodeDetails.id}</label>
+                      <CollapsibleButton
+                        id={sourceNodeDetails.id + 'Btn'}
+                        className='sourceNodeBtn'
+                        key={sourceNodeDetails.id + 'Btn'}
+                        eventKey={sourceNodeDetails.id + 'Btn'}
+                        name={sourceNodeDetails.name}
+                        style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                      >
 
-                    <div className="DetailsLabel">State</div>
-                    <label id="valueLabel">{sourceNodeDetails.state}</label>
+                        <div className="DetailsLabel">Node ID</div>
+                        <label id="valueLabel">{sourceNodeDetails.id}</label>
 
-                    <div className="DetailsLabel">Location</div>
-                    <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label>
+                        <div className="DetailsLabel">State</div>
+                        <label id="valueLabel">{sourceNodeDetails.state}</label>
 
-                  </CollapsibleButton>
+                        <div className="DetailsLabel">Location</div>
+                        <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label>
 
-                  <CollapsibleButton
-                    id={targetNodeDetails.id + 'Btn'}
-                    className='targetNodeBtn'
-                    key={targetNodeDetails.id + 'Btn'}
-                    eventKey={targetNodeDetails.id + 'Btn'}
-                    name={targetNodeDetails.name}
-                    style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
-                  >
+                      </CollapsibleButton>
 
-                    <div className="DetailsLabel">Node ID</div>
-                    <label id="valueLabel">{targetNodeDetails.id}</label>
+                      <CollapsibleButton
+                        id={targetNodeDetails.id + 'Btn'}
+                        className='targetNodeBtn'
+                        key={targetNodeDetails.id + 'Btn'}
+                        eventKey={targetNodeDetails.id + 'Btn'}
+                        name={targetNodeDetails.name}
+                        style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                      >
 
-                    <div className="DetailsLabel">State</div>
-                    <label id="valueLabel">{targetNodeDetails.state}</label>
+                        <div className="DetailsLabel">Node ID</div>
+                        <label id="valueLabel">{targetNodeDetails.id}</label>
 
-                    <div className="DetailsLabel">Location</div>
-                    <label id="valueLabel">{targetLocation.slice(7, targetLocation.length)}</label>
+                        <div className="DetailsLabel">State</div>
+                        <label id="valueLabel">{targetNodeDetails.state}</label>
 
-                  </CollapsibleButton>
+                        <div className="DetailsLabel">Location</div>
+                        <label id="valueLabel">{targetLocation.slice(7, targetLocation.length)}</label>
 
-                </div>
+                      </CollapsibleButton>
 
-                <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
-                  <button onClick={this.handleSwitch} id="switchBtn" />
-                </div>
+                    </div>
 
-              </div>
-              <hr style={{ backgroundColor: '#486186' }} />
-              <div className="DetailsLabel">Tunnel ID</div>
-              <label id="valueLabel">{linkDetails.id}</label>
-              <div className="DetailsLabel">Interface Name</div>
-              <label id="valueLabel">{linkDetails.name}</label>
-              <div className="DetailsLabel">MAC</div>
-              <label id="valueLabel">{linkDetails.MAC}</label>
-              <div className="DetailsLabel">State</div>
-              <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
-              <div className="DetailsLabel">Tunnel Type</div>
-              <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
+                    <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
+                      <button onClick={this.handleSwitch} id="switchBtn" />
+                    </div>
 
-            </div >
-	    </CollapsibleButton>
+                  </div>
+                  <hr style={{ backgroundColor: '#486186' }} />
+                  <div className="DetailsLabel">Tunnel ID</div>
+                  <label id="valueLabel">{linkDetails.id}</label>
+                  <div className="DetailsLabel">Interface Name</div>
+                  <label id="valueLabel">{linkDetails.name}</label>
+                  <div className="DetailsLabel">MAC</div>
+                  <label id="valueLabel">{linkDetails.MAC}</label>
+                  <div className="DetailsLabel">State</div>
+                  <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
+                  <div className="DetailsLabel">Tunnel Type</div>
+                  <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
+
+                </div >
+              </CollapsibleButton>
             ReactDOM.render(linkContent, document.getElementById('sideBarContent'))
           })
       })
@@ -473,9 +473,9 @@ class TopologyView extends React.Component {
     var promise = new Promise(function (resolve, reject) {
       try {
         if (that.state.switchToggle) {
-          linkDetails = that.state.topology.getLinkDetails(that.state.currentSelectedElement.data().target, that.state.currentSelectedElement.data().id)
+          linkDetails = that.props.currentTopology.getLinkDetails(that.state.currentSelectedElement.data().target, that.state.currentSelectedElement.data().id)
         } else {
-          linkDetails = that.state.topology.getLinkDetails(that.state.currentSelectedElement.data().source, that.state.currentSelectedElement.data().id)
+          linkDetails = that.props.currentTopology.getLinkDetails(that.state.currentSelectedElement.data().source, that.state.currentSelectedElement.data().id)
         }
         resolve(linkDetails)
       } catch {
@@ -499,7 +499,7 @@ class TopologyView extends React.Component {
     var promise = new Promise(function (resolve, reject) {
       try {
 
-        var sourceNode = that.state.topology.getNodeDetails(node.data().id)
+        var sourceNode = that.props.currentTopology.getNodeDetails(node.data().id)
 
         var connectedNodes = that.cy.elements(node.incomers().union(node.outgoers())).filter((element) => {
           return element.isNode()
@@ -524,15 +524,15 @@ class TopologyView extends React.Component {
     var that = this
     var promise = new Promise(function (resolve, reject) {
       try {
-        var linkDetails = that.state.topology.getLinkDetails(link.data().source, link.data().id)
+        var linkDetails = that.props.currentTopology.getLinkDetails(link.data().source, link.data().id)
 
         var sourceNode = link.data().source
 
         var targetNode = link.data().target
 
-        var sourceNodeDetails = that.state.topology.getNodeDetails(link.data().source)
+        var sourceNodeDetails = that.props.currentTopology.getNodeDetails(link.data().source)
 
-        var targetNodeDetails = that.state.topology.getNodeDetails(link.data().target)
+        var targetNodeDetails = that.props.currentTopology.getNodeDetails(link.data().target)
 
         that.setState({ linkDetails: { linkDetails: linkDetails, sourceNode: sourceNode, targetNode: targetNode, sourceNodeDetails: sourceNodeDetails, targetNodeDetails: targetNodeDetails } })
 
@@ -550,87 +550,77 @@ class TopologyView extends React.Component {
   }
 
   renderGraph = () => {
-    if (this.state.topology === null) {
-      return <Spinner id='loading' animation='border' variant='info' />
-    } else {
-      if (this.state.currentView !== 'Map') {
-        this.setState({ currentView: 'Topology' })
-        ReactDOM.render(<Cytoscape id="cy"
-          cy={(cy) => {
-            this.cy = cy
+    //this.setState({ currentView: 'Topology' })
+    return <>
+      <Cytoscape id="cy"
+        cy={(cy) => {
+          this.cy = cy
 
-            this.setState({ cytoscape: cy })
+          this.setState({ cytoscape: cy })
 
-            this.cy.maxZoom(this.state.setMaxZoom)
-            this.cy.minZoom(this.state.setMinZoom)
-            this.cy.zoom(this.state.zoomValue)
-            this.cy.center()
+          this.cy.maxZoom(this.state.setMaxZoom)
+          this.cy.minZoom(this.state.setMinZoom)
+          this.cy.zoom(this.state.zoomValue)
+          this.cy.center()
 
-            var that = this
+          var that = this
 
-           if (this.state.currentSelectedElement !== null) {
-              if (this.state.currentSelectedElement.isNode()) {
-                var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
-                var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-                var notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-                selectedElement.select()
-                relatedElement.removeClass('transparent')
-                notRelatedElement.addClass('transparent')
-              } else if (this.state.currentSelectedElement.isEdge()) {
-                var relatedElement2 = this.state.currentSelectedElement.connectedNodes().union(this.state.currentSelectedElement)
-                var notRelatedElement2 = this.cy.elements().difference(this.state.currentSelectedElement.connectedNodes()).not(this.state.currentSelectedElement)
-                this.state.currentSelectedElement.select()
-                relatedElement2.removeClass('transparent')
-                notRelatedElement2.addClass('transparent')
+          if (this.state.currentSelectedElement !== null) {
+            if (this.state.currentSelectedElement.isNode()) {
+              var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
+              var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
+              var notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
+              selectedElement.select()
+              relatedElement.removeClass('transparent')
+              notRelatedElement.addClass('transparent')
+            } else if (this.state.currentSelectedElement.isEdge()) {
+              var relatedElement2 = this.state.currentSelectedElement.connectedNodes().union(this.state.currentSelectedElement)
+              var notRelatedElement2 = this.cy.elements().difference(this.state.currentSelectedElement.connectedNodes()).not(this.state.currentSelectedElement)
+              this.state.currentSelectedElement.select()
+              relatedElement2.removeClass('transparent')
+              notRelatedElement2.addClass('transparent')
+            }
+          }
+
+          this.cy.on('click', function (e) {
+            var selectedElement = e.target[0]
+            var relatedElement
+            var notRelatedElement
+            try {
+              if (selectedElement.isNode()) {
+                that.setNodeDetails(selectedElement)
+                relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
+                notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
+              } else if (selectedElement.isEdge()) {
+                that.setLinkDetails(selectedElement)
+                relatedElement = selectedElement.connectedNodes().union(selectedElement)
+                notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
+              }
+
+              relatedElement.removeClass('transparent')
+              notRelatedElement.addClass('transparent')
+            } catch (error) {
+              console.log("OnClick Error: ", error);
+              if (e.target[0] === this.cy) {
+                ReactDOM.render(<></>, document.getElementById('sideBarContent'))
+                that.cy.elements().removeClass('transparent')
+              }
+            } finally {
+              if (e.target[0] !== this.cy) {
+                that.setState({ switchToggle: false, currentSelectedElement: e.target })
+              } else {
+                that.setState({ switchToggle: true, currentSelectedElement: null })
               }
             }
-
-            this.cy.on('click', function (e) {
-              var selectedElement = e.target[0]
-              var relatedElement
-              var notRelatedElement
-              try {
-                if (selectedElement.isNode()) {
-                  that.setNodeDetails(selectedElement)
-                  relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-                  notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-                } else if (selectedElement.isEdge()) {
-                  that.setLinkDetails(selectedElement)
-                  relatedElement = selectedElement.connectedNodes().union(selectedElement)
-                  notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
-                }
-
-		relatedElement.removeClass('transparent')
-		notRelatedElement.addClass('transparent')
-	      } catch(error) {
-		console.log("Inside Catch: ", error);
-                if (e.target[0] === this.cy) {
-                  ReactDOM.render(<></>, document.getElementById('sideBarContent'))
-                  that.cy.elements().removeClass('transparent')
-                }
-              } finally {
-                if (e.target[0] !== this.cy) {
-                  that.setState({ switchToggle: false, currentSelectedElement: e.target })
-                } else {
-                  that.setState({ switchToggle: true, currentSelectedElement: null })
-                }
-              }
-            })
-	  }}
-          wheelSensitivity={0.1}
-
-          elements={this.state.topology.getAlltopology()}
-
-          stylesheet={cytoscapeStyle}
-
-          style={{ width: window.innerWidth, height: window.innerHeight }}
-
-          layout={{ name: 'circle', clockwise: true }}
-
-
-        />, document.getElementById('midArea'))
-      }
-    }
+          })
+        }}
+        wheelSensitivity={0.1}
+        elements={this.props.currentTopology.getAlltopology()}
+        stylesheet={cytoscapeStyle}
+        style={{ width: window.innerWidth, height: window.innerHeight }}
+        layout={{ name: 'circle', clockwise: true }}
+      />
+    </>
   }
 
   elementFilter = (element, props) => {
@@ -942,7 +932,7 @@ class TopologyView extends React.Component {
   }
 
   handleRedrawGraph = () => {
-    //var prevTopology = this.state.topology;
+    //var prevTopology = this.props.currentTopology;
     //var copytopology = JSON.parse(JSON.stringify(prevTopology));
     //this.setState({ topology : null});
     //this.setState({ copyTopology : copytopology });
@@ -959,7 +949,7 @@ class TopologyView extends React.Component {
     //this.componentDidMount();
   }
 
-  render() {
+  renderLeftTools = () => {
     return <>
       <div id="leftTools">
         <button id="elementBreadcrumb" className="leftToolsBtn">
@@ -1069,19 +1059,39 @@ class TopologyView extends React.Component {
           <button onClick={this.zoomOut} id="minusBtn" className="leftToolsBtn"></button>
         </div>
       </div>
+    </>
+  }
 
+  renderCytoscape = () => {
+    if (this.props.currentTopology === null) {
+      return <Spinner id='loading' animation='border' variant='info' />
+    }
+    return <>
       <section onWheel={this.handleWheel} style={{ width: '100vw', height: '100vh' }}>
-        <div id="midArea">
-
+        <div id="midArea" >
+          {this.renderGraph()}
         </div>
       </section>
+    </>
+  }
 
-      <SideBar></SideBar>
-
+  render() {
+    return <>
+      {this.renderLeftTools()}
+      {this.renderCytoscape()}
     </>
   }
 }
 
-export default TopologyView
+const mapStateToProps = state => ({
+  currentTopology: state.topology.current
+});
+
+const mapDispatchToProps = {
+  setView,
+  setTopology,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(TopologyView);
 
 
