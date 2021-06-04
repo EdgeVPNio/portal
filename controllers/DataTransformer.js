@@ -23,7 +23,7 @@
 /**
  * Class to hold the data transform functionality.
  */
-class DataTransformer {
+ class DataTransformer {
     /**
      * Function to transform the raw data into data required to be stored in the DB.
      * Refer to the design document for more details on the data format.
@@ -43,8 +43,8 @@ class DataTransformer {
                 }
                 else {
                     var overlayData = {
-                        OverlayId:overlayId,
-                        Nodes:[]
+                        OverlayId: overlayId,
+                        Nodes: {}
                     }
                     topologyDict[overlayId] = overlayData;
                 }
@@ -53,60 +53,55 @@ class DataTransformer {
                 }
                 else {
                     var highLevelOverlayData = {
-                        OverlayId:overlayId,
-                        Nodes:[],
-                        Edges:[]
+                        OverlayId: overlayId,
+                        Nodes: new Set(),
+                        Edges: new Set()
                     }
                 }
                 overlayData['OverlayId'] = overlayId;
                 var linkManagerData = visData[overlayId]['LinkManager'];
                 var topologyData = visData[overlayId]['Topology'];
                 var nodeObject = {
-                    NodeId:data[timeStampId]['NodeName'],
-                    NodeName:data[timeStampId]['NodeName'],
-                    Version:data[timeStampId]['Version'],
-                    GeoCoordinates:data[timeStampId]['GeoCoordinate'],
-                    Edges:[]
+                    NodeId: data[timeStampId]['NodeId'],
+                    NodeName: data[timeStampId]['NodeName'],
+                    Version: data[timeStampId]['Version'],
+                    GeoCoordinates: data[timeStampId]['GeoCoordinate'],
+                    Edges: []
                 };
-                if(!highLevelOverlayData['Nodes'].includes(nodeObject.NodeId)) {
-                    highLevelOverlayData['Nodes'].push(nodeObject.NodeId);
-                }
+
                 for (var nodeId in linkManagerData) {
-                    nodeObject['NodeId'] = nodeId;
                     var edgeData = linkManagerData[nodeId]
                     for (var edgeId in edgeData) {
-                        if(!highLevelOverlayData['Edges'].includes(edgeId)) {
-                            highLevelOverlayData['Edges'].push(edgeId);
-                        }
+                        highLevelOverlayData['Edges'].add(edgeId);
                         var edgeObject = {
-                            EdgeId:edgeId,
-                            PeerId:topologyData[edgeId]['PeerId'],
-                            CreatedTime:topologyData[edgeId]['CreatedTime'],
-                            ConnectedTime:topologyData[edgeId]['ConnectedTime'],
-                            State:topologyData[edgeId]['State'],
-                            Type:topologyData[edgeId]['Type'],
-                            TapName:linkManagerData[nodeId][edgeId]['TapName'],
-                            MAC:linkManagerData[nodeId][edgeId]['MAC']
+                            EdgeId: edgeId,
+                            PeerId: topologyData[edgeId]['PeerId'],
+                            CreatedTime: topologyData[edgeId]['CreatedTime'],
+                            ConnectedTime: topologyData[edgeId]['ConnectedTime'],
+                            State: topologyData[edgeId]['State'],
+                            Type: topologyData[edgeId]['Type'],
+                            TapName: linkManagerData[nodeId][edgeId]['TapName'],
+                            MAC: linkManagerData[nodeId][edgeId]['MAC']
                         }
                         nodeObject['Edges'].push(edgeObject);
                     }
-                    overlayData['Nodes'].push(nodeObject);
-                }
-                if (Object.keys(nodeObject).length !== 0) {
-                    overlayData['Nodes'].push(nodeObject);
+                    
+                    highLevelOverlayData['Nodes'].add(nodeObject.NodeId);
+                    overlayData['Nodes'][nodeObject.NodeId] = nodeObject;
+                    //console.log("overlayData: ", overlayData)
                 }
                 topologyDict[overlayId] = overlayData;
                 overlayDict[overlayId] = highLevelOverlayData;
-            }    
+            }
         }
         Object.keys(topologyDict).forEach(function (item) {
             topologyArray.push(topologyDict[item]);
         });
         Object.keys(overlayDict).forEach(function (item) {
             var overlayObject = {
-                OverlayId:overlayDict[item]['OverlayId'],
-                NumNodes:overlayDict[item]['Nodes'].length,
-                NumEdges:overlayDict[item]['Edges'].length
+                OverlayId: overlayDict[item]['OverlayId'],
+                NumNodes: overlayDict[item]['Nodes'].size,
+                NumEdges: overlayDict[item]['Edges'].size
             }
             overlaysArray.push(overlayObject);
         });

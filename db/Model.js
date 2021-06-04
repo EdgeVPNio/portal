@@ -44,28 +44,28 @@ const overlaySchema = new mongoose.Schema({
 
 //----------------------------------- End of Overlays collection schema ------------------------------------------
 
-var edgeSchema = new mongoose.Schema({
-    EdgeId: String,
-    PeerId: String,
-    CreatedTime:Decimal128,
-    ConnectedTime:Decimal128,
-    State:String,
-    Type:String,
-    TapName:String,
-    MAC:String
-}, { _id: false });
+// var edgeSchema = new mongoose.Schema({
+//     EdgeId: String,
+//     PeerId: String,
+//     CreatedTime:Decimal128,
+//     ConnectedTime:Decimal128,
+//     State:String,
+//     Type:String,
+//     TapName:String,
+//     MAC:String
+// }, { _id: false });
 
-var nodeSchema = new mongoose.Schema({
-    NodeId: String,
-    NodeName:String,
-    Version: String,
-    GeoCoordinates:String,
-    Edges:[edgeSchema]
-}, { _id: false });
+// var nodeSchema = new mongoose.Schema({
+//     NodeId: String,
+//     NodeName:String,
+//     Version: String,
+//     GeoCoordinates:String,
+//     Edges:[edgeSchema]
+// }, { _id: false });
 
 var internalOverlaySchema = new mongoose.Schema({
     OverlayId:String,
-    Nodes:[nodeSchema]
+    Nodes:{}
 }, { _id: false })
 
 const topologySchema = new mongoose.Schema({
