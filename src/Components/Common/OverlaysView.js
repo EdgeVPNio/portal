@@ -131,7 +131,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   setView,
-  setOverlayId,
+  setOverlayId
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OverlaysView);

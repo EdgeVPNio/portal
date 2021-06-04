@@ -1,7 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-//const initialState = {};
-
 const overlaySlice = createSlice({
   name: 'overlayId',
   initialState: {current : ""},

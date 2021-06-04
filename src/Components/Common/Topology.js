@@ -1,12 +1,22 @@
+
+
 export default class Topology {
 
     constructor(response) {
         var topology = [];
-        var nodes = [];
         var nodeDetails = {};
         var edgeDetails = {};
-        var nodeSet = new Set();
-        var notConnectedSet = new Set();
+        var nodeSet = new Set(); //all nodeIds reported and inferred
+        var notReportingNodes = new Set(); //nodeIds of not reporting nodes
+        
+
+        if (!response)
+            return {
+                "graph": topology,
+                "nodeDetails": nodeDetails,
+                "edgeDetails": edgeDetails,
+                "notReportingNodes": notReportingNodes
+            };
 
         var nodesData = response[0].Topology[0].Nodes;
         for (var idx in nodesData) {
@@ -17,43 +27,29 @@ export default class Topology {
                     group: "nodes",
                     data: {
                         id: node.NodeId,
-                        label: node.NodeName,
-                        state: "Connected",
-                        type: "",
+                        label: node.NodeName, //name
+                        state: nodeStates.noTunnels,
                         coordinate: node.GeoCoordinates,
                         color: '#f2be22'
                     }
                 }
-                nodes.push(nodeDataNT);
-                var nodeDetailNT = {
-                    "name": node.NodeName,
-                    "id": node.NodeId,
-                    "state": "Connected",
-                    "raw_data": node
-                }
-                nodeDetails[node.NodeId] = nodeDetailNT;
+                nodeDetails[node.NodeId] = nodeDataNT;
                 continue;
             }
+
             //Connected nodes - CN
             var nodeDataCN = {
                 group: "nodes",
                 data: {
                     id: node.NodeId,
                     label: node.NodeName,
-                    state: "Connected",
-                    type: "",
+                    state: nodeStates.connected,
                     coordinate: node.GeoCoordinates,
                     color: '#8AA626'
                 }
             }
-            nodes.push(nodeDataCN);
-            var nodeDetailCN = {
-                "name": node.NodeName,
-                "id": node.NodeId,
-                "state": "Connected",
-                "raw_data": node
-            }
-            nodeDetails[node.NodeId] = nodeDetailCN;
+            nodeDetails[node.NodeId] = nodeDataCN;
+
             var edgesData = node.Edges;
             for (var edgeidx in edgesData) {
                 //Processing edges for each connected node
@@ -64,6 +60,8 @@ export default class Topology {
                     data: {
                         id: edge.EdgeId,
                         label: edge.EdgeId.slice(0, 7),
+                        tapName: edge.TapName,
+                        mac: edge.MAC,
                         source: node.NodeId,
                         target: edge.PeerId,
                         state: edge.State,
@@ -73,127 +71,78 @@ export default class Topology {
                     }
                 }
                 topology.push(edgeData);
-                var edgeDetail = {
-                    name: edge.TapName,
-                    id: edge.EdgeId,
-                    MAC: edge.MAC,
-                    state: edge.State,
-                    type: edge.Type,
-                    stats: "",
-                    source: node.NodeId,
-                    target: edge.PeerId,
-                    raw_data: edge
-                }
 
                 if (!edgeDetails[edge.EdgeId]) {
                     edgeDetails[edge.EdgeId] = {};
                 }
-                edgeDetails[edge.EdgeId][node.NodeId] = edgeDetail;
+                edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
             }
         }
 
         for (var nodeId of nodeSet) {
             if (!nodeDetails[nodeId]) {
                 //not reported nodes -NR
-                var nodeDetailNR = {
-                    "name": nodeId.slice(0, 7),
-                    "id": nodeId,
-                    "state": "Not Reporting",
-                    "raw_data": ' '
-                }
-                nodeDetails[nodeId] = nodeDetailNR;
                 var nodeDataNR = {
                     group: "nodes",
                     data: {
                         id: nodeId,
                         label: nodeId.slice(0, 7),
-                        state: "Not Reporting",
-                        type: "",
+                        state: nodeStates.notReporting,
                         coordinate: "",
                         color: "#ADD8E6"
                     }
                 }
-                nodes.push(nodeDataNR);
-                notConnectedSet.add(nodeId);
+                nodeDetails[nodeId] = nodeDataNR;
+                notReportingNodes.add(nodeId);
             }
         }
         //console.log("topology:", topology);
         //console.log("nodeDetails:", nodeDetails);
         //console.log("edgeDetails: ", edgeDetails);
-        //Logic to display in sorted cyclic order on cytoscape ring
-        nodes.sort(function (a, b) {
-            return a.data['id'].localeCompare(b.data['id']);
-        })
-	 //   console.log("nodes:",nodes)
-        nodes.forEach(node => topology.push(node))
+        //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
+        var nodes = Object.keys(nodeDetails).sort();
+        nodes.forEach(nodeId => topology.push(nodeDetails[nodeId]))
 
         this.getAlltopology = () => {
-            return topology
+            return topology;
         }
 
         this.getNodeDetails = (id) => {
-            return nodeDetails[id];
+            return nodeDetails[id].data;
         }
 
         this.getLinkDetails = (src, id) => {
-            return edgeDetails[id][src];
+            return edgeDetails[id][src].data;
         }
 
-        this.getConnectedNodeDetails = (src, tgt) => {
-            var connectedNodeDetails
+        this.getNeighborDetails = (src, tgt) => {
+            var srcEdgeData;
 
             Object.keys(edgeDetails).forEach(edgeId => {
-                Object.keys(edgeDetails[edgeId]).forEach(nodeId => {
-                    if (!notConnectedSet.has(nodeId) && nodeId === src && edgeDetails[edgeId][nodeId].target === tgt) {
-                        connectedNodeDetails = edgeDetails[edgeId][nodeId];
-                    }
-                })
+                //check for reporting src connected to tgt node
+                if (!notReportingNodes.has(src) && edgeDetails[edgeId][src].target === tgt) {
+                    srcEdgeData = edgeDetails[edgeId][src];
+                }
             })
-
-            return connectedNodeDetails
+            return srcEdgeData;
         }
 
-    }
-
-    getLinkColor(type) {
-        var linkColor;
-        switch (type) {
-            case 'CETypeILongDistance':
-                linkColor = '#5E4FA2'
-                break
-            case 'CETypeLongDistance':
-                linkColor = '#5E4FA2'
-                break
-            case 'CETypePredecessor':
-                linkColor = '#01665E'
-                break
-            case 'CETypeSuccessor':
-                linkColor = '#01665E'
-                break
-            default: break
+        this.getState = () => {
+            return {
+                "graph": topology,
+                "nodeDetails": nodeDetails,
+                "edgeDetails": edgeDetails,
+                "notReportingNodes": notReportingNodes
+            };
         }
-        return linkColor;
-    }
-
-    getLinkStyle(state) {
-        var linkStyle;
-        switch (state) {
-            case 'CEStateInitialized':
-            case 'CEStatePreAuth':
-            case 'CEStateAuthorized':
-            case 'CEStateCreated':
-                linkStyle = 'dotted'
-                break
-            case 'CEStateConnected':
-                linkStyle = 'solid'
-                break
-            case 'CEStateDisconnected':
-            case 'CEStateDeleting':
-                linkStyle = 'dashed'
-                break
-            default: break
+    
+        this.setState = (topoState) => {
+            topology = topoState["graph"];
+            nodeDetails = topoState["nodeDetails"];
+            edgeDetails = topoState["edgeDetails"];
+            notReportingNodes = topoState["notReportingNodes"];
         }
-        return linkStyle;
+
     }
 
 }

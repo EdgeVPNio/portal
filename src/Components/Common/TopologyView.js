@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import Card from 'react-bootstrap/Card'
-import Cytoscape from 'react-cytoscapejs'
+import CytoscapeComponent from 'react-cytoscapejs'
 import CollapsibleButton from './CollapsibleButton'
 import Popover from 'react-bootstrap/Popover'
 import cytoscapeStyle from './cytoscapeStyle.js'
@@ -15,7 +15,6 @@ import successor_ic from '../../Images/Icons/successor_ic.svg'
 import longdistance_ic from '../../Images/Icons/longdistance_ic.svg'
 import not_reporting_ic from '../../Images/Icons/not_reporting_ic.svg'
 import GoogleMapReact from 'google-map-react'
-import Topology from './Topology'
 import { Spinner } from 'react-bootstrap'
 import SideBar from "./Sidebar";
 import { SiGraphql } from 'react-icons/si';
@@ -24,6 +23,8 @@ import { GrMapLocation } from 'react-icons/gr';
 import { useDispatch, useSelector, connect } from 'react-redux';
 import { setTopology } from '../../redux/topologySlice'
 import { setView } from '../../redux/viewSlice';
+
+const nodeStates = { connected: "Connected", noTunnels: "No Tunnels", notReporting: "Not Reporting" };
 
 class TopologyView extends React.Component {
   constructor(props) {
@@ -42,8 +43,7 @@ class TopologyView extends React.Component {
       linkDetails: null,
       currentSelectedElement: null,
       //currentView: null,
-      //topology: null,
-      count: 0 //counter to render right panel for first time at renderGraph
+      cytoscape: null
     }
     this.autoRefresh = true; //flag to monitor autoRefresh onClick of refresh button
   }
@@ -53,7 +53,7 @@ class TopologyView extends React.Component {
    * @param {String} overlayId 
    * @param {String} intervalId 
    */
-  async getTopology(overlayId, intervalId) {
+  async apiQueryTopology(overlayId, intervalId) {
     var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId;
     //console.log("URL for topology:", url);
 
@@ -64,33 +64,27 @@ class TopologyView extends React.Component {
       })
       .then(res => {
         if (this.autoRefresh) {
-          this.props.setTopology(new Topology(res))
-          //this.setState({ topology: new Topology(res) });
-          this.renderGraph();
-          this.prepareSearch();
+          this.props.setTopology(this.getState(res));
+          //this.renderCytoscape();
+          //this.prepareSearch();
           intervalId = res[0]._id;
-          this.getTopology(overlayId, intervalId);
+          this.apiQueryTopology(overlayId, intervalId);
         }
       })
       .catch(err => {
         console.log("Failed to fetch details due to ", err);
-        this.getTopology(overlayId, intervalId)
+        this.apiQueryTopology(overlayId, intervalId)
       })
   }
 
   componentDidMount() {
-    if (this.autoRefresh) {
-      this.getTopology(this.props.overlayName);
-    } else {
-      this.renderGraph();
-      this.prepareSearch();
-    }
+    this.apiQueryTopology(this.props.overlayName);
   }
 
   prepareSearch() {
     var perpareSearchElement = new Promise((resolve, reject) => {
       try {
-        var searchElement = this.props.currentTopology.getAlltopology().map((element) => { return JSON.stringify(element) })
+        var searchElement = this.props.currentTopology.graph.map((element) => { return JSON.stringify(element) })
         resolve(searchElement)
       } catch (e) {
         reject(e)
@@ -140,7 +134,7 @@ class TopologyView extends React.Component {
   renderNodeDetails = () => {
     var sourceNode = this.state.nodeDetails.sourceNode
     var connectedNodes = this.state.nodeDetails.connectedNodes
-    if (sourceNode.raw_data === " ") {
+    if (sourceNode.state === nodeStates.notReporting) {
       //Not reporting nodes
       var nodeContent =
         <CollapsibleButton
@@ -152,7 +146,7 @@ class TopologyView extends React.Component {
         >
           <div>
 
-            <h5>{sourceNode.name}</h5>
+            <h5>{sourceNode.label}</h5>
 
             <div className="DetailsLabel">Node ID</div>
             <label id="valueLabel">{sourceNode.id}</label>
@@ -173,7 +167,7 @@ class TopologyView extends React.Component {
       return;
     }
 
-    var coordinate = sourceNode.raw_data['GeoCoordinates'].split(',')
+    var coordinate = sourceNode.coordinate.split(',')
     //GET location from coordinates passed from evio nodes through google API
     fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinate[0]},${coordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
       .then(res => res.json()).then((data) => {
@@ -195,7 +189,7 @@ class TopologyView extends React.Component {
 
             <div>
 
-              <h5>{sourceNode.name}</h5>
+              <h5>{sourceNode.label}</h5>
 
               <div id="DetailsLabel">Node ID</div>
               <label id="valueLabel">{sourceNode.id}</label>
@@ -211,7 +205,7 @@ class TopologyView extends React.Component {
               <div id="connectedNode" style={{ overflow: 'auto' }}>
                 {connectedNodes.map(connectedNode => {
                   try {
-                    var connectedNodeDetail = this.props.currentTopology.getConnectedNodeDetails(sourceNode.id, connectedNode.data().id)
+                    var connectedNodeDetail = this.props.currentTopology.getNeighborDetails(this.props.currentTopology, sourceNode.id, connectedNode.data().id)
                     var connectedNodeBtn =
                       <CollapsibleButton
                         id={connectedNode.data().id + 'Btn'}
@@ -225,9 +219,9 @@ class TopologyView extends React.Component {
                         <div className="DetailsLabel">Tunnel ID</div>
                         <label id="valueLabel">{connectedNodeDetail.id}</label>
                         <div className="DetailsLabel">Interface Name</div>
-                        <label id="valueLabel">{connectedNodeDetail.name}</label>
+                        <label id="valueLabel">{connectedNodeDetail.tapName}</label>
                         <div className="DetailsLabel">MAC</div>
-                        <label id="valueLabel">{connectedNodeDetail.MAC}</label>
+                        <label id="valueLabel">{connectedNodeDetail.mac}</label>
                         <div className="DetailsLabel">State</div>
                         <label id="valueLabel">{connectedNodeDetail.state.slice(7, connectedNodeDetail.state.length)}</label>
                         <div className="DetailsLabel">Tunnel Type</div>
@@ -254,7 +248,7 @@ class TopologyView extends React.Component {
     var sourceNodeDetails = this.state.linkDetails.sourceNodeDetails
     var targetNodeDetails = this.state.linkDetails.targetNodeDetails
 
-    if (sourceNodeDetails.raw_data === " " && targetNodeDetails.raw_data === " ") {
+    if (sourceNodeDetails.state === nodeStates.notReporting && targetNodeDetails.state === nodeStates.notReporting) {
       //both nodes of the edge are not reporting - NR
       var linkContentNR =
 
@@ -273,7 +267,7 @@ class TopologyView extends React.Component {
       return;
     }
 
-    if (sourceNodeDetails.raw_data === " " || targetNodeDetails.raw_data === " ") {
+    if (sourceNodeDetails.state === nodeStates.notReporting || targetNodeDetails.state === nodeStates.notReporting) {
       //if either of nodes is not reporting
       var linkContent =
 
@@ -295,7 +289,7 @@ class TopologyView extends React.Component {
                   className='sourceNodeBtn'
                   key={sourceNodeDetails.id + 'Btn'}
                   eventKey={sourceNodeDetails.id + 'Btn'}
-                  name={sourceNodeDetails.name}
+                  name={sourceNodeDetails.label}
                   style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
                 >
 
@@ -309,7 +303,7 @@ class TopologyView extends React.Component {
                   className='targetNodeBtn'
                   key={targetNodeDetails.id + 'Btn'}
                   eventKey={targetNodeDetails.id + 'Btn'}
-                  name={targetNodeDetails.name}
+                  name={targetNodeDetails.label}
                   style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
                 >
 
@@ -329,9 +323,9 @@ class TopologyView extends React.Component {
             <div className="DetailsLabel">Tunnel ID</div>
             <label id="valueLabel">{linkDetails.id}</label>
             <div className="DetailsLabel">Interface Name</div>
-            <label id="valueLabel">{linkDetails.name}</label>
+            <label id="valueLabel">{linkDetails.tapName}</label>
             <div className="DetailsLabel">MAC</div>
-            <label id="valueLabel">{linkDetails.MAC}</label>
+            <label id="valueLabel">{linkDetails.mac}</label>
             <div className="DetailsLabel">State</div>
             <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
             <div className="DetailsLabel">Tunnel Type</div>
@@ -342,9 +336,9 @@ class TopologyView extends React.Component {
       ReactDOM.render(linkContent, document.getElementById('sideBarContent'))
     }
 
-    const srcCoordinate = sourceNodeDetails.raw_data['GeoCoordinates'].split(',')
+    const srcCoordinate = sourceNodeDetails.coordinate.split(',')
 
-    const tgtCoordinate = targetNodeDetails.raw_data['GeoCoordinates'].split(',')
+    const tgtCoordinate = targetNodeDetails.coordinate.split(',')
     //GET location from coordinates passed for source evio node through google API
     fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${srcCoordinate[0]},${srcCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
       .then(res => res.json()).then(data => {
@@ -385,7 +379,7 @@ class TopologyView extends React.Component {
                         className='sourceNodeBtn'
                         key={sourceNodeDetails.id + 'Btn'}
                         eventKey={sourceNodeDetails.id + 'Btn'}
-                        name={sourceNodeDetails.name}
+                        name={sourceNodeDetails.label}
                         style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
                       >
 
@@ -405,7 +399,7 @@ class TopologyView extends React.Component {
                         className='targetNodeBtn'
                         key={targetNodeDetails.id + 'Btn'}
                         eventKey={targetNodeDetails.id + 'Btn'}
-                        name={targetNodeDetails.name}
+                        name={targetNodeDetails.label}
                         style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
                       >
 
@@ -431,9 +425,9 @@ class TopologyView extends React.Component {
                   <div className="DetailsLabel">Tunnel ID</div>
                   <label id="valueLabel">{linkDetails.id}</label>
                   <div className="DetailsLabel">Interface Name</div>
-                  <label id="valueLabel">{linkDetails.name}</label>
+                  <label id="valueLabel">{linkDetails.tapName}</label>
                   <div className="DetailsLabel">MAC</div>
-                  <label id="valueLabel">{linkDetails.MAC}</label>
+                  <label id="valueLabel">{linkDetails.mac}</label>
                   <div className="DetailsLabel">State</div>
                   <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
                   <div className="DetailsLabel">Tunnel Type</div>
@@ -473,9 +467,9 @@ class TopologyView extends React.Component {
     var promise = new Promise(function (resolve, reject) {
       try {
         if (that.state.switchToggle) {
-          linkDetails = that.props.currentTopology.getLinkDetails(that.state.currentSelectedElement.data().target, that.state.currentSelectedElement.data().id)
+          linkDetails = that.props.currentTopology.edgeDetails[that.state.currentSelectedElement.data().target][that.state.currentSelectedElement.data().id].data;
         } else {
-          linkDetails = that.props.currentTopology.getLinkDetails(that.state.currentSelectedElement.data().source, that.state.currentSelectedElement.data().id)
+          linkDetails = that.props.currentTopology.edgeDetails[that.state.currentSelectedElement.data().source][that.state.currentSelectedElement.data().id].data;
         }
         resolve(linkDetails)
       } catch {
@@ -499,7 +493,7 @@ class TopologyView extends React.Component {
     var promise = new Promise(function (resolve, reject) {
       try {
 
-        var sourceNode = that.props.currentTopology.getNodeDetails(node.data().id)
+        var sourceNode = that.props.currentTopology.nodeDetails[node.data().id].data;
 
         var connectedNodes = that.cy.elements(node.incomers().union(node.outgoers())).filter((element) => {
           return element.isNode()
@@ -524,15 +518,15 @@ class TopologyView extends React.Component {
     var that = this
     var promise = new Promise(function (resolve, reject) {
       try {
-        var linkDetails = that.props.currentTopology.getLinkDetails(link.data().source, link.data().id)
+        var linkDetails = that.props.currentTopology.edgeDetails[link.data().source][link.data().id].data;
 
         var sourceNode = link.data().source
 
         var targetNode = link.data().target
 
-        var sourceNodeDetails = that.props.currentTopology.getNodeDetails(link.data().source)
+        var sourceNodeDetails = that.props.currentTopology.nodeDetails[link.data().source].data;
 
-        var targetNodeDetails = that.props.currentTopology.getNodeDetails(link.data().target)
+        var targetNodeDetails = that.props.currentTopology.nodeDetails[link.data().target].data;
 
         that.setState({ linkDetails: { linkDetails: linkDetails, sourceNode: sourceNode, targetNode: targetNode, sourceNodeDetails: sourceNodeDetails, targetNodeDetails: targetNodeDetails } })
 
@@ -552,11 +546,11 @@ class TopologyView extends React.Component {
   renderGraph = () => {
     //this.setState({ currentView: 'Topology' })
     return <>
-      <Cytoscape id="cy"
+      <CytoscapeComponent id="cy"
         cy={(cy) => {
           this.cy = cy
 
-          this.setState({ cytoscape: cy })
+          //this.setState({ cytoscape: cy })
 
           this.cy.maxZoom(this.state.setMaxZoom)
           this.cy.minZoom(this.state.setMinZoom)
@@ -615,7 +609,7 @@ class TopologyView extends React.Component {
           })
         }}
         wheelSensitivity={0.1}
-        elements={this.props.currentTopology.getAlltopology()}
+        elements={JSON.parse(JSON.stringify(this.props.currentGraph))} //deep clone of global topo graph
         stylesheet={cytoscapeStyle}
         style={{ width: window.innerWidth, height: window.innerHeight }}
         layout={{ name: 'circle', clockwise: true }}
@@ -638,13 +632,13 @@ class TopologyView extends React.Component {
       // Setting auto refresh on
       document.getElementById('refreshBtn').style.opacity = '1';
       this.autoRefresh = true;
+      this.apiQueryTopology(this.props.overlayName);
     } else {
       // Setting auto refresh off
       document.getElementById('refreshBtn').style.opacity = '0.4';
       this.autoRefresh = false;
     }
     console.log("Handled refresh, called update with refresh set to", this.autoRefresh);
-    this.getTopology(this.props.overlayName);
   }
 
   zoomIn = () => {
@@ -1063,16 +1057,18 @@ class TopologyView extends React.Component {
   }
 
   renderCytoscape = () => {
-    if (this.props.currentTopology === null) {
-      return <Spinner id='loading' animation='border' variant='info' />
-    }
-    return <>
-      <section onWheel={this.handleWheel} style={{ width: '100vw', height: '100vh' }}>
+    if (Object.keys(this.props.currentGraph).length === 0) {
+      return <section onWheel={this.handleWheel} style={{ width: '100vw', height: '100vh' }}>
         <div id="midArea" >
-          {this.renderGraph()}
+          <Spinner id='loading' animation='border' variant='info' />
         </div>
       </section>
-    </>
+    }
+    return <section onWheel={this.handleWheel} style={{ width: '100vw', height: '100vh' }}>
+      <div id="midArea" >
+        {this.renderGraph()}
+      </div>
+    </section>;
   }
 
   render() {
@@ -1081,10 +1077,544 @@ class TopologyView extends React.Component {
       {this.renderCytoscape()}
     </>
   }
+
+  getState = (response) => {
+    var graph = [];
+    //var nodes = [];
+    var nodeDetails = {};
+    var edgeDetails = {};
+    var nodeSet = new Set(); //all nodeIds reported and inferred
+    var notReportingNodes = new Set(); //nodeIds of not reporting nodes
+    
+
+    if (!response)
+        return {
+            "graph": graph,
+            "nodeDetails": nodeDetails,
+            "edgeDetails": edgeDetails,
+            "notReportingNodes": notReportingNodes
+        };
+
+    var nodesData = response[0].Topology[0].Nodes;
+    for (var idx in nodesData) {
+        var node = nodesData[idx];
+        if (node.Edges.length === 0) {
+            //No tunnels node - NT
+            var nodeDataNT = {
+                group: "nodes",
+                data: {
+                    id: node.NodeId,
+                    label: node.NodeName, //name
+                    state: nodeStates.noTunnels,
+                    coordinate: node.GeoCoordinates,
+                    color: '#f2be22'
+                }
+            }
+            nodeDetails[node.NodeId] = nodeDataNT;
+            continue;
+        }
+        //Connected nodes - CN
+        var nodeDataCN = {
+            group: "nodes",
+            data: {
+                id: node.NodeId,
+                label: node.NodeName,
+                state: nodeStates.connected,
+                coordinate: node.GeoCoordinates,
+                color: '#8AA626'
+            }
+        }
+        nodeDetails[node.NodeId] = nodeDataCN;
+
+        var edgesData = node.Edges;
+        for (var edgeidx in edgesData) {
+            //Processing edges for each connected node
+            var edge = edgesData[edgeidx];
+            nodeSet.add(edge.PeerId);
+            var edgeData = {
+                group: "edges",
+                data: {
+                    id: edge.EdgeId,
+                    label: edge.EdgeId.slice(0, 7),
+                    tapName: edge.TapName,
+                    mac: edge.MAC,
+                    source: node.NodeId,
+                    target: edge.PeerId,
+                    state: edge.State,
+                    type: edge.Type,
+                    color: this.getLinkColor(edge.Type),
+                    style: this.getLinkStyle(edge.State)
+                }
+            }
+            graph.push(edgeData);
+
+            if (!edgeDetails[edge.EdgeId]) {
+                edgeDetails[edge.EdgeId] = {};
+            }
+            edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
+        }
+    }
+
+    for (var nodeId of nodeSet) {
+        if (!nodeDetails[nodeId]) {
+            //not reported nodes -NR
+            var nodeDataNR = {
+                group: "nodes",
+                data: {
+                    id: nodeId,
+                    label: nodeId.slice(0, 7),
+                    state: nodeStates.notReporting,
+                    coordinate: "",
+                    color: "#ADD8E6"
+                }
+            }
+            nodeDetails[nodeId] = nodeDataNR;
+            notReportingNodes.add(nodeId);
+        }
+    }
+    //console.log("topology:", topology);
+    //console.log("nodeDetails:", nodeDetails);
+    //console.log("edgeDetails: ", edgeDetails);
+    //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
+    var nodes = Object.keys(nodeDetails).sort();
+    nodes.forEach(nodeId => graph.push(nodeDetails[nodeId]));
+    // var graph = [];
+    // var nodeDetailsMap = {};
+    // var edgeDetailsMap = {};
+    // var nodeDetails = {};
+    // var edgeDetails = {};
+    // var nodeSet = new Set(); //all nodeIds reported and inferred
+    // var notReportingNodes = new Set(); //nodeIds of not reporting nodes
+
+
+    // if (!response)
+    //   return {
+    //     graph: graph,
+    //     nodeDetails: nodeDetails,
+    //     edgeDetails: edgeDetails,
+    //     notReportingNodes: notReportingNodes
+    //   };
+
+    // var nodesData = response[0].Topology[0].Nodes;
+    // for (var idx in nodesData) {
+    //   var node = nodesData[idx];
+    //   if (node.Edges.length === 0) {
+    //     //No tunnels node - NT
+    //     var nodeDataNT = {
+    //       group: "nodes",
+    //       data: {
+    //         id: node.NodeId,
+    //         label: node.NodeName, //name
+    //         state: nodeStates.noTunnels,
+    //         coordinate: node.GeoCoordinates,
+    //         color: '#f2be22'
+    //       }
+    //     }
+    //     var nodeDataNTMap = Map({
+    //       group: "nodes",
+    //       data: Map({
+    //         id: node.NodeId,
+    //         label: node.NodeName, //name
+    //         state: nodeStates.noTunnels,
+    //         coordinate: node.GeoCoordinates,
+    //         color: '#f2be22'
+    //       })
+    //     })
+    //     nodeDetails[node.NodeId] = nodeDataNT;
+    //     nodeDetailsMap = nodeDetailsMap.set(node.NodeId, nodeDataNTMap);
+    //     continue;
+    //   }
+    //   //Connected nodes - CN
+    //   var nodeDataCN = {
+    //     group: "nodes",
+    //     data: {
+    //       id: node.NodeId,
+    //       label: node.NodeName,
+    //       state: nodeStates.connected,
+    //       coordinate: node.GeoCoordinates,
+    //       color: '#8AA626'
+    //     }
+    //   }
+    //   var nodeDataCNMap = Map({
+    //     group: "nodes",
+    //     data: Map({
+    //       id: node.NodeId,
+    //       label: node.NodeName,
+    //       state: nodeStates.connected,
+    //       coordinate: node.GeoCoordinates,
+    //       color: '#8AA626'
+    //     })
+    //   })
+    //   nodeDetails[node.NodeId] = nodeDataCN;
+    //   nodeDetailsMap = nodeDetailsMap.set(node.NodeId, nodeDataCNMap);
+
+    //   var edgesData = node.Edges;
+    //   for (var edgeidx in edgesData) {
+    //     //Processing edges for each connected node
+    //     var edge = edgesData[edgeidx];
+    //     nodeSet.add(edge.PeerId);
+    //     var edgeData = {
+    //       group: "edges",
+    //       data: {
+    //         id: edge.EdgeId,
+    //         label: edge.EdgeId.slice(0, 7),
+    //         tapName: edge.TapName,
+    //         mac: edge.MAC,
+    //         source: node.NodeId,
+    //         target: edge.PeerId,
+    //         state: edge.State,
+    //         type: edge.Type,
+    //         color: this.getLinkColor(edge.Type),
+    //         style: this.getLinkStyle(edge.State)
+    //       }
+    //     }
+    //     var edgeDataMap = Map({
+    //       group: "edges",
+    //       data: Map({
+    //         id: edge.EdgeId,
+    //         label: edge.EdgeId.slice(0, 7),
+    //         tapName: edge.TapName,
+    //         mac: edge.MAC,
+    //         source: node.NodeId,
+    //         target: edge.PeerId,
+    //         state: edge.State,
+    //         type: edge.Type,
+    //         color: this.getLinkColor(edge.Type),
+    //         style: this.getLinkStyle(edge.State)
+    //       })
+    //     })
+    //     graph = graph.push(edgeDataMap);
+    //     if (!edgeDetails[edge.EdgeId]) {
+    //       edgeDetails[edge.EdgeId] = {};
+    //     }
+    //     edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
+    //     //edgeDetailsMap = edgeDetailsMap.set(edgeDetails[edge.EdgeId][node.NodeId], edgeDataMap);
+    //   }
+    // }
+
+    // for (var nodeId of nodeSet) {
+    //   if (!nodeDetails[nodeId]) {
+    //     var nodeDataNR = {
+    //       group: "nodes",
+    //       data: {
+    //         id: nodeId,
+    //         label: nodeId.slice(0, 7),
+    //         state: nodeStates.notReporting,
+    //         coordinate: "",
+    //         color: "#ADD8E6"
+    //       }
+    //     }
+    //     var nodeDataNRMap = Map ({
+    //       group: "nodes",
+    //       data: Map({
+    //         id: nodeId,
+    //         label: nodeId.slice(0, 7),
+    //         state: nodeStates.notReporting,
+    //         coordinate: "",
+    //         color: "#ADD8E6"
+    //       })
+    //     })
+    //     nodeDetails[nodeId] = nodeDataNR;
+    //     nodeDetailsMap = nodeDetailsMap.set(nodeId, nodeDataNRMap);
+    //     notReportingNodes.add(nodeId);
+    //   }
+    // }
+    // //console.log("graph:", graph);
+    // //console.log("nodeDetails:", nodeDetails);
+    // //console.log("edgeDetails: ", edgeDetails);
+    // //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
+    // // var nodes = Object.keys(nodeDetails).sort();
+
+    // // //   console.log("nodes:",nodes)
+    // // nodes.forEach(nodeId => topology.push(nodeDetails[nodeId]))
+    // edgeDetailsMap = Immutable.fromJS(edgeDetails);
+    // //nodeDetailsMap.keySeq().forEach(k => console.log("Key:", k));
+    // //nodeDetailsMap.valueSeq().forEach(k => console.log("Value:", k));
+    // //   console.log("nodes:",nodes)
+    // nodeDetailsMap.keySeq().forEach(nodeId => {
+    //   graph = graph.push(nodeDetailsMap.get(nodeId))});
+    // edgeDetailsMap.keySeq().forEach(k => console.log("Key:", k));
+    // edgeDetailsMap.valueSeq().forEach(k => console.log("Value:", k));
+    // edgeDetailsMap.keySeq().forEach(edgeId => {
+    //     edgeDetailsMap.get(edgeId).keySeq().forEach(nodeId => {
+    //       graph = graph.push(edgeDetailsMap.get(edgeId).get(nodeId));
+    //     })});
+    //var graph = [];
+    //var nodes = [];
+//     var nodeDetails = {};
+//     var edgeDetails = {};
+//     var nodeSet = new Set(); //all nodeIds reported and inferred
+//     var notReportingNodes = new Set(); //nodeIds of not reporting nodes
+
+//     var graph = 
+//       [{
+//         "group" : "nodes",
+//         "data": { "id": "a", "label": "Gene1" }
+//       },
+//       {
+//         "group" : "nodes",
+//         "data": { "id": "b", "label": "Gene2" }
+//       },
+//       {
+//         "group" : "nodes",
+//         "data": { "id": "c", "label": "Gene3" }
+//       },
+//       {
+//         "group" : "nodes",
+//         "data": { "id": "d", "label": "Gene4" }
+//       },
+//       {
+//         "group" : "nodes",
+//         "data": { "id": "e", "label": "Gene5" }
+//       },
+//       {
+//         "group" : "nodes",
+//         "data": { "id": "f", "label": "Gene6" }
+//       },
+//       {
+//         "group" : "edges",
+//         "data": {
+//           "id": "ab",
+//           "source": "a",
+//           "target": "b"
+//         }
+//       },
+//       {
+//         "group" : "edges",
+//         "data": {
+//           "id": "cd",
+//           "source": "c",
+//           "target": "d"
+//         }
+//       },
+//       {
+//         "group" : "edges",
+//         "data": {
+//           "id": "ef",
+//           "source": "e",
+//           "target": "f"
+//         }
+//       },
+//       {
+//         "group" : "edges",
+//         "data": {
+//           "id": "ac",
+//           "source": "a",
+//           "target": "d"
+//         }
+//       },
+//       {
+//         "group" : "edges",
+//         "data": {
+//           "id": "be",
+//           "source": "b",
+//           "target": "e"
+//         }
+//       }];
+//   //console.log("Mutable graph:", graph);
+//   graph = Immutable.fromJS(graph);
+//   console.log("Immutable graph:", graph)
+//   var dummy = Immutable.List([
+//     Immutable.Map({ group: "nodes", data: Immutable.Map({ id: 'a', label: 'a' }) }), 
+//     Immutable.Map({ group: "nodes", data: Immutable.Map({ id: 'b', label: 'b' }) }),
+//     Immutable.Map({ group: "edges", data: Immutable.Map({ id: 'ab', label: 'ab', source:'a', target:'b' }) })
+//   ]);
+//   console.log("Dummy graph:", dummy);
+//   //if (!response)
+//       return {
+//   graph: dummy,
+//   nodeDetails: nodeDetails,
+//   edgeDetails: edgeDetails,
+//   notReportingNodes: notReportingNodes
+// };;
+
+// var nodesData = response[0].Topology[0].Nodes;
+// for (var idx in nodesData) {
+//   var node = nodesData[idx];
+//   if (node.Edges.length === 0) {
+//     //No tunnels node - NT
+//     var nodeDataNT = {
+//       group: "nodes",
+//       data: {
+//         id: node.NodeId,
+//         label: node.NodeName, //name
+//         state: nodeStates.noTunnels,
+//         coordinate: node.GeoCoordinates,
+//         color: '#f2be22'
+//       }
+//     }
+//     //nodes.push(nodeDataNT);
+//     // var nodeDetailNT = {
+//     //     "name": node.NodeName,
+//     //     "id": node.NodeId,
+//     //     "state": "Connected",
+//     //     "raw_data": node
+//     // }
+//     nodeDetails[node.NodeId] = nodeDataNT;
+//     continue;
+//   }
+//   //Connected nodes - CN
+//   var nodeDataCN = {
+//     group: "nodes",
+//     data: {
+//       id: node.NodeId,
+//       label: node.NodeName,
+//       state: nodeStates.connected,
+//       coordinate: node.GeoCoordinates,
+//       color: '#8AA626'
+//     }
+//   }
+//   // nodes.push(nodeDataCN);
+//   // var nodeDetailCN = {
+//   //     "name": node.NodeName,
+//   //     "id": node.NodeId,
+//   //     "state": "Connected",
+//   //     "raw_data": node
+//   // }
+//   nodeDetails[node.NodeId] = nodeDataCN;
+
+//   var edgesData = node.Edges;
+//   for (var edgeidx in edgesData) {
+//     //Processing edges for each connected node
+//     var edge = edgesData[edgeidx];
+//     nodeSet.add(edge.PeerId);
+//     var edgeData = {
+//       group: "edges",
+//       data: {
+//         id: edge.EdgeId,
+//         label: edge.EdgeId.slice(0, 7),
+//         tapName: edge.TapName,
+//         mac: edge.MAC,
+//         source: node.NodeId,
+//         target: edge.PeerId,
+//         state: edge.State,
+//         type: edge.Type,
+//         color: this.getLinkColor(edge.Type),
+//         style: this.getLinkStyle(edge.State)
+//       }
+//     }
+//     graph.push(edgeData);
+//     // var edgeDetail = {
+//     //     name: edge.TapName,
+//     //     id: edge.EdgeId,
+//     //     MAC: edge.MAC,
+//     //     state: edge.State,
+//     //     type: edge.Type,
+//     //     stats: "",
+//     //     source: node.NodeId,
+//     //     target: edge.PeerId,
+//     //     raw_data: edge
+//     // }
+
+//     if (!edgeDetails[edge.EdgeId]) {
+//       edgeDetails[edge.EdgeId] = {};
+//     }
+//     edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
+//   }
+// }
+
+// for (var nodeId of nodeSet) {
+//   if (!nodeDetails[nodeId]) {
+//     //not reported nodes -NR
+//     // var nodeDetailNR = {
+//     //     "name": nodeId.slice(0, 7),
+//     //     "id": nodeId,
+//     //     "state": "Not Reporting",
+//     //     "raw_data": ' '
+//     // }
+//     var nodeDataNR = {
+//       group: "nodes",
+//       data: {
+//         id: nodeId,
+//         label: nodeId.slice(0, 7),
+//         state: nodeStates.notReporting,
+//         coordinate: "",
+//         color: "#ADD8E6"
+//       }
+//     }
+//     nodeDetails[nodeId] = nodeDataNR;
+//     //nodes.push(nodeDataNR);
+//     notReportingNodes.add(nodeId);
+//   }
+// }
+// //console.log("topology:", topology);
+// //console.log("nodeDetails:", nodeDetails);
+// //console.log("edgeDetails: ", edgeDetails);
+// //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
+// var nodes = Object.keys(nodeDetails).sort();
+
+// // nodeDetails.sort(function (a, b) {
+// //     return a.data['id'].localeCompare(b.data['id']);
+// // })
+// //   console.log("nodes:",nodes)
+// nodes.forEach(nodeId => graph.push(nodeDetails[nodeId]))
+// var graphImmutable = Immutable.fromJS(graph);
+// console.log("Graph:", graph);
+// console.log("Graph Immutable:", graphImmutable);
+return {
+  graph: graph,
+  nodeDetails: nodeDetails,
+  edgeDetails: edgeDetails,
+  notReportingNodes: notReportingNodes
+};
+}
+
+getNeighborDetails = (topoState, src, tgt) => {
+  var srcEdgeData;
+
+  Object.keys(topoState.edgeDetails).forEach(edgeId => {
+    if (!topoState.notReportingNodes.has(src) && topoState.edgeDetails[edgeId][src].target === tgt) {
+      srcEdgeData = topoState.edgeDetails[edgeId][src];
+    }
+  })
+  return srcEdgeData;
+}
+
+getLinkColor(type) {
+  var linkColor;
+  switch (type) {
+    case 'CETypeILongDistance':
+      linkColor = '#5E4FA2'
+      break
+    case 'CETypeLongDistance':
+      linkColor = '#5E4FA2'
+      break
+    case 'CETypePredecessor':
+      linkColor = '#01665E'
+      break
+    case 'CETypeSuccessor':
+      linkColor = '#01665E'
+      break
+    default: break
+  }
+  return linkColor;
+}
+
+getLinkStyle(state) {
+  var linkStyle;
+  switch (state) {
+    case 'CEStateInitialized':
+    case 'CEStatePreAuth':
+    case 'CEStateAuthorized':
+    case 'CEStateCreated':
+      linkStyle = 'dotted'
+      break
+    case 'CEStateConnected':
+      linkStyle = 'solid'
+      break
+    case 'CEStateDisconnected':
+    case 'CEStateDeleting':
+      linkStyle = 'dashed'
+      break
+    default: break
+  }
+  return linkStyle;
+}
 }
 
 const mapStateToProps = state => ({
-  currentTopology: state.topology.current
+  currentTopology: state.topology.current,
+  currentGraph: state.topology.graph
 });
 
 const mapDispatchToProps = {
@@ -1093,5 +1623,3 @@ const mapDispatchToProps = {
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TopologyView);
-
-
