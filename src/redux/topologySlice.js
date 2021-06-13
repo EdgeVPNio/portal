@@ -2,11 +2,12 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const topologySlice = createSlice({
   name: "topology",
-  initialState: { current: {}, graph: {} },
+  //initialState: { current: {}, graph: {} },
+  initialState: { current: {} },
   reducers: {
     setTopology(state, action) {
       state.current = action.payload;
-      state.graph = action.payload.graph;
+      //state.graph = action.payload.graph;
     },
   },
 });

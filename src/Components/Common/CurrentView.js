@@ -10,7 +10,7 @@ export const CurrentView = () => {
 	//const selectedTunnelId = useSelector((state) => state.tunnelId.current);
 	switch(curView) {
 		case 'OverlaysView' : return <OverlaysView />;
-		case 'TopologyView' : return <TopologyView overlayName={selectedOverlayId}/>;
+		case 'TopologyView' : return <TopologyView overlayId={selectedOverlayId}/>;
 		default : return <Spinner id='loading' animation='border' variant='info' />;
 	}
 }

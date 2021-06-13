@@ -47,11 +47,12 @@ if(process.env.PORT) {
 }
 
 var Data = {}
+var dbInstance;
 //As the object dbInstance is built, Evio db is connected from constructor, check for the type of database.
-if (process.env.DB == "mongo") {
-  var dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio');
-} else if (process.env.DB == "influx") {
-  var dbInstance = new InfluxDBImpl('Evio');
+if (process.env.DB === "mongo") {
+  dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio');
+} else if (process.env.DB === "influx") {
+  dbInstance = new InfluxDBImpl('Evio');
 }
 
 app.set('views', path.join(__dirname, '../build'));

@@ -1,34 +1,37 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import Card from 'react-bootstrap/Card'
-import CytoscapeComponent from 'react-cytoscapejs'
-import CollapsibleButton from './CollapsibleButton'
-import Popover from 'react-bootstrap/Popover'
-import cytoscapeStyle from './cytoscapeStyle.js'
-import { Typeahead } from 'react-bootstrap-typeahead'
-import static_ic from '../../Images/Icons/static_ic.svg'
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import ondemand_ic from '../../Images/Icons/ondemand_ic.svg'
-import connected_ic from '../../Images/Icons/connected_ic.svg'
-import no_tunnel_ic from '../../Images/Icons/no_tunnel_ic.svg'
-import successor_ic from '../../Images/Icons/successor_ic.svg'
-import longdistance_ic from '../../Images/Icons/longdistance_ic.svg'
-import not_reporting_ic from '../../Images/Icons/not_reporting_ic.svg'
-import GoogleMapReact from 'google-map-react'
-import { Spinner } from 'react-bootstrap'
+import React from "react";
+import ReactDOM from "react-dom";
+//import Card from "react-bootstrap/Card";
+import cytoscape from "cytoscape";
+import CytoscapeComponent from "react-cytoscapejs";
+import CollapsibleButton from "./CollapsibleButton";
+import Popover from "react-bootstrap/Popover";
+import cytoscapeStyle from "./cytoscapeStyle.js";
+import { Typeahead } from "react-bootstrap-typeahead";
+import static_ic from "../../Images/Icons/static_ic.svg";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import ondemand_ic from "../../Images/Icons/ondemand_ic.svg";
+import connected_ic from "../../Images/Icons/connected_ic.svg";
+import no_tunnel_ic from "../../Images/Icons/no_tunnel_ic.svg";
+import successor_ic from "../../Images/Icons/successor_ic.svg";
+import longdistance_ic from "../../Images/Icons/longdistance_ic.svg";
+import not_reporting_ic from "../../Images/Icons/not_reporting_ic.svg";
+import GoogleMapReact from "google-map-react";
+import { Spinner } from "react-bootstrap";
 import SideBar from "./Sidebar";
-import { SiGraphql } from 'react-icons/si';
-import { BiNetworkChart } from 'react-icons/bi';
-import { GrMapLocation } from 'react-icons/gr';
-import { useDispatch, useSelector, connect } from 'react-redux';
-import { setTopology } from '../../redux/topologySlice'
-import { setView } from '../../redux/viewSlice';
 
-const nodeStates = { connected: "Connected", noTunnels: "No Tunnels", notReporting: "Not Reporting" };
+import { useDispatch, useSelector, connect } from "react-redux";
+import { setTopology } from "../../redux/topologySlice";
+import { setView } from "../../redux/viewSlice";
+
+const nodeStates = {
+  connected: "Connected",
+  noTunnels: "No Tunnels",
+  notReporting: "Not Reporting",
+};
 
 class TopologyView extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       zoomValue: 0.8,
       setMinZoom: 0.1,
@@ -43,109 +46,225 @@ class TopologyView extends React.Component {
       linkDetails: null,
       currentSelectedElement: null,
       //currentView: null,
-      cytoscape: null
-    }
+      cytoscape: null,
+    };
     this.autoRefresh = true; //flag to monitor autoRefresh onClick of refresh button
+    this.intervalId = null;
+    this.timeoutId = null;
   }
 
   /**
    * Polling function on GET Topology data - runs untill autoRefresh is disabled
-   * @param {String} overlayId 
-   * @param {String} intervalId 
+   * @param {String} overlayId
+   * @param {String} intervalId
    */
   async apiQueryTopology(overlayId, intervalId) {
-    var url = '/topology?overlayid=' + overlayId + '&interval=' + intervalId;
-    //console.log("URL for topology:", url);
+    var url = "/topology?overlayid=" + overlayId + "&interval=" + intervalId;
+    var resp = await fetch(url).then((res) => {
+      //console.log(res);
+      return res.json();
+    });
+    return resp;
+  }
 
-    await fetch(url)
-      .then(res => {
-        console.log(res);
-        return res.json()
-      })
-      .then(res => {
+  queryTopology() {
+    this.apiQueryTopology(this.props.overlayId, this.intervalId)
+      .then((res) => {
+        this.props.setTopology(this.buildTopoRep(res));
         if (this.autoRefresh) {
-          this.props.setTopology(this.getState(res));
-          //this.renderCytoscape();
-          //this.prepareSearch();
-          intervalId = res[0]._id;
-          this.apiQueryTopology(overlayId, intervalId);
+          this.intervalId = res[0]._id;
+          this.queryTopology();
         }
       })
-      .catch(err => {
-        console.log("Failed to fetch details due to ", err);
-        this.apiQueryTopology(overlayId, intervalId)
-      })
+      .catch((err) => {
+        console.log("query topology failed ", err);
+        if (this.autoRefresh) {
+          this.timeoutId = setTimeout(this.queryTopology.bind(this), 10000);
+        }
+      });
   }
 
   componentDidMount() {
-    this.apiQueryTopology(this.props.overlayName);
+    // this.cy.maxZoom(this.state.setMaxZoom);
+    // this.cy.minZoom(this.state.setMinZoom);
+    // this.cy.zoom(this.state.zoomValue);
+    // this.cy.center();
+    // if (this.state.currentSelectedElement !== null) {
+    //   if (this.state.currentSelectedElement.isNode()) {
+    //     var selectedElement = this.cy
+    //       .elements()
+    //       .filter(
+    //         (node) =>
+    //           node.data().id === this.state.currentSelectedElement.data().id
+    //       )
+    //       .filter((element) => {
+    //         return element.isNode();
+    //       });
+    //     var relatedElement = selectedElement
+    //       .outgoers()
+    //       .union(selectedElement.incomers())
+    //       .union(selectedElement);
+    //     var notRelatedElement = this.cy
+    //       .elements()
+    //       .difference(
+    //         selectedElement.outgoers().union(selectedElement.incomers())
+    //       )
+    //       .not(selectedElement);
+    //     selectedElement.select();
+    //     relatedElement.removeClass("transparent");
+    //     notRelatedElement.addClass("transparent");
+    //   } else if (this.state.currentSelectedElement.isEdge()) {
+    //     var relatedElement2 = this.state.currentSelectedElement
+    //       .connectedNodes()
+    //       .union(this.state.currentSelectedElement);
+    //     var notRelatedElement2 = this.cy
+    //       .elements()
+    //       .difference(this.state.currentSelectedElement.connectedNodes())
+    //       .not(this.state.currentSelectedElement);
+    //     this.state.currentSelectedElement.select();
+    //     relatedElement2.removeClass("transparent");
+    //     notRelatedElement2.addClass("transparent");
+    //   }
+    // }
+    // var that = this;
+    // this.cy.on("click", function (e) {
+    //   var selectedElement = e.target[0];
+    //   var relatedElement;
+    //   var notRelatedElement;
+    //   try {
+    //     if (selectedElement.isNode()) {
+    //       that.setNodeDetails(selectedElement);
+    //       relatedElement = selectedElement
+    //         .outgoers()
+    //         .union(selectedElement.incomers())
+    //         .union(selectedElement);
+    //       notRelatedElement = that.cy
+    //         .elements()
+    //         .difference(
+    //           selectedElement.outgoers().union(selectedElement.incomers())
+    //         )
+    //         .not(selectedElement);
+    //     } else if (selectedElement.isEdge()) {
+    //       that.setLinkDetails(selectedElement);
+    //       relatedElement = selectedElement
+    //         .connectedNodes()
+    //         .union(selectedElement);
+    //       notRelatedElement = that.cy
+    //         .elements()
+    //         .difference(selectedElement.connectedNodes())
+    //         .not(selectedElement);
+    //     }
+
+    //     relatedElement.removeClass("transparent");
+    //     notRelatedElement.addClass("transparent");
+    //   } catch (error) {
+    //     console.log("OnClick Error: ", error);
+    //     if (e.target[0] === this.cy) {
+    //       ReactDOM.render(<></>, document.getElementById("sideBarContent"));
+    //       that.cy.elements().removeClass("transparent");
+    //     }
+    //   } finally {
+    //     if (e.target[0] !== this.cy) {
+    //       that.setState({
+    //         switchToggle: false,
+    //         currentSelectedElement: e.target,
+    //       });
+    //     } else {
+    //       that.setState({
+    //         switchToggle: true,
+    //         currentSelectedElement: null,
+    //       });
+    //     }
+    //   }
+    // });
+
+    this.queryTopology();
   }
+
+  componentWillUnmount() {
+    this.autoRefresh = false;
+    clearTimeout(this.timeoutId);
+  }
+
+  componentDidUpdate() {}
 
   prepareSearch() {
     var perpareSearchElement = new Promise((resolve, reject) => {
       try {
-        var searchElement = this.props.currentTopology.graph.map((element) => { return JSON.stringify(element) })
-        resolve(searchElement)
+        var searchElement = this.props.currentTopology.graph.map((element) => {
+          return JSON.stringify(element);
+        });
+        resolve(searchElement);
       } catch (e) {
-        reject(e)
+        reject(e);
       }
-    })
+    });
 
     perpareSearchElement.then((searchElement) => {
-      ReactDOM.render(<div>
-        <Typeahead
-          id='searchOverlay'
-          onChange={(selected) => {
-            try {
-              this.cy.elements().getElementById(JSON.parse(selected).data.id).trigger('click')
-              this.cy.elements().getElementById(JSON.parse(selected).data.id).select()
-            } catch (e) {
-              //console.log(e)
-              this.cy.elements().removeClass('transparent')
-              ReactDOM.render(<></>, document.getElementById('sideBarContent'))
-            }
-          }}
-          labelKey={(option) => { return (`${JSON.parse(option).data.label}`) }}
-          options={searchElement}
-          selected={this.state.selected}
-          selectHintOnEnter
-          placeholder={'select a node or tunnel'}
-          renderMenuItemChildren={(option) => {
-            return (
-              <div className='searchResult'>
-                <div className='resultLabel'>
-                  <b>{JSON.parse(option).data.label}</b>
+      ReactDOM.render(
+        <div>
+          <Typeahead
+            id="searchOverlay"
+            onChange={(selected) => {
+              try {
+                this.cy
+                  .elements()
+                  .getElementById(JSON.parse(selected).data.id)
+                  .trigger("click");
+                this.cy
+                  .elements()
+                  .getElementById(JSON.parse(selected).data.id)
+                  .select();
+              } catch (e) {
+                //console.log(e)
+                this.cy.elements().removeClass("transparent");
+                ReactDOM.render(
+                  <></>,
+                  document.getElementById("sideBarContent")
+                );
+              }
+            }}
+            labelKey={(option) => {
+              return `${JSON.parse(option).data.label}`;
+            }}
+            options={searchElement}
+            selected={this.state.selected}
+            selectHintOnEnter
+            placeholder={"select a node or tunnel"}
+            renderMenuItemChildren={(option) => {
+              return (
+                <div className="searchResult">
+                  <div className="resultLabel">
+                    <b>{JSON.parse(option).data.label}</b>
+                  </div>
+                  <small className="resultLabel">{`ID : ${
+                    JSON.parse(option).data.id
+                  }`}</small>
+                  <br />
                 </div>
-                <small className='resultLabel'>{`ID : ${JSON.parse(option).data.id}`}</small><br />
-              </div>
-            )
-          }}
-        >
-        </Typeahead>
-        <div class="navBarRow">
-          <button title="Topology" class="navBarBtn" onClick={this.handleViewSelector.bind(this, "Topology")}> <SiGraphql fontSize="1.5em" /> </button>
-          <button title="SubGraph" class="navBarBtn" onClick={this.handleViewSelector.bind(this, "Subgraph")}> <BiNetworkChart fontSize="1.5em" /> </button>
-          <button title="Map" class="navBarBtn" onClick={this.handleViewSelector.bind(this, "Map")}> <GrMapLocation fontSize="1.5em" /> </button>
-        </div>
-      </div>, document.getElementById('searchBar'))
+              );
+            }}
+          ></Typeahead>
+        </div>,
+        document.getElementById("searchBar")
+      );
     });
   }
 
   renderNodeDetails = () => {
-    var sourceNode = this.state.nodeDetails.sourceNode
-    var connectedNodes = this.state.nodeDetails.connectedNodes
+    var sourceNode = this.state.nodeDetails.sourceNode;
+    var connectedNodes = this.state.nodeDetails.connectedNodes;
     if (sourceNode.state === nodeStates.notReporting) {
       //Not reporting nodes
-      var nodeContent =
+      var nodeContent = (
         <CollapsibleButton
-          id={sourceNode.id + 'Btn'}
-          className='detailsNodeBtn'
-          key={sourceNode.id + 'Btn'}
-          name={'Details'}
+          id={sourceNode.id + "Btn"}
+          className="detailsNodeBtn"
+          key={sourceNode.id + "Btn"}
+          name={"Details"}
           isOpen
         >
           <div>
-
             <h5>{sourceNode.label}</h5>
 
             <div className="DetailsLabel">Node ID</div>
@@ -156,39 +275,41 @@ class TopologyView extends React.Component {
 
             <div className="DetailsLabel">Location</div>
             <label id="valueLabel">{"Unknown"}</label>
-            <hr style={{ backgroundColor: '#486186' }} />
-            <br /><br />
-
+            <hr style={{ backgroundColor: "#486186" }} />
+            <br />
+            <br />
           </div>
         </CollapsibleButton>
+      );
 
-
-      ReactDOM.render(nodeContent, document.getElementById('sideBarContent'))
+      ReactDOM.render(nodeContent, document.getElementById("sideBarContent"));
       return;
     }
 
-    var coordinate = sourceNode.coordinate.split(',')
+    var coordinate = sourceNode.coordinate.split(",");
     //GET location from coordinates passed from evio nodes through google API
-    fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinate[0]},${coordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
-      .then(res => res.json()).then((data) => {
+    fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinate[0]},${coordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`
+    )
+      .then((res) => res.json())
+      .then((data) => {
         // //console.log(data)
         try {
-          return data.results[data.results.length - 1].formatted_address
+          return data.results[data.results.length - 1].formatted_address;
         } catch {
-          return '-'
+          return "-";
         }
-      }).then((location) => {
-        var nodeContent =
+      })
+      .then((location) => {
+        var nodeContent = (
           <CollapsibleButton
-            id={sourceNode.id + 'Btn'}
-            className='detailsNodeBtn'
-            key={sourceNode.id + 'Btn'}
-            name={'Details'}
+            id={sourceNode.id + "Btn"}
+            className="detailsNodeBtn"
+            key={sourceNode.id + "Btn"}
+            name={"Details"}
             isOpen
           >
-
             <div>
-
               <h5>{sourceNode.label}</h5>
 
               <div id="DetailsLabel">Node ID</div>
@@ -198,19 +319,27 @@ class TopologyView extends React.Component {
               <label id="valueLabel">{sourceNode.state}</label>
 
               <div className="DetailsLabel">Location</div>
-              <label id="valueLabel">{location.slice(7, location.length)}</label>
-              <hr style={{ backgroundColor: '#486186' }} />
-              <br /><br />
+              <label id="valueLabel">
+                {location.slice(7, location.length)}
+              </label>
+              <hr style={{ backgroundColor: "#486186" }} />
+              <br />
+              <br />
 
-              <div id="connectedNode" style={{ overflow: 'auto' }}>
-                {connectedNodes.map(connectedNode => {
+              <div id="connectedNode" style={{ overflow: "auto" }}>
+                {connectedNodes.map((connectedNode) => {
                   try {
-                    var connectedNodeDetail = this.props.currentTopology.getNeighborDetails(this.props.currentTopology, sourceNode.id, connectedNode.data().id)
-                    var connectedNodeBtn =
+                    var connectedNodeDetail =
+                      this.props.currentTopology.getNeighborDetails(
+                        this.props.currentTopology,
+                        sourceNode.id,
+                        connectedNode.data().id
+                      );
+                    var connectedNodeBtn = (
                       <CollapsibleButton
-                        id={connectedNode.data().id + 'Btn'}
-                        className='connectedNodeBtn'
-                        key={connectedNode.data().id + 'Btn'}
+                        id={connectedNode.data().id + "Btn"}
+                        className="connectedNodeBtn"
+                        key={connectedNode.data().id + "Btn"}
                         eventKey={connectedNode.data().label}
                         name={connectedNode.data().label}
                       >
@@ -219,107 +348,127 @@ class TopologyView extends React.Component {
                         <div className="DetailsLabel">Tunnel ID</div>
                         <label id="valueLabel">{connectedNodeDetail.id}</label>
                         <div className="DetailsLabel">Interface Name</div>
-                        <label id="valueLabel">{connectedNodeDetail.tapName}</label>
+                        <label id="valueLabel">
+                          {connectedNodeDetail.tapName}
+                        </label>
                         <div className="DetailsLabel">MAC</div>
                         <label id="valueLabel">{connectedNodeDetail.mac}</label>
                         <div className="DetailsLabel">State</div>
-                        <label id="valueLabel">{connectedNodeDetail.state.slice(7, connectedNodeDetail.state.length)}</label>
+                        <label id="valueLabel">
+                          {connectedNodeDetail.state.slice(
+                            7,
+                            connectedNodeDetail.state.length
+                          )}
+                        </label>
                         <div className="DetailsLabel">Tunnel Type</div>
-                        <label id="valueLabel">{connectedNodeDetail.type.slice(6, connectedNodeDetail.type.length)}</label>
-
+                        <label id="valueLabel">
+                          {connectedNodeDetail.type.slice(
+                            6,
+                            connectedNodeDetail.type.length
+                          )}
+                        </label>
                       </CollapsibleButton>
+                    );
 
-                    return connectedNodeBtn
+                    return connectedNodeBtn;
                   } catch (e) {
                     //console.log(e)
-                    return false
+                    return false;
                   }
                 })}
               </div>
-
             </div>
           </CollapsibleButton>
-        ReactDOM.render(nodeContent, document.getElementById('sideBarContent'))
-      })
-  }
+        );
+        ReactDOM.render(nodeContent, document.getElementById("sideBarContent"));
+      });
+  };
 
   renderLinkDetails = () => {
-    var linkDetails = this.state.linkDetails.linkDetails
-    var sourceNodeDetails = this.state.linkDetails.sourceNodeDetails
-    var targetNodeDetails = this.state.linkDetails.targetNodeDetails
+    var linkDetails = this.state.linkDetails.linkDetails;
+    var sourceNodeDetails = this.state.linkDetails.sourceNodeDetails;
+    var targetNodeDetails = this.state.linkDetails.targetNodeDetails;
 
-    if (sourceNodeDetails.state === nodeStates.notReporting && targetNodeDetails.state === nodeStates.notReporting) {
+    if (
+      sourceNodeDetails.state === nodeStates.notReporting &&
+      targetNodeDetails.state === nodeStates.notReporting
+    ) {
       //both nodes of the edge are not reporting - NR
-      var linkContentNR =
-
+      var linkContentNR = (
         <CollapsibleButton
-          id={'notReportingBtn'}
-          className='detailsLinkBtn'
-          key={'notReportingBtn'}
-          name={'Details'}
+          id={"notReportingBtn"}
+          className="detailsLinkBtn"
+          key={"notReportingBtn"}
+          name={"Details"}
           isOpen
         >
           <div>
             <label id="valueLabel">{"Data not available"}</label>
           </div>
         </CollapsibleButton>
-      ReactDOM.render(linkContentNR, document.getElementById('sideBarContent'))
+      );
+      ReactDOM.render(linkContentNR, document.getElementById("sideBarContent"));
       return;
     }
 
-    if (sourceNodeDetails.state === nodeStates.notReporting || targetNodeDetails.state === nodeStates.notReporting) {
+    if (
+      sourceNodeDetails.state === nodeStates.notReporting ||
+      targetNodeDetails.state === nodeStates.notReporting
+    ) {
       //if either of nodes is not reporting
-      var linkContent =
-
+      var linkContent = (
         <CollapsibleButton
-          id={linkDetails.name + 'Btn'}
-          className='detailsLinkBtn'
-          key={linkDetails.name + 'Btn'}
-          name={'Details'}
+          id={linkDetails.name + "Btn"}
+          className="detailsLinkBtn"
+          key={linkDetails.name + "Btn"}
+          name={"Details"}
         >
           <div>
             <h5>{linkDetails.name}</h5>
 
             <div className="row">
-
-              <div className="col-10" style={{ paddingRight: '0' }}>
-
+              <div className="col-10" style={{ paddingRight: "0" }}>
                 <CollapsibleButton
-                  id={sourceNodeDetails.id + 'Btn'}
-                  className='sourceNodeBtn'
-                  key={sourceNodeDetails.id + 'Btn'}
-                  eventKey={sourceNodeDetails.id + 'Btn'}
+                  id={sourceNodeDetails.id + "Btn"}
+                  className="sourceNodeBtn"
+                  key={sourceNodeDetails.id + "Btn"}
+                  eventKey={sourceNodeDetails.id + "Btn"}
                   name={sourceNodeDetails.label}
-                  style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                  style={{
+                    marginBottom: "2.5%",
+                    backgroundColor: "#8aa626",
+                    border: `solid #8aa626`,
+                  }}
                 >
-
                   <div className="DetailsLabel">Node ID</div>
                   <label id="valueLabel">{sourceNodeDetails.id}</label>
-
                 </CollapsibleButton>
 
                 <CollapsibleButton
-                  id={targetNodeDetails.id + 'Btn'}
-                  className='targetNodeBtn'
-                  key={targetNodeDetails.id + 'Btn'}
-                  eventKey={targetNodeDetails.id + 'Btn'}
+                  id={targetNodeDetails.id + "Btn"}
+                  className="targetNodeBtn"
+                  key={targetNodeDetails.id + "Btn"}
+                  eventKey={targetNodeDetails.id + "Btn"}
                   name={targetNodeDetails.label}
-                  style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                  style={{
+                    marginBottom: "2.5%",
+                    backgroundColor: "#8aa626",
+                    border: `solid #8aa626`,
+                  }}
                 >
-
                   <div className="DetailsLabel">Node ID</div>
                   <label id="valueLabel">{targetNodeDetails.id}</label>
-
                 </CollapsibleButton>
-
               </div>
 
-              <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
+              <div
+                className="col"
+                style={{ margin: "auto", padding: "0", textAlign: "center" }}
+              >
                 <button onClick={this.handleSwitch} id="switchBtn" />
               </div>
-
             </div>
-            <hr style={{ backgroundColor: '#486186' }} />
+            <hr style={{ backgroundColor: "#486186" }} />
             <div className="DetailsLabel">Tunnel ID</div>
             <label id="valueLabel">{linkDetails.id}</label>
             <div className="DetailsLabel">Interface Name</div>
@@ -327,62 +476,73 @@ class TopologyView extends React.Component {
             <div className="DetailsLabel">MAC</div>
             <label id="valueLabel">{linkDetails.mac}</label>
             <div className="DetailsLabel">State</div>
-            <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
+            <label id="valueLabel">
+              {linkDetails.state.slice(7, linkDetails.state.length)}
+            </label>
             <div className="DetailsLabel">Tunnel Type</div>
-            <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
-
-          </div >
+            <label id="valueLabel">
+              {linkDetails.type.slice(6, linkDetails.type.length)}
+            </label>
+          </div>
         </CollapsibleButton>
-      ReactDOM.render(linkContent, document.getElementById('sideBarContent'))
+      );
+      ReactDOM.render(linkContent, document.getElementById("sideBarContent"));
     }
 
-    const srcCoordinate = sourceNodeDetails.coordinate.split(',')
+    const srcCoordinate = sourceNodeDetails.coordinate.split(",");
 
-    const tgtCoordinate = targetNodeDetails.coordinate.split(',')
+    const tgtCoordinate = targetNodeDetails.coordinate.split(",");
     //GET location from coordinates passed for source evio node through google API
-    fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${srcCoordinate[0]},${srcCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
-      .then(res => res.json()).then(data => {
+    fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${srcCoordinate[0]},${srcCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`
+    )
+      .then((res) => res.json())
+      .then((data) => {
         try {
-          return data.results[data.results.length - 1].formatted_address
+          return data.results[data.results.length - 1].formatted_address;
         } catch {
-          return '-'
+          return "-";
         }
-      }).then(sourceLocation => {
+      })
+      .then((sourceLocation) => {
         //GET location from coordinates passed for target evio node through google API
-        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${tgtCoordinate[0]},${tgtCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`)
-          .then(res => res.json()).then(data => {
+        fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${tgtCoordinate[0]},${tgtCoordinate[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`
+        )
+          .then((res) => res.json())
+          .then((data) => {
             try {
-              return data.results[data.results.length - 1].formatted_address
+              return data.results[data.results.length - 1].formatted_address;
             } catch {
-              return '-'
+              return "-";
             }
-          }).then(targetLocation => {
-            var linkContent =
-
+          })
+          .then((targetLocation) => {
+            var linkContent = (
               <CollapsibleButton
-                id={linkDetails.name + 'Btn'}
-                className='detailsLinkBtn'
-                key={linkDetails.name + 'Btn'}
-                name={'Details'}
+                id={linkDetails.name + "Btn"}
+                className="detailsLinkBtn"
+                key={linkDetails.name + "Btn"}
+                name={"Details"}
                 isOpen
               >
-
                 <div>
                   <h5>{linkDetails.name}</h5>
 
                   <div className="row">
-
-                    <div className="col-10" style={{ paddingRight: '0' }}>
-
+                    <div className="col-10" style={{ paddingRight: "0" }}>
                       <CollapsibleButton
-                        id={sourceNodeDetails.id + 'Btn'}
-                        className='sourceNodeBtn'
-                        key={sourceNodeDetails.id + 'Btn'}
-                        eventKey={sourceNodeDetails.id + 'Btn'}
+                        id={sourceNodeDetails.id + "Btn"}
+                        className="sourceNodeBtn"
+                        key={sourceNodeDetails.id + "Btn"}
+                        eventKey={sourceNodeDetails.id + "Btn"}
                         name={sourceNodeDetails.label}
-                        style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                        style={{
+                          marginBottom: "2.5%",
+                          backgroundColor: "#8aa626",
+                          border: `solid #8aa626`,
+                        }}
                       >
-
                         <div className="DetailsLabel">Node ID</div>
                         <label id="valueLabel">{sourceNodeDetails.id}</label>
 
@@ -390,19 +550,23 @@ class TopologyView extends React.Component {
                         <label id="valueLabel">{sourceNodeDetails.state}</label>
 
                         <div className="DetailsLabel">Location</div>
-                        <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label>
-
+                        <label id="valueLabel">
+                          {sourceLocation.slice(7, sourceLocation.length)}
+                        </label>
                       </CollapsibleButton>
 
                       <CollapsibleButton
-                        id={targetNodeDetails.id + 'Btn'}
-                        className='targetNodeBtn'
-                        key={targetNodeDetails.id + 'Btn'}
-                        eventKey={targetNodeDetails.id + 'Btn'}
+                        id={targetNodeDetails.id + "Btn"}
+                        className="targetNodeBtn"
+                        key={targetNodeDetails.id + "Btn"}
+                        eventKey={targetNodeDetails.id + "Btn"}
                         name={targetNodeDetails.label}
-                        style={{ marginBottom: '2.5%', backgroundColor: '#8aa626', border: `solid #8aa626` }}
+                        style={{
+                          marginBottom: "2.5%",
+                          backgroundColor: "#8aa626",
+                          border: `solid #8aa626`,
+                        }}
                       >
-
                         <div className="DetailsLabel">Node ID</div>
                         <label id="valueLabel">{targetNodeDetails.id}</label>
 
@@ -410,18 +574,24 @@ class TopologyView extends React.Component {
                         <label id="valueLabel">{targetNodeDetails.state}</label>
 
                         <div className="DetailsLabel">Location</div>
-                        <label id="valueLabel">{targetLocation.slice(7, targetLocation.length)}</label>
-
+                        <label id="valueLabel">
+                          {targetLocation.slice(7, targetLocation.length)}
+                        </label>
                       </CollapsibleButton>
-
                     </div>
 
-                    <div className="col" style={{ margin: 'auto', padding: '0', textAlign: 'center' }}>
+                    <div
+                      className="col"
+                      style={{
+                        margin: "auto",
+                        padding: "0",
+                        textAlign: "center",
+                      }}
+                    >
                       <button onClick={this.handleSwitch} id="switchBtn" />
                     </div>
-
                   </div>
-                  <hr style={{ backgroundColor: '#486186' }} />
+                  <hr style={{ backgroundColor: "#486186" }} />
                   <div className="DetailsLabel">Tunnel ID</div>
                   <label id="valueLabel">{linkDetails.id}</label>
                   <div className="DetailsLabel">Interface Name</div>
@@ -429,1192 +599,553 @@ class TopologyView extends React.Component {
                   <div className="DetailsLabel">MAC</div>
                   <label id="valueLabel">{linkDetails.mac}</label>
                   <div className="DetailsLabel">State</div>
-                  <label id="valueLabel">{linkDetails.state.slice(7, linkDetails.state.length)}</label>
+                  <label id="valueLabel">
+                    {linkDetails.state.slice(7, linkDetails.state.length)}
+                  </label>
                   <div className="DetailsLabel">Tunnel Type</div>
-                  <label id="valueLabel">{linkDetails.type.slice(6, linkDetails.type.length)}</label>
-
-                </div >
+                  <label id="valueLabel">
+                    {linkDetails.type.slice(6, linkDetails.type.length)}
+                  </label>
+                </div>
               </CollapsibleButton>
-            ReactDOM.render(linkContent, document.getElementById('sideBarContent'))
-          })
-      })
-  }
+            );
+            ReactDOM.render(
+              linkContent,
+              document.getElementById("sideBarContent")
+            );
+          });
+      });
+  };
 
   handleSwitch = () => {
-    var that = this
+    var that = this;
     var promise = new Promise(function (resolve, reject) {
       try {
-        that.setState(prevState => {
-          return { switchToggle: !prevState.switchToggle }
-        })
+        that.setState((prevState) => {
+          return { switchToggle: !prevState.switchToggle };
+        });
 
-        resolve(true)
+        resolve(true);
       } catch (e) {
-        reject(e)
+        reject(e);
       }
-    })
+    });
 
-    promise.then(function () {
-      that.swap()
-    }).catch(function (e) {
-
-    })
-  }
+    promise
+      .then(function () {
+        that.swap();
+      })
+      .catch(function (e) {});
+  };
 
   swap = () => {
-    var that = this
-    var linkDetails
+    var that = this;
+    var linkDetails;
     var promise = new Promise(function (resolve, reject) {
       try {
         if (that.state.switchToggle) {
-          linkDetails = that.props.currentTopology.edgeDetails[that.state.currentSelectedElement.data().target][that.state.currentSelectedElement.data().id].data;
+          linkDetails =
+            that.props.currentTopology.edgeDetails[
+              that.state.currentSelectedElement.data().target
+            ][that.state.currentSelectedElement.data().id].data;
         } else {
-          linkDetails = that.props.currentTopology.edgeDetails[that.state.currentSelectedElement.data().source][that.state.currentSelectedElement.data().id].data;
+          linkDetails =
+            that.props.currentTopology.edgeDetails[
+              that.state.currentSelectedElement.data().source
+            ][that.state.currentSelectedElement.data().id].data;
         }
-        resolve(linkDetails)
+        resolve(linkDetails);
       } catch {
-        reject(false)
+        reject(false);
       }
-    })
+    });
 
-    promise.then(function (linkDetails) {
-      that.setState(prevState => {
-        return { linkDetails: { linkDetails: linkDetails, sourceNodeDetails: prevState.linkDetails.targetNodeDetails, targetNodeDetails: prevState.linkDetails.sourceNodeDetails } }
+    promise
+      .then(function (linkDetails) {
+        that.setState((prevState) => {
+          return {
+            linkDetails: {
+              linkDetails: linkDetails,
+              sourceNodeDetails: prevState.linkDetails.targetNodeDetails,
+              targetNodeDetails: prevState.linkDetails.sourceNodeDetails,
+            },
+          };
+        });
       })
-    }).then(function () {
-      that.renderLinkDetails()
-    }).catch(function (e) {
-
-    })
-  }
+      .then(function () {
+        that.renderLinkDetails();
+      })
+      .catch(function (e) {});
+  };
 
   setNodeDetails = (node) => {
-    var that = this
+    var that = this;
     var promise = new Promise(function (resolve, reject) {
       try {
+        var sourceNode =
+          that.props.currentTopology.nodeDetails[node.data().id].data;
 
-        var sourceNode = that.props.currentTopology.nodeDetails[node.data().id].data;
+        var connectedNodes = that.cy
+          .elements(node.incomers().union(node.outgoers()))
+          .filter((element) => {
+            return element.isNode();
+          });
 
-        var connectedNodes = that.cy.elements(node.incomers().union(node.outgoers())).filter((element) => {
-          return element.isNode()
-        })
+        that.setState({
+          nodeDetails: {
+            sourceNode: sourceNode,
+            connectedNodes: connectedNodes,
+          },
+        });
 
-        that.setState({ nodeDetails: { sourceNode: sourceNode, connectedNodes: connectedNodes } })
-
-        resolve(true)
+        resolve(true);
       } catch {
-        reject(false)
+        reject(false);
       }
-    })
+    });
 
-    promise.then(function () {
-      that.renderNodeDetails()
-    }).catch(function () {
-
-    })
-  }
+    promise
+      .then(function () {
+        that.renderNodeDetails();
+      })
+      .catch(function () {});
+  };
 
   setLinkDetails = (link) => {
-    var that = this
+    var that = this;
     var promise = new Promise(function (resolve, reject) {
       try {
-        var linkDetails = that.props.currentTopology.edgeDetails[link.data().source][link.data().id].data;
+        var linkDetails =
+          that.props.currentTopology.edgeDetails[link.data().source][
+            link.data().id
+          ].data;
 
-        var sourceNode = link.data().source
+        var sourceNode = link.data().source;
 
-        var targetNode = link.data().target
+        var targetNode = link.data().target;
 
-        var sourceNodeDetails = that.props.currentTopology.nodeDetails[link.data().source].data;
+        var sourceNodeDetails =
+          that.props.currentTopology.nodeDetails[link.data().source].data;
 
-        var targetNodeDetails = that.props.currentTopology.nodeDetails[link.data().target].data;
+        var targetNodeDetails =
+          that.props.currentTopology.nodeDetails[link.data().target].data;
 
-        that.setState({ linkDetails: { linkDetails: linkDetails, sourceNode: sourceNode, targetNode: targetNode, sourceNodeDetails: sourceNodeDetails, targetNodeDetails: targetNodeDetails } })
+        that.setState({
+          linkDetails: {
+            linkDetails: linkDetails,
+            sourceNode: sourceNode,
+            targetNode: targetNode,
+            sourceNodeDetails: sourceNodeDetails,
+            targetNodeDetails: targetNodeDetails,
+          },
+        });
 
-        resolve(true)
+        resolve(true);
       } catch {
-        reject(false)
+        reject(false);
       }
-    })
+    });
 
-    promise.then(function () {
-      that.renderLinkDetails()
-    }).catch(function () {
-
-    })
-  }
+    promise
+      .then(function () {
+        that.renderLinkDetails();
+      })
+      .catch(function () {});
+  };
 
   renderGraph = () => {
     //this.setState({ currentView: 'Topology' })
-    return <>
-      <CytoscapeComponent id="cy"
-        cy={(cy) => {
-          this.cy = cy
-
-          //this.setState({ cytoscape: cy })
-
-          this.cy.maxZoom(this.state.setMaxZoom)
-          this.cy.minZoom(this.state.setMinZoom)
-          this.cy.zoom(this.state.zoomValue)
-          this.cy.center()
-
-          var that = this
-
-          if (this.state.currentSelectedElement !== null) {
-            if (this.state.currentSelectedElement.isNode()) {
-              var selectedElement = this.cy.elements().filter(node => node.data().id === this.state.currentSelectedElement.data().id).filter(element => { return element.isNode() })
-              var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-              var notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-              selectedElement.select()
-              relatedElement.removeClass('transparent')
-              notRelatedElement.addClass('transparent')
-            } else if (this.state.currentSelectedElement.isEdge()) {
-              var relatedElement2 = this.state.currentSelectedElement.connectedNodes().union(this.state.currentSelectedElement)
-              var notRelatedElement2 = this.cy.elements().difference(this.state.currentSelectedElement.connectedNodes()).not(this.state.currentSelectedElement)
-              this.state.currentSelectedElement.select()
-              relatedElement2.removeClass('transparent')
-              notRelatedElement2.addClass('transparent')
-            }
-          }
-
-          this.cy.on('click', function (e) {
-            var selectedElement = e.target[0]
-            var relatedElement
-            var notRelatedElement
-            try {
-              if (selectedElement.isNode()) {
-                that.setNodeDetails(selectedElement)
-                relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement)
-                notRelatedElement = that.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-              } else if (selectedElement.isEdge()) {
-                that.setLinkDetails(selectedElement)
-                relatedElement = selectedElement.connectedNodes().union(selectedElement)
-                notRelatedElement = that.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
-              }
-
-              relatedElement.removeClass('transparent')
-              notRelatedElement.addClass('transparent')
-            } catch (error) {
-              console.log("OnClick Error: ", error);
-              if (e.target[0] === this.cy) {
-                ReactDOM.render(<></>, document.getElementById('sideBarContent'))
-                that.cy.elements().removeClass('transparent')
-              }
-            } finally {
-              if (e.target[0] !== this.cy) {
-                that.setState({ switchToggle: false, currentSelectedElement: e.target })
-              } else {
-                that.setState({ switchToggle: true, currentSelectedElement: null })
-              }
-            }
-          })
-        }}
-        wheelSensitivity={0.1}
-        elements={JSON.parse(JSON.stringify(this.props.currentGraph))} //deep clone of global topo graph
-        stylesheet={cytoscapeStyle}
-        style={{ width: window.innerWidth, height: window.innerHeight }}
-        layout={{ name: 'circle', clockwise: true }}
-      />
-    </>
-  }
+    return (
+      <>
+        <CytoscapeComponent
+          id="cy"
+          cy={(cy) => {
+            this.cy = cy;
+          }}
+          wheelSensitivity={0.1}
+          elements={JSON.parse(
+            JSON.stringify(this.props.currentTopology.graph)
+          )} //deep clone of global topo graph
+          stylesheet={cytoscapeStyle}
+          style={{ width: window.innerWidth, height: window.innerHeight }}
+          layout={{ name: "circle", clockwise: true }}
+        />
+      </>
+    );
+  };
 
   elementFilter = (element, props) => {
-    if (element.group === 'nodes') {
-      return (element.data().label.toLowerCase().indexOf(props.text.toLowerCase()) !== -1 ||
-        element.data().id.toLowerCase().indexOf(props.text.toLowerCase()) !== -1)
+    if (element.group === "nodes") {
+      return (
+        element.data().label.toLowerCase().indexOf(props.text.toLowerCase()) !==
+          -1 ||
+        element.data().id.toLowerCase().indexOf(props.text.toLowerCase()) !== -1
+      );
     } else {
-      return (element.data().label.toLowerCase().indexOf(props.text.toLowerCase()) !== -1 ||
-        element.data().id.toLowerCase().indexOf(props.text.toLowerCase()) !== -1)
+      return (
+        element.data().label.toLowerCase().indexOf(props.text.toLowerCase()) !==
+          -1 ||
+        element.data().id.toLowerCase().indexOf(props.text.toLowerCase()) !== -1
+      );
     }
-  }
+  };
 
   handleRefresh = () => {
     if (!this.autoRefresh) {
       // Setting auto refresh on
-      document.getElementById('refreshBtn').style.opacity = '1';
+      document.getElementById("refreshBtn").style.opacity = "1";
       this.autoRefresh = true;
       this.apiQueryTopology(this.props.overlayName);
     } else {
       // Setting auto refresh off
-      document.getElementById('refreshBtn').style.opacity = '0.4';
+      document.getElementById("refreshBtn").style.opacity = "0.4";
       this.autoRefresh = false;
     }
-    console.log("Handled refresh, called update with refresh set to", this.autoRefresh);
-  }
+    console.log(
+      "Handled refresh, called update with refresh set to",
+      this.autoRefresh
+    );
+  };
 
   zoomIn = () => {
-    var InitZoomValue = this.cy.zoom() + 0.1
-    this.cy.zoom(InitZoomValue)
-    this.setState({ zoomValue: InitZoomValue })
-    //document.getElementById('zoomSlider').value = (this.cy.zoom())
-  }
+    var InitZoomValue = this.cy.zoom() + 0.1;
+    this.cy.zoom(InitZoomValue);
+    this.setState({ zoomValue: InitZoomValue });
+  };
 
   zoomOut = () => {
-    var InitZoomValue = this.cy.zoom() - 0.1
-    this.cy.zoom(InitZoomValue)
-    this.setState({ zoomValue: InitZoomValue })
-    //document.getElementById('zoomSlider').value = (this.cy.zoom())
-  }
-
-  handleZoomSlider = (e) => {
-    this.cy.zoom(parseFloat(e.target.value))
-  }
+    var InitZoomValue = this.cy.zoom() - 0.1;
+    this.cy.zoom(InitZoomValue);
+    this.setState({ zoomValue: InitZoomValue });
+  };
 
   handleWheel = (e) => {
-    this.setState({ zoomValue: this.cy.zoom() })
-  }
+    this.setState({ zoomValue: this.cy.zoom() });
+  };
 
   handleSetMinZoom = (e) => {
     try {
-      this.cy.minZoom(parseFloat(e.target.value))
+      this.cy.minZoom(parseFloat(e.target.value));
       //document.getElementById('zoomSlider').min = parseFloat(e.target.value)
     } finally {
       if (this.cy.zoom() < parseFloat(e.target.value)) {
-        this.cy.zoom(parseFloat(e.target.value))
+        this.cy.zoom(parseFloat(e.target.value));
       }
-      this.setState({ setMinZoom: e.target.value })
+      this.setState({ setMinZoom: e.target.value });
     }
-  }
+  };
 
   handleSetMaxZoom = (e) => {
     try {
-      this.cy.maxZoom(parseFloat(e.target.value))
+      this.cy.maxZoom(parseFloat(e.target.value));
       //document.getElementById('zoomSlider').max = parseFloat(e.target.value)
     } finally {
       if (this.cy.zoom() > parseFloat(e.target.value)) {
-        this.cy.zoom(parseFloat(e.target.value))
+        this.cy.zoom(parseFloat(e.target.value));
       }
-      this.setState({ setMaxZoom: e.target.value })
+      this.setState({ setMaxZoom: e.target.value });
     }
-  }
+  };
 
   handleBackToHome = () => {
-    window.location.reload(true)
-  }
-
-  renderSubgraph = () => {
-    var selectedElement = this.state.currentSelectedElement
-    var notRelatedElement
-    if (this.state.currentView !== 'Map') {
-
-      try {
-        if (selectedElement.isNode()) {
-          notRelatedElement = this.cy.elements().difference(selectedElement.outgoers().union(selectedElement.incomers())).not(selectedElement)
-        } else if (selectedElement.isEdge()) {
-          notRelatedElement = this.cy.elements().difference(selectedElement.connectedNodes()).not(selectedElement)
-        }
-        notRelatedElement.addClass('subgraph')
-        this.setState({ currentView: 'Subgraph' })
-      } catch {
-        alert('Please select node or tunnel.')
-        document.getElementById('viewSelector').value = this.state.currentView
-      }
-    } else {
-      alert('Map is not available for this view.')
-      document.getElementById('viewSelector').value = this.state.currentView
-    }
-  }
+    window.location.reload(true);
+  };
 
   renderTopology = () => {
-    document.getElementById('elementBreadcrumb').hidden = false
-    document.getElementById('overlayBreadcrumb').hidden = false
-    document.getElementById('homeBtn').hidden = false
-    document.getElementById('refreshBtn').hidden = false
-    document.getElementById('configBtn').hidden = false
-    document.getElementById('infoBtn').hidden = false
-    document.getElementById('plusBtn').hidden = false
-    document.getElementById('minusBtn').hidden = false
-    if (this.state.currentView === 'Subgraph') {
-      this.cy.elements().removeClass('subgraph')
-    } else if (this.state.currentView === 'Map') {
-      this.setState({ currentView: 'Topology' })
-      this.renderGraph()
+    document.getElementById("elementBreadcrumb").hidden = false;
+    document.getElementById("overlayBreadcrumb").hidden = false;
+    document.getElementById("homeBtn").hidden = false;
+    document.getElementById("refreshBtn").hidden = false;
+    document.getElementById("configBtn").hidden = false;
+    document.getElementById("infoBtn").hidden = false;
+    document.getElementById("plusBtn").hidden = false;
+    document.getElementById("minusBtn").hidden = false;
+    if (this.state.currentView === "Subgraph") {
+      this.cy.elements().removeClass("subgraph");
+    } else if (this.state.currentView === "Map") {
+      this.setState({ currentView: "Topology" });
+      this.renderGraph();
     }
-  }
+  };
 
   handleMakerClicked = (node) => {
     if (this.state.currentSelectedElement.isNode()) {
-      node.trigger('click')
-      document.getElementById(node.data().id + 'Marker').classList.add('selected')
-      this.setState({ switchToggle: false, currentSelectedElement: node })
+      node.trigger("click");
+      document
+        .getElementById(node.data().id + "Marker")
+        .classList.add("selected");
+      this.setState({ switchToggle: false, currentSelectedElement: node });
     }
-  }
+  };
 
   midpoint = (lat1, lng1, lat2, lng2) => {
-    lat1 = this.deg2rad(lat1)
-    lng1 = this.deg2rad(lng1)
-    lat2 = this.deg2rad(lat2)
-    lng2 = this.deg2rad(lng2)
+    lat1 = this.deg2rad(lat1);
+    lng1 = this.deg2rad(lng1);
+    lat2 = this.deg2rad(lat2);
+    lng2 = this.deg2rad(lng2);
 
-    var dlng = lng2 - lng1
-    var Bx = Math.cos(lat2) * Math.cos(dlng)
-    var By = Math.cos(lat2) * Math.sin(dlng)
-    var lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2),
-      Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By))
-    var lng3 = lng1 + Math.atan2(By, (Math.cos(lat1) + Bx))
+    var dlng = lng2 - lng1;
+    var Bx = Math.cos(lat2) * Math.cos(dlng);
+    var By = Math.cos(lat2) * Math.sin(dlng);
+    var lat3 = Math.atan2(
+      Math.sin(lat1) + Math.sin(lat2),
+      Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By)
+    );
+    var lng3 = lng1 + Math.atan2(By, Math.cos(lat1) + Bx);
 
-    return [(lat3 * 180) / Math.PI, (lng3 * 180) / Math.PI]
-  }
+    return [(lat3 * 180) / Math.PI, (lng3 * 180) / Math.PI];
+  };
 
   deg2rad = (degrees) => {
-    return degrees * Math.PI / 180
+    return (degrees * Math.PI) / 180;
   };
 
   hasCoordinate = (node) => {
-    if (node.data('coordinate').split(',')[1]) {
+    if (node.data("coordinate").split(",")[1]) {
       return true;
     }
     return false;
-  }
+  };
 
-  renderMap = () => {
-    var that = this
-    if (this.state.currentSelectedElement !== null) {
-      if (this.state.currentSelectedElement.isEdge()) {
-        var createMapFromEdge = new Promise((resolve, reject) => {
-          try {
-            var selectedElement = this.state.currentSelectedElement
-            var relatedElement = selectedElement.connectedNodes().filter((element) => {
-              return that.hasCoordinate(element)
-            })
-            var unmappedElement = selectedElement.connectedNodes().filter((element) => {
-              return that.hasCoordinate(element) === false
-            })
-            var centerPoint, map
-            if (relatedElement.length !== 0) {
-              centerPoint = this.midpoint(parseFloat(relatedElement[0].data().coordinate.split(',')[0]), parseFloat(relatedElement[0].data().coordinate.split(',')[1]), parseFloat(relatedElement[1].data().coordinate.split(',')[0]), parseFloat(relatedElement[1].data().coordinate.split(',')[1]))
-
-              map = <GoogleMapReact
-                bootstrapURLKeys={{
-                  key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                  language: 'en'
-                }}
-                center={{ lat: centerPoint[0], lng: centerPoint[1] }}
-                defaultZoom={10}
-              >
-
-                {relatedElement.map(node => {
-
-                  return <button onClick={this.handleMakerClicked.bind(this, node)} key={node.data().id + 'Marker'} id={node.data().id + 'Marker'} className="nodeMarker selected" lat={parseFloat(node.data().coordinate.split(',')[0])} lng={parseFloat(node.data().coordinate.split(',')[1])}>
-                    <label className="markerLabel">
-                      {node.data().label}
-                    </label>
-                  </button>
-                })}
-
-              </GoogleMapReact>
-
-            } else {
-              centerPoint = [parseFloat('15.8700'), parseFloat('100.9925')]
-              map = <GoogleMapReact
-                bootstrapURLKeys={{
-                  key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                  language: 'en'
-                }}
-                center={{ lat: centerPoint[0], lng: centerPoint[1] }}
-                defaultZoom={10}
-              >
-                <Card id="non-coordinate-card">
-                  <Card.Header>
-                    Unmapped nodes.
-                </Card.Header>
-                  <Card.Body>
-                    {unmappedElement.map(node => {
-                      return <button onClick={this.handleMakerClicked.bind(this, node)} key={node.data().id + 'Marker'} id={node.data().id + 'Marker'} className="nodeMarker">
-                        <label className="markerLabel">
-                          {node.data().label}
-                        </label>
-                      </button>
-                    })}
-                  </Card.Body>
-                </Card>
-              </GoogleMapReact>
-
-            }
-            this.setState({ currentView: 'Map' })
-            ReactDOM.render(map, document.getElementById('midArea'))
-            resolve(true)
-          } catch (e) {
-            console.log(e)
-            reject(false)
-          }
-        })
-
-        createMapFromEdge.then(function () {
-          if (that.state.currentSelectedElement !== null) {
-            //console.log(document.getElementById(that.state.currentSelectedElement.data().id + 'Marker'))
-
-            // document.getElementById(that.state.currentSelectedElement.data().source + "Marker").classList.add("selected");
-            // document.getElementById(that.state.currentSelectedElement.data().target + "Marker").classList.add("selected");
-          }
-        })
-      } else if (this.state.currentSelectedElement.isNode()) {
-        var createMapFromNode = new Promise((resolve, reject) => {
-          try {
-            var selectedElement = this.state.currentSelectedElement
-            var relatedElement = selectedElement.outgoers().union(selectedElement.incomers()).union(selectedElement).filter((element => {
-              return element.isNode() && this.hasCoordinate(element)
-            }))
-            // //console.log(selectedElement.data().coordinate.split(',')[0])
-            // //console.log(relatedElement)
-            var map
-            if (relatedElement.length !== 0) {
-
-              map = <GoogleMapReact
-                bootstrapURLKeys={{
-                  key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                  language: 'en'
-                }}
-                center={{ lat: parseFloat(selectedElement.data().coordinate.split(',')[0]), lng: parseFloat(selectedElement.data().coordinate.split(',')[1]) }}
-                defaultZoom={10}
-              >
-
-                {relatedElement.map(node => {
-                  return <button onClick={this.handleMakerClicked.bind(this, node)} key={node.data().id + 'Marker'} id={node.data().id + 'Marker'} className="nodeMarker" lat={parseFloat(node.data().coordinate.split(',')[0])} lng={parseFloat(node.data().coordinate.split(',')[1])}>
-                    <label className="markerLabel">
-                      {node.data().label}
-                    </label>
-                  </button>
-                })}
-
-              </GoogleMapReact>
-            } else {
-              map = <GoogleMapReact
-                bootstrapURLKeys={{
-                  key: 'AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs',
-                  language: 'en'
-                }}
-                center={{ lat: parseFloat('15.8700'), lng: parseFloat('100.9925') }}
-                defaultZoom={10}
-              >
-              </GoogleMapReact>
-            }
-            ReactDOM.render(map, document.getElementById('midArea'))
-            this.setState({ currentView: 'Map' })
-            resolve(true)
-          } catch (e) {
-            // alert("You have to select a node.")
-            // document.getElementById("viewSelector").value = this.state.currentView;
-            // console.log(e)
-            reject(false)
-          }
-        })
-
-        createMapFromNode.then(function () {
-          if (that.state.currentSelectedElement !== null) {
-            //console.log(document.getElementById(that.state.currentSelectedElement.data().id + 'Marker'))
-            if (document.getElementById(that.state.currentSelectedElement.data().id + 'Marker') !== null) {
-              document.getElementById(that.state.currentSelectedElement.data().id + 'Marker').classList.add('selected')
-            }
-          }
-        })
-      }
-    } else {
-      alert('Please select some node or tunnel.')
-      document.getElementById('viewSelector').value = this.state.currentView
-    }
-  }
-
-
-  handleViewSelector = (e) => {
-    switch (e) {
-      case 'Subgraph': this.renderSubgraph(); break
-      case 'Topology': this.renderTopology(); break
-      case 'Map': this.renderMap(); break
-
-      default: ;
-    }
-  }
-
-  handleRedrawGraph = () => {
-    //var prevTopology = this.props.currentTopology;
-    //var copytopology = JSON.parse(JSON.stringify(prevTopology));
-    //this.setState({ topology : null});
-    //this.setState({ copyTopology : copytopology });
-    //this.cy.zoom(0.5)
-    //this.cy.center()
-    //this.cy.style({ width: window.innerWidth, height: window.innerHeight });
-    //this.cy.wheelSensitivity(0.1);
-    this.cy.layout({ name: 'circle' }).run();
-    this.cy.zoom(this.state.zoomValue)
-    this.cy.center();
-
-    //this.renderNewGraph();
-    //  window.location.reload(true)
-    //this.componentDidMount();
-  }
-
-  renderLeftTools = () => {
-    return <>
-      <div id="leftTools">
-        <button id="elementBreadcrumb" className="leftToolsBtn">
-          <div className="breadcrumbLabel">
-            {this.state.currentSelectedElement !== null ? this.state.currentSelectedElement.isNode() ? 'Node : ' + this.state.currentSelectedElement.data().label : 'Tunnel : ' + this.state.currentSelectedElement.data().label : 'None.'}
-          </div>
-        </button>
-
-        <button id="overlayBreadcrumb" className="leftToolsBtn">
-          <div className="breadcrumbLabel" onClick={this.handleRedrawGraph} >
-            Overlay : {this.props.overlayName}
-          </div>
-        </button>
-
-        <div>
-          <button onClick={this.handleBackToHome} id="homeBtn" className="leftToolsBtn"></button>
-        </div>
-        <div>
-          <button onClick={this.handleRefresh} id="refreshBtn" className="leftToolsBtn" title="Disable/Enable Auto Refresh"></button>
-        </div>
-        <div>
-          <OverlayTrigger rootClose={true} trigger="click" placement="right" overlay={
-            <Popover>
-              <Popover.Title as="h3">EVIO Network Visualizer : Legend</Popover.Title>
-              {/* <Card id="infoContent"> */}
-              <Popover.Content id="infoContent">
-                <table>
-                  <thead>
-                    <tr>
-                      <th colSpan={2}>Node</th>
-                      <th colSpan={2}>Tunnel</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={{ width: '5%', margin: 'auto' }}><img className="node_img" src={connected_ic} alt="connected_node" /></td>
-                      <td>Connected</td>
-                      <td style={{ width: '15%' }}><img className="tunnel_img" src={longdistance_ic} alt="longdistance_tunnel" /></td>
-                      <td>Long Distance</td>
-                    </tr>
-                    <tr>
-                      <td style={{ width: '5%' }}><img className="node_img" src={not_reporting_ic} alt="not_reporting_node" /></td>
-                      <td>Not Reporting</td>
-                      <td style={{ width: '15%' }}><img className="tunnel_img" src={ondemand_ic} alt="ondemand_tunnel" /></td>
-                      <td>On Demand</td>
-                    </tr>
-                    <tr>
-                      <td style={{ width: '5%' }}><img className="node_img" src={no_tunnel_ic} alt="no_tunnel_node" /></td>
-                      <td>No Tunnels</td>
-                      <td style={{ width: '15%' }}><img className="tunnel_img" src={static_ic} alt="static_tunnel" /></td>
-                      <td>Static</td>
-                    </tr>
-                    <tr>
-                      <td ></td>
-                      <td></td>
-                      <td style={{ width: '15%' }}><img className="tunnel_img" src={successor_ic} alt="successor_tnnel" /></td>
-                      <td>Successor</td>
-                    </tr>
-                  </tbody>
-                </table>
-                {/* </Card> */}
-              </Popover.Content>
-            </Popover>}>
-            <button onClick={this.handleInfoToggle} id="infoBtn" className="leftToolsBtn"></button>
-          </OverlayTrigger>
-        </div>
-        <div>
-          <OverlayTrigger rootClose={true} trigger="click" placement="right" overlay={
-            <Popover>
-              <Popover.Title as="h3">EVIO Network Visualizer : Configure</Popover.Title>
-              <Popover.Content id="configContent">
-                <div className="row">
-                  <div className="col">
-                    <label>Minimum zoom</label>
-                  </div>
-                  <div className="col">
-                    <select defaultValue={this.state.setMinZoom} onChange={this.handleSetMinZoom} id="minZoomSelector" value={this.state.minZoom}>
-                      <option id="0.1">0.1</option>
-                      <option id="0.3">0.3</option>
-                      <option id="0.5">0.5</option>
-                      <option id="0.9">0.9</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="row">
-                  <div className="col">
-                    <label>Maximum zoom</label>
-                  </div>
-                  <div className="col">
-                    <select defaultValue={this.state.setMaxZoom} onChange={this.handleSetMaxZoom} id="maxZoomSelector" value={this.state.maxZoom}>
-                      <option>2</option>
-                      <option>3</option>
-                      <option>5</option>
-                      <option>10</option>
-                    </select>
-                  </div>
-                </div>
-              </Popover.Content>
-            </Popover>}>
-            <button onClick={this.handleConfigToggle} id="configBtn" className="leftToolsBtn"></button>
-          </OverlayTrigger>
-        </div>
-        <div>
-          <button onClick={this.zoomIn} id="plusBtn" className="leftToolsBtn"></button>
-        </div>
-        <div>
-          <button onClick={this.zoomOut} id="minusBtn" className="leftToolsBtn"></button>
-        </div>
-      </div>
-    </>
-  }
+  renderTools = () => {
+    return <null />;
+  };
 
   renderCytoscape = () => {
-    if (Object.keys(this.props.currentGraph).length === 0) {
-      return <section onWheel={this.handleWheel} style={{ width: '100vw', height: '100vh' }}>
-        <div id="midArea" >
-          <Spinner id='loading' animation='border' variant='info' />
+    return (
+      <section
+        onWheel={this.handleWheel}
+        style={{ width: "100vw", height: "100vh" }}
+      >
+        <div id="cyArea">
+          {Object.keys(this.props.currentTopology).length === 0 ? (
+            <Spinner id="loading" animation="border" variant="info" />
+          ) : (
+            <div id="cyArea">{this.renderGraph()}</div>
+          )}
         </div>
       </section>
-    }
-    return <section onWheel={this.handleWheel} style={{ width: '100vw', height: '100vh' }}>
-      <div id="midArea" >
-        {this.renderGraph()}
-      </div>
-    </section>;
-  }
+    );
+  };
 
   render() {
-    return <>
-      {this.renderLeftTools()}
-      {this.renderCytoscape()}
-    </>
+    return (
+      <>
+        {this.renderTools()}
+        {this.renderCytoscape()}
+      </>
+    );
   }
 
-  getState = (response) => {
+  buildTopoRep = (response) => {
     var graph = [];
     //var nodes = [];
     var nodeDetails = {};
     var edgeDetails = {};
     var nodeSet = new Set(); //all nodeIds reported and inferred
     var notReportingNodes = new Set(); //nodeIds of not reporting nodes
-    
 
     if (!response)
-        return {
-            "graph": graph,
-            "nodeDetails": nodeDetails,
-            "edgeDetails": edgeDetails,
-            "notReportingNodes": notReportingNodes
-        };
+      return {
+        graph: graph,
+        nodeDetails: nodeDetails,
+        edgeDetails: edgeDetails,
+        notReportingNodes: notReportingNodes,
+      };
 
     var nodesData = response[0].Topology[0].Nodes;
     for (var idx in nodesData) {
-        var node = nodesData[idx];
-        if (node.Edges.length === 0) {
-            //No tunnels node - NT
-            var nodeDataNT = {
-                group: "nodes",
-                data: {
-                    id: node.NodeId,
-                    label: node.NodeName, //name
-                    state: nodeStates.noTunnels,
-                    coordinate: node.GeoCoordinates,
-                    color: '#f2be22'
-                }
-            }
-            nodeDetails[node.NodeId] = nodeDataNT;
-            continue;
-        }
-        //Connected nodes - CN
-        var nodeDataCN = {
-            group: "nodes",
-            data: {
-                id: node.NodeId,
-                label: node.NodeName,
-                state: nodeStates.connected,
-                coordinate: node.GeoCoordinates,
-                color: '#8AA626'
-            }
-        }
-        nodeDetails[node.NodeId] = nodeDataCN;
+      var node = nodesData[idx];
+      if (node.Edges.length === 0) {
+        //No tunnels node - NT
+        var nodeDataNT = {
+          group: "nodes",
+          data: {
+            id: node.NodeId,
+            label: node.NodeName, //name
+            state: nodeStates.noTunnels,
+            coordinate: node.GeoCoordinates,
+            color: "#f2be22",
+          },
+        };
+        nodeDetails[node.NodeId] = nodeDataNT;
+        continue;
+      }
+      //Connected nodes - CN
+      var nodeDataCN = {
+        group: "nodes",
+        data: {
+          id: node.NodeId,
+          label: node.NodeName,
+          state: nodeStates.connected,
+          coordinate: node.GeoCoordinates,
+          color: "#8AA626",
+        },
+      };
+      nodeDetails[node.NodeId] = nodeDataCN;
 
-        var edgesData = node.Edges;
-        for (var edgeidx in edgesData) {
-            //Processing edges for each connected node
-            var edge = edgesData[edgeidx];
-            nodeSet.add(edge.PeerId);
-            var edgeData = {
-                group: "edges",
-                data: {
-                    id: edge.EdgeId,
-                    label: edge.EdgeId.slice(0, 7),
-                    tapName: edge.TapName,
-                    mac: edge.MAC,
-                    source: node.NodeId,
-                    target: edge.PeerId,
-                    state: edge.State,
-                    type: edge.Type,
-                    color: this.getLinkColor(edge.Type),
-                    style: this.getLinkStyle(edge.State)
-                }
-            }
-            graph.push(edgeData);
+      var edgesData = node.Edges;
+      for (var edgeidx in edgesData) {
+        //Processing edges for each connected node
+        var edge = edgesData[edgeidx];
+        nodeSet.add(edge.PeerId);
+        var edgeData = {
+          group: "edges",
+          data: {
+            id: edge.EdgeId,
+            label: edge.EdgeId.slice(0, 7),
+            tapName: edge.TapName,
+            mac: edge.MAC,
+            source: node.NodeId,
+            target: edge.PeerId,
+            state: edge.State,
+            type: edge.Type,
+            color: this.getLinkColor(edge.Type),
+            style: this.getLinkStyle(edge.State),
+          },
+        };
+        graph.push(edgeData);
 
-            if (!edgeDetails[edge.EdgeId]) {
-                edgeDetails[edge.EdgeId] = {};
-            }
-            edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
+        if (!edgeDetails[edge.EdgeId]) {
+          edgeDetails[edge.EdgeId] = {};
         }
+        edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
+      }
     }
 
     for (var nodeId of nodeSet) {
-        if (!nodeDetails[nodeId]) {
-            //not reported nodes -NR
-            var nodeDataNR = {
-                group: "nodes",
-                data: {
-                    id: nodeId,
-                    label: nodeId.slice(0, 7),
-                    state: nodeStates.notReporting,
-                    coordinate: "",
-                    color: "#ADD8E6"
-                }
-            }
-            nodeDetails[nodeId] = nodeDataNR;
-            notReportingNodes.add(nodeId);
-        }
+      if (!nodeDetails[nodeId]) {
+        //not reported nodes -NR
+        var nodeDataNR = {
+          group: "nodes",
+          data: {
+            id: nodeId,
+            label: nodeId.slice(0, 7),
+            state: nodeStates.notReporting,
+            coordinate: "",
+            color: "#ADD8E6",
+          },
+        };
+        nodeDetails[nodeId] = nodeDataNR;
+        notReportingNodes.add(nodeId);
+      }
     }
     //console.log("topology:", topology);
     //console.log("nodeDetails:", nodeDetails);
     //console.log("edgeDetails: ", edgeDetails);
     //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
     var nodes = Object.keys(nodeDetails).sort();
-    nodes.forEach(nodeId => graph.push(nodeDetails[nodeId]));
-    // var graph = [];
-    // var nodeDetailsMap = {};
-    // var edgeDetailsMap = {};
-    // var nodeDetails = {};
-    // var edgeDetails = {};
-    // var nodeSet = new Set(); //all nodeIds reported and inferred
-    // var notReportingNodes = new Set(); //nodeIds of not reporting nodes
+    nodes.forEach((nodeId) => graph.push(nodeDetails[nodeId]));
 
+    return {
+      graph: graph,
+      nodeDetails: nodeDetails,
+      edgeDetails: edgeDetails,
+      notReportingNodes: notReportingNodes,
 
-    // if (!response)
-    //   return {
-    //     graph: graph,
-    //     nodeDetails: nodeDetails,
-    //     edgeDetails: edgeDetails,
-    //     notReportingNodes: notReportingNodes
-    //   };
+      // cy: cytoscape({
+      //   // very commonly used options
+      //   container: document.getElementById("cyArea"),
+      //   elements: JSON.parse(JSON.stringify(graph)),
+      //   style: { cytoscapeStyle },
+      //   layout: { name: "circle", clockwise: true },
+      //   data: {
+      //     /* ... */
+      //   },
 
-    // var nodesData = response[0].Topology[0].Nodes;
-    // for (var idx in nodesData) {
-    //   var node = nodesData[idx];
-    //   if (node.Edges.length === 0) {
-    //     //No tunnels node - NT
-    //     var nodeDataNT = {
-    //       group: "nodes",
-    //       data: {
-    //         id: node.NodeId,
-    //         label: node.NodeName, //name
-    //         state: nodeStates.noTunnels,
-    //         coordinate: node.GeoCoordinates,
-    //         color: '#f2be22'
-    //       }
-    //     }
-    //     var nodeDataNTMap = Map({
-    //       group: "nodes",
-    //       data: Map({
-    //         id: node.NodeId,
-    //         label: node.NodeName, //name
-    //         state: nodeStates.noTunnels,
-    //         coordinate: node.GeoCoordinates,
-    //         color: '#f2be22'
-    //       })
-    //     })
-    //     nodeDetails[node.NodeId] = nodeDataNT;
-    //     nodeDetailsMap = nodeDetailsMap.set(node.NodeId, nodeDataNTMap);
-    //     continue;
-    //   }
-    //   //Connected nodes - CN
-    //   var nodeDataCN = {
-    //     group: "nodes",
-    //     data: {
-    //       id: node.NodeId,
-    //       label: node.NodeName,
-    //       state: nodeStates.connected,
-    //       coordinate: node.GeoCoordinates,
-    //       color: '#8AA626'
-    //     }
-    //   }
-    //   var nodeDataCNMap = Map({
-    //     group: "nodes",
-    //     data: Map({
-    //       id: node.NodeId,
-    //       label: node.NodeName,
-    //       state: nodeStates.connected,
-    //       coordinate: node.GeoCoordinates,
-    //       color: '#8AA626'
-    //     })
-    //   })
-    //   nodeDetails[node.NodeId] = nodeDataCN;
-    //   nodeDetailsMap = nodeDetailsMap.set(node.NodeId, nodeDataCNMap);
+      //   // initial viewport state:
+      //   zoom: 1,
+      //   pan: { x: 0, y: 0 },
 
-    //   var edgesData = node.Edges;
-    //   for (var edgeidx in edgesData) {
-    //     //Processing edges for each connected node
-    //     var edge = edgesData[edgeidx];
-    //     nodeSet.add(edge.PeerId);
-    //     var edgeData = {
-    //       group: "edges",
-    //       data: {
-    //         id: edge.EdgeId,
-    //         label: edge.EdgeId.slice(0, 7),
-    //         tapName: edge.TapName,
-    //         mac: edge.MAC,
-    //         source: node.NodeId,
-    //         target: edge.PeerId,
-    //         state: edge.State,
-    //         type: edge.Type,
-    //         color: this.getLinkColor(edge.Type),
-    //         style: this.getLinkStyle(edge.State)
-    //       }
-    //     }
-    //     var edgeDataMap = Map({
-    //       group: "edges",
-    //       data: Map({
-    //         id: edge.EdgeId,
-    //         label: edge.EdgeId.slice(0, 7),
-    //         tapName: edge.TapName,
-    //         mac: edge.MAC,
-    //         source: node.NodeId,
-    //         target: edge.PeerId,
-    //         state: edge.State,
-    //         type: edge.Type,
-    //         color: this.getLinkColor(edge.Type),
-    //         style: this.getLinkStyle(edge.State)
-    //       })
-    //     })
-    //     graph = graph.push(edgeDataMap);
-    //     if (!edgeDetails[edge.EdgeId]) {
-    //       edgeDetails[edge.EdgeId] = {};
-    //     }
-    //     edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
-    //     //edgeDetailsMap = edgeDetailsMap.set(edgeDetails[edge.EdgeId][node.NodeId], edgeDataMap);
-    //   }
-    // }
+      //   // interaction options:
+      //   minZoom: 1e-50,
+      //   maxZoom: 1e50,
+      //   zoomingEnabled: true,
+      //   userZoomingEnabled: true,
+      //   panningEnabled: true,
+      //   userPanningEnabled: true,
+      //   boxSelectionEnabled: true,
+      //   selectionType: "single",
+      //   touchTapThreshold: 8,
+      //   desktopTapThreshold: 4,
+      //   autolock: false,
+      //   autoungrabify: false,
+      //   autounselectify: false,
 
-    // for (var nodeId of nodeSet) {
-    //   if (!nodeDetails[nodeId]) {
-    //     var nodeDataNR = {
-    //       group: "nodes",
-    //       data: {
-    //         id: nodeId,
-    //         label: nodeId.slice(0, 7),
-    //         state: nodeStates.notReporting,
-    //         coordinate: "",
-    //         color: "#ADD8E6"
-    //       }
-    //     }
-    //     var nodeDataNRMap = Map ({
-    //       group: "nodes",
-    //       data: Map({
-    //         id: nodeId,
-    //         label: nodeId.slice(0, 7),
-    //         state: nodeStates.notReporting,
-    //         coordinate: "",
-    //         color: "#ADD8E6"
-    //       })
-    //     })
-    //     nodeDetails[nodeId] = nodeDataNR;
-    //     nodeDetailsMap = nodeDetailsMap.set(nodeId, nodeDataNRMap);
-    //     notReportingNodes.add(nodeId);
-    //   }
-    // }
-    // //console.log("graph:", graph);
-    // //console.log("nodeDetails:", nodeDetails);
-    // //console.log("edgeDetails: ", edgeDetails);
-    // //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
-    // // var nodes = Object.keys(nodeDetails).sort();
+      //   // rendering options:
+      //   headless: false,
+      //   styleEnabled: true,
+      //   hideEdgesOnViewport: false,
+      //   textureOnViewport: false,
+      //   motionBlur: false,
+      //   motionBlurOpacity: 0.2,
+      //   wheelSensitivity: 1,
+      //   pixelRatio: "auto",
+      // }),
+    };
+  };
 
-    // // //   console.log("nodes:",nodes)
-    // // nodes.forEach(nodeId => topology.push(nodeDetails[nodeId]))
-    // edgeDetailsMap = Immutable.fromJS(edgeDetails);
-    // //nodeDetailsMap.keySeq().forEach(k => console.log("Key:", k));
-    // //nodeDetailsMap.valueSeq().forEach(k => console.log("Value:", k));
-    // //   console.log("nodes:",nodes)
-    // nodeDetailsMap.keySeq().forEach(nodeId => {
-    //   graph = graph.push(nodeDetailsMap.get(nodeId))});
-    // edgeDetailsMap.keySeq().forEach(k => console.log("Key:", k));
-    // edgeDetailsMap.valueSeq().forEach(k => console.log("Value:", k));
-    // edgeDetailsMap.keySeq().forEach(edgeId => {
-    //     edgeDetailsMap.get(edgeId).keySeq().forEach(nodeId => {
-    //       graph = graph.push(edgeDetailsMap.get(edgeId).get(nodeId));
-    //     })});
-    //var graph = [];
-    //var nodes = [];
-//     var nodeDetails = {};
-//     var edgeDetails = {};
-//     var nodeSet = new Set(); //all nodeIds reported and inferred
-//     var notReportingNodes = new Set(); //nodeIds of not reporting nodes
+  getNeighborDetails = (topoState, src, tgt) => {
+    var srcEdgeData;
 
-//     var graph = 
-//       [{
-//         "group" : "nodes",
-//         "data": { "id": "a", "label": "Gene1" }
-//       },
-//       {
-//         "group" : "nodes",
-//         "data": { "id": "b", "label": "Gene2" }
-//       },
-//       {
-//         "group" : "nodes",
-//         "data": { "id": "c", "label": "Gene3" }
-//       },
-//       {
-//         "group" : "nodes",
-//         "data": { "id": "d", "label": "Gene4" }
-//       },
-//       {
-//         "group" : "nodes",
-//         "data": { "id": "e", "label": "Gene5" }
-//       },
-//       {
-//         "group" : "nodes",
-//         "data": { "id": "f", "label": "Gene6" }
-//       },
-//       {
-//         "group" : "edges",
-//         "data": {
-//           "id": "ab",
-//           "source": "a",
-//           "target": "b"
-//         }
-//       },
-//       {
-//         "group" : "edges",
-//         "data": {
-//           "id": "cd",
-//           "source": "c",
-//           "target": "d"
-//         }
-//       },
-//       {
-//         "group" : "edges",
-//         "data": {
-//           "id": "ef",
-//           "source": "e",
-//           "target": "f"
-//         }
-//       },
-//       {
-//         "group" : "edges",
-//         "data": {
-//           "id": "ac",
-//           "source": "a",
-//           "target": "d"
-//         }
-//       },
-//       {
-//         "group" : "edges",
-//         "data": {
-//           "id": "be",
-//           "source": "b",
-//           "target": "e"
-//         }
-//       }];
-//   //console.log("Mutable graph:", graph);
-//   graph = Immutable.fromJS(graph);
-//   console.log("Immutable graph:", graph)
-//   var dummy = Immutable.List([
-//     Immutable.Map({ group: "nodes", data: Immutable.Map({ id: 'a', label: 'a' }) }), 
-//     Immutable.Map({ group: "nodes", data: Immutable.Map({ id: 'b', label: 'b' }) }),
-//     Immutable.Map({ group: "edges", data: Immutable.Map({ id: 'ab', label: 'ab', source:'a', target:'b' }) })
-//   ]);
-//   console.log("Dummy graph:", dummy);
-//   //if (!response)
-//       return {
-//   graph: dummy,
-//   nodeDetails: nodeDetails,
-//   edgeDetails: edgeDetails,
-//   notReportingNodes: notReportingNodes
-// };;
+    Object.keys(topoState.edgeDetails).forEach((edgeId) => {
+      if (
+        !topoState.notReportingNodes.has(src) &&
+        topoState.edgeDetails[edgeId][src].target === tgt
+      ) {
+        srcEdgeData = topoState.edgeDetails[edgeId][src];
+      }
+    });
+    return srcEdgeData;
+  };
 
-// var nodesData = response[0].Topology[0].Nodes;
-// for (var idx in nodesData) {
-//   var node = nodesData[idx];
-//   if (node.Edges.length === 0) {
-//     //No tunnels node - NT
-//     var nodeDataNT = {
-//       group: "nodes",
-//       data: {
-//         id: node.NodeId,
-//         label: node.NodeName, //name
-//         state: nodeStates.noTunnels,
-//         coordinate: node.GeoCoordinates,
-//         color: '#f2be22'
-//       }
-//     }
-//     //nodes.push(nodeDataNT);
-//     // var nodeDetailNT = {
-//     //     "name": node.NodeName,
-//     //     "id": node.NodeId,
-//     //     "state": "Connected",
-//     //     "raw_data": node
-//     // }
-//     nodeDetails[node.NodeId] = nodeDataNT;
-//     continue;
-//   }
-//   //Connected nodes - CN
-//   var nodeDataCN = {
-//     group: "nodes",
-//     data: {
-//       id: node.NodeId,
-//       label: node.NodeName,
-//       state: nodeStates.connected,
-//       coordinate: node.GeoCoordinates,
-//       color: '#8AA626'
-//     }
-//   }
-//   // nodes.push(nodeDataCN);
-//   // var nodeDetailCN = {
-//   //     "name": node.NodeName,
-//   //     "id": node.NodeId,
-//   //     "state": "Connected",
-//   //     "raw_data": node
-//   // }
-//   nodeDetails[node.NodeId] = nodeDataCN;
-
-//   var edgesData = node.Edges;
-//   for (var edgeidx in edgesData) {
-//     //Processing edges for each connected node
-//     var edge = edgesData[edgeidx];
-//     nodeSet.add(edge.PeerId);
-//     var edgeData = {
-//       group: "edges",
-//       data: {
-//         id: edge.EdgeId,
-//         label: edge.EdgeId.slice(0, 7),
-//         tapName: edge.TapName,
-//         mac: edge.MAC,
-//         source: node.NodeId,
-//         target: edge.PeerId,
-//         state: edge.State,
-//         type: edge.Type,
-//         color: this.getLinkColor(edge.Type),
-//         style: this.getLinkStyle(edge.State)
-//       }
-//     }
-//     graph.push(edgeData);
-//     // var edgeDetail = {
-//     //     name: edge.TapName,
-//     //     id: edge.EdgeId,
-//     //     MAC: edge.MAC,
-//     //     state: edge.State,
-//     //     type: edge.Type,
-//     //     stats: "",
-//     //     source: node.NodeId,
-//     //     target: edge.PeerId,
-//     //     raw_data: edge
-//     // }
-
-//     if (!edgeDetails[edge.EdgeId]) {
-//       edgeDetails[edge.EdgeId] = {};
-//     }
-//     edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
-//   }
-// }
-
-// for (var nodeId of nodeSet) {
-//   if (!nodeDetails[nodeId]) {
-//     //not reported nodes -NR
-//     // var nodeDetailNR = {
-//     //     "name": nodeId.slice(0, 7),
-//     //     "id": nodeId,
-//     //     "state": "Not Reporting",
-//     //     "raw_data": ' '
-//     // }
-//     var nodeDataNR = {
-//       group: "nodes",
-//       data: {
-//         id: nodeId,
-//         label: nodeId.slice(0, 7),
-//         state: nodeStates.notReporting,
-//         coordinate: "",
-//         color: "#ADD8E6"
-//       }
-//     }
-//     nodeDetails[nodeId] = nodeDataNR;
-//     //nodes.push(nodeDataNR);
-//     notReportingNodes.add(nodeId);
-//   }
-// }
-// //console.log("topology:", topology);
-// //console.log("nodeDetails:", nodeDetails);
-// //console.log("edgeDetails: ", edgeDetails);
-// //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
-// var nodes = Object.keys(nodeDetails).sort();
-
-// // nodeDetails.sort(function (a, b) {
-// //     return a.data['id'].localeCompare(b.data['id']);
-// // })
-// //   console.log("nodes:",nodes)
-// nodes.forEach(nodeId => graph.push(nodeDetails[nodeId]))
-// var graphImmutable = Immutable.fromJS(graph);
-// console.log("Graph:", graph);
-// console.log("Graph Immutable:", graphImmutable);
-return {
-  graph: graph,
-  nodeDetails: nodeDetails,
-  edgeDetails: edgeDetails,
-  notReportingNodes: notReportingNodes
-};
-}
-
-getNeighborDetails = (topoState, src, tgt) => {
-  var srcEdgeData;
-
-  Object.keys(topoState.edgeDetails).forEach(edgeId => {
-    if (!topoState.notReportingNodes.has(src) && topoState.edgeDetails[edgeId][src].target === tgt) {
-      srcEdgeData = topoState.edgeDetails[edgeId][src];
+  getLinkColor(type) {
+    var linkColor;
+    switch (type) {
+      case "CETypeILongDistance":
+        linkColor = "#5E4FA2";
+        break;
+      case "CETypeLongDistance":
+        linkColor = "#5E4FA2";
+        break;
+      case "CETypePredecessor":
+        linkColor = "#01665E";
+        break;
+      case "CETypeSuccessor":
+        linkColor = "#01665E";
+        break;
+      default:
+        break;
     }
-  })
-  return srcEdgeData;
-}
-
-getLinkColor(type) {
-  var linkColor;
-  switch (type) {
-    case 'CETypeILongDistance':
-      linkColor = '#5E4FA2'
-      break
-    case 'CETypeLongDistance':
-      linkColor = '#5E4FA2'
-      break
-    case 'CETypePredecessor':
-      linkColor = '#01665E'
-      break
-    case 'CETypeSuccessor':
-      linkColor = '#01665E'
-      break
-    default: break
+    return linkColor;
   }
-  return linkColor;
-}
 
-getLinkStyle(state) {
-  var linkStyle;
-  switch (state) {
-    case 'CEStateInitialized':
-    case 'CEStatePreAuth':
-    case 'CEStateAuthorized':
-    case 'CEStateCreated':
-      linkStyle = 'dotted'
-      break
-    case 'CEStateConnected':
-      linkStyle = 'solid'
-      break
-    case 'CEStateDisconnected':
-    case 'CEStateDeleting':
-      linkStyle = 'dashed'
-      break
-    default: break
+  getLinkStyle(state) {
+    var linkStyle;
+    switch (state) {
+      case "CEStateInitialized":
+      case "CEStatePreAuth":
+      case "CEStateAuthorized":
+      case "CEStateCreated":
+        linkStyle = "dotted";
+        break;
+      case "CEStateConnected":
+        linkStyle = "solid";
+        break;
+      case "CEStateDisconnected":
+      case "CEStateDeleting":
+        linkStyle = "dashed";
+        break;
+      default:
+        break;
+    }
+    return linkStyle;
   }
-  return linkStyle;
-}
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   currentTopology: state.topology.current,
-  currentGraph: state.topology.graph
+  //currentGraph: state.topology.graph,
 });
 
 const mapDispatchToProps = {
