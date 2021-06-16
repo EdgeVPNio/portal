@@ -5,16 +5,6 @@ import { BiNetworkChart } from "react-icons/bi";
 import { GrMapLocation } from "react-icons/gr";
 import { setView } from "../../redux/viewSlice";
 
-function arraysEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length !== b.length) return false;
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
 
 class NavBar extends React.Component {
   constructor(props) {
@@ -24,7 +14,14 @@ class NavBar extends React.Component {
     };
   }
 
+  handleViewSelector(view) {
+    if (this.props.selectedOverlayId.length > 0) {
+      this.props.setView({ current: this.props.currentView, selected: view });
+    }
+  }
+
   componentDidUpdate(prevProps, prevState) {
+    console.log("componentDidUpdate: NavBar");
     if (this.props.selectedOverlayId !== prevProps.selectedOverlayId) {
       if (this.props.selectedOverlayId.length > 0) {
         this.setState({ buttonStates: [false, true, true] });
@@ -34,13 +31,17 @@ class NavBar extends React.Component {
     }
   }
 
-  handleViewSelector(view) {
-    if (this.props.selectedOverlayId.length > 0) {
-      this.props.setView(view);
-    }
+  componentDidMount() {
+    console.log("componentDidMount: NavBar");
+  }
+
+  componentWillUnmount() {
+    console.log("componentWillUnmount: NavBar");
   }
 
   render() {
+    console.log("render: NavBar");
+
     console.log("selectedOverlayId: ", this.props.selectedOverlayId);
 
     return (
@@ -78,7 +79,8 @@ class NavBar extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  selectedView: state.view.current,
+  currentView: state.view.current,
+  //selectedView: state.view.selected,
   selectedOverlayId: state.overlayId.current,
 });
 

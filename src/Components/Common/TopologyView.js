@@ -18,10 +18,11 @@ import not_reporting_ic from "../../Images/Icons/not_reporting_ic.svg";
 import GoogleMapReact from "google-map-react";
 import { Spinner } from "react-bootstrap";
 import SideBar from "./Sidebar";
-
+import Tools from "./Tools";
 import { useDispatch, useSelector, connect } from "react-redux";
 import { setTopology } from "../../redux/topologySlice";
 import { setView } from "../../redux/viewSlice";
+import { setTools } from "../../redux/toolsSlice";
 
 const nodeStates = {
   connected: "Connected",
@@ -33,162 +34,49 @@ class TopologyView extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      zoomValue: 0.8,
-      setMinZoom: 0.1,
-      setMaxZoom: 2,
-      graphElement: [],
-      dataReady: false,
-      refresh: false,
       switchToggle: false,
-      infoToggle: true,
-      configToggle: true,
       nodeDetails: null,
       linkDetails: null,
       currentSelectedElement: null,
-      //currentView: null,
-      cytoscape: null,
     };
-    this.autoRefresh = true; //flag to monitor autoRefresh onClick of refresh button
     this.intervalId = null;
     this.timeoutId = null;
+    this.autoRefresh = this.props.autoUpdate;
   }
 
   /**
-   * Polling function on GET Topology data - runs untill autoRefresh is disabled
+   * Polling function on GET Topology data - runs untill autoUpdate is disabled
    * @param {String} overlayId
    * @param {String} intervalId
    */
   async apiQueryTopology(overlayId, intervalId) {
     var url = "/topology?overlayid=" + overlayId + "&interval=" + intervalId;
     var resp = await fetch(url).then((res) => {
-      //console.log(res);
       return res.json();
     });
+    console.log("apiQueryTopology: ", resp);
     return resp;
   }
 
   queryTopology() {
-    this.apiQueryTopology(this.props.overlayId, this.intervalId)
-      .then((res) => {
-        this.props.setTopology(this.buildTopoRep(res));
-        if (this.autoRefresh) {
-          this.intervalId = res[0]._id;
-          this.queryTopology();
-        }
-      })
-      .catch((err) => {
-        console.log("query topology failed ", err);
-        if (this.autoRefresh) {
-          this.timeoutId = setTimeout(this.queryTopology.bind(this), 10000);
-        }
-      });
+    if (this.autoRefresh)
+      this.apiQueryTopology(this.props.currentOverlayId, this.intervalId)
+        .then((res) => {
+          if (this.autoRefresh) {
+            this.props.setTopology(this.buildTopoRep(res));
+            this.intervalId = res[0]._id;
+            this.queryTopology();
+          }
+        })
+        .catch((err) => {
+          console.log("query topology failed ", err);
+          if (this.autoRefresh) {
+            this.timeoutId = setTimeout(this.queryTopology.bind(this), 30000);
+          }
+        });
   }
 
-  componentDidMount() {
-    // this.cy.maxZoom(this.state.setMaxZoom);
-    // this.cy.minZoom(this.state.setMinZoom);
-    // this.cy.zoom(this.state.zoomValue);
-    // this.cy.center();
-    // if (this.state.currentSelectedElement !== null) {
-    //   if (this.state.currentSelectedElement.isNode()) {
-    //     var selectedElement = this.cy
-    //       .elements()
-    //       .filter(
-    //         (node) =>
-    //           node.data().id === this.state.currentSelectedElement.data().id
-    //       )
-    //       .filter((element) => {
-    //         return element.isNode();
-    //       });
-    //     var relatedElement = selectedElement
-    //       .outgoers()
-    //       .union(selectedElement.incomers())
-    //       .union(selectedElement);
-    //     var notRelatedElement = this.cy
-    //       .elements()
-    //       .difference(
-    //         selectedElement.outgoers().union(selectedElement.incomers())
-    //       )
-    //       .not(selectedElement);
-    //     selectedElement.select();
-    //     relatedElement.removeClass("transparent");
-    //     notRelatedElement.addClass("transparent");
-    //   } else if (this.state.currentSelectedElement.isEdge()) {
-    //     var relatedElement2 = this.state.currentSelectedElement
-    //       .connectedNodes()
-    //       .union(this.state.currentSelectedElement);
-    //     var notRelatedElement2 = this.cy
-    //       .elements()
-    //       .difference(this.state.currentSelectedElement.connectedNodes())
-    //       .not(this.state.currentSelectedElement);
-    //     this.state.currentSelectedElement.select();
-    //     relatedElement2.removeClass("transparent");
-    //     notRelatedElement2.addClass("transparent");
-    //   }
-    // }
-    // var that = this;
-    // this.cy.on("click", function (e) {
-    //   var selectedElement = e.target[0];
-    //   var relatedElement;
-    //   var notRelatedElement;
-    //   try {
-    //     if (selectedElement.isNode()) {
-    //       that.setNodeDetails(selectedElement);
-    //       relatedElement = selectedElement
-    //         .outgoers()
-    //         .union(selectedElement.incomers())
-    //         .union(selectedElement);
-    //       notRelatedElement = that.cy
-    //         .elements()
-    //         .difference(
-    //           selectedElement.outgoers().union(selectedElement.incomers())
-    //         )
-    //         .not(selectedElement);
-    //     } else if (selectedElement.isEdge()) {
-    //       that.setLinkDetails(selectedElement);
-    //       relatedElement = selectedElement
-    //         .connectedNodes()
-    //         .union(selectedElement);
-    //       notRelatedElement = that.cy
-    //         .elements()
-    //         .difference(selectedElement.connectedNodes())
-    //         .not(selectedElement);
-    //     }
-
-    //     relatedElement.removeClass("transparent");
-    //     notRelatedElement.addClass("transparent");
-    //   } catch (error) {
-    //     console.log("OnClick Error: ", error);
-    //     if (e.target[0] === this.cy) {
-    //       ReactDOM.render(<></>, document.getElementById("sideBarContent"));
-    //       that.cy.elements().removeClass("transparent");
-    //     }
-    //   } finally {
-    //     if (e.target[0] !== this.cy) {
-    //       that.setState({
-    //         switchToggle: false,
-    //         currentSelectedElement: e.target,
-    //       });
-    //     } else {
-    //       that.setState({
-    //         switchToggle: true,
-    //         currentSelectedElement: null,
-    //       });
-    //     }
-    //   }
-    // });
-
-    this.queryTopology();
-  }
-
-  componentWillUnmount() {
-    this.autoRefresh = false;
-    clearTimeout(this.timeoutId);
-  }
-
-  componentDidUpdate() {}
-
-  prepareSearch() {
+  renderTypeahead() {
     var perpareSearchElement = new Promise((resolve, reject) => {
       try {
         var searchElement = this.props.currentTopology.graph.map((element) => {
@@ -201,57 +89,52 @@ class TopologyView extends React.Component {
     });
 
     perpareSearchElement.then((searchElement) => {
-      ReactDOM.render(
-        <div>
-          <Typeahead
-            id="searchOverlay"
-            onChange={(selected) => {
-              try {
-                this.cy
-                  .elements()
-                  .getElementById(JSON.parse(selected).data.id)
-                  .trigger("click");
-                this.cy
-                  .elements()
-                  .getElementById(JSON.parse(selected).data.id)
-                  .select();
-              } catch (e) {
-                //console.log(e)
-                this.cy.elements().removeClass("transparent");
-                ReactDOM.render(
-                  <></>,
-                  document.getElementById("sideBarContent")
-                );
-              }
-            }}
-            labelKey={(option) => {
-              return `${JSON.parse(option).data.label}`;
-            }}
-            options={searchElement}
-            selected={this.state.selected}
-            selectHintOnEnter
-            placeholder={"select a node or tunnel"}
-            renderMenuItemChildren={(option) => {
-              return (
-                <div className="searchResult">
-                  <div className="resultLabel">
-                    <b>{JSON.parse(option).data.label}</b>
-                  </div>
-                  <small className="resultLabel">{`ID : ${
-                    JSON.parse(option).data.id
-                  }`}</small>
-                  <br />
+      return (
+        <Typeahead
+          id="searchOverlay"
+          onChange={(selected) => {
+            try {
+              this.cy
+                .elements()
+                .getElementById(JSON.parse(selected).data.id)
+                .trigger("click");
+              this.cy
+                .elements()
+                .getElementById(JSON.parse(selected).data.id)
+                .select();
+            } catch (e) {
+              //console.log(e)
+              this.cy.elements().removeClass("transparent");
+              ReactDOM.render(<></>, document.getElementById("sideBarContent"));
+            }
+          }}
+          labelKey={(option) => {
+            return `${JSON.parse(option).data.label}`;
+          }}
+          options={searchElement}
+          selected={this.state.selected}
+          selectHintOnEnter
+          placeholder={"select a node or tunnel"}
+          renderMenuItemChildren={(option) => {
+            return (
+              <div className="searchResult">
+                <div className="resultLabel">
+                  <b>{JSON.parse(option).data.label}</b>
                 </div>
-              );
-            }}
-          ></Typeahead>
-        </div>,
-        document.getElementById("searchBar")
+                <small className="resultLabel">{`ID : ${
+                  JSON.parse(option).data.id
+                }`}</small>
+                <br />
+              </div>
+            );
+          }}
+        ></Typeahead>
       );
     });
   }
 
-  renderNodeDetails = () => {
+  renderSidebarDetails() {
+    return <null />;
     var sourceNode = this.state.nodeDetails.sourceNode;
     var connectedNodes = this.state.nodeDetails.connectedNodes;
     if (sourceNode.state === nodeStates.notReporting) {
@@ -282,8 +165,8 @@ class TopologyView extends React.Component {
         </CollapsibleButton>
       );
 
-      ReactDOM.render(nodeContent, document.getElementById("sideBarContent"));
-      return;
+      //ReactDOM.render(nodeContent, document.getElementById("sideBarContent"));
+      return nodeContent;
     }
 
     var coordinate = sourceNode.coordinate.split(",");
@@ -382,7 +265,7 @@ class TopologyView extends React.Component {
         );
         ReactDOM.render(nodeContent, document.getElementById("sideBarContent"));
       });
-  };
+  }
 
   renderLinkDetails = () => {
     var linkDetails = this.state.linkDetails.linkDetails;
@@ -753,26 +636,31 @@ class TopologyView extends React.Component {
       .catch(function () {});
   };
 
-  renderGraph = () => {
+  renderTopologyContent() {
     //this.setState({ currentView: 'Topology' })
-    return (
-      <>
-        <CytoscapeComponent
-          id="cy"
-          cy={(cy) => {
-            this.cy = cy;
-          }}
-          wheelSensitivity={0.1}
-          elements={JSON.parse(
-            JSON.stringify(this.props.currentTopology.graph)
-          )} //deep clone of global topo graph
-          stylesheet={cytoscapeStyle}
-          style={{ width: window.innerWidth, height: window.innerHeight }}
-          layout={{ name: "circle", clockwise: true }}
-        />
-      </>
+    if (Object.keys(this.props.currentTopology).length === 0) {
+      return <Spinner id="loading" animation="border" variant="info" />;
+    }
+    const topologyContent = (
+      <CytoscapeComponent
+        id="cy"
+        cy={(cy) => {
+          this.cy = cy;
+          this.cy.on("click", this.handleCytoClick.bind(this));
+          this.cy.maxZoom(this.props.zoomMax);
+          this.cy.minZoom(this.props.ZoomMin);
+          this.cy.zoom(this.state.zoomValue);
+          this.cy.center();
+        }}
+        wheelSensitivity={0.1}
+        elements={JSON.parse(JSON.stringify(this.props.currentTopology.graph))} //deep clone of global topo graph
+        stylesheet={cytoscapeStyle}
+        style={{ width: window.innerWidth, height: window.innerHeight }}
+        layout={{ name: "circle", clockwise: true }}
+      />
     );
-  };
+    return topologyContent;
+  }
 
   elementFilter = (element, props) => {
     if (element.group === "nodes") {
@@ -790,65 +678,8 @@ class TopologyView extends React.Component {
     }
   };
 
-  handleRefresh = () => {
-    if (!this.autoRefresh) {
-      // Setting auto refresh on
-      document.getElementById("refreshBtn").style.opacity = "1";
-      this.autoRefresh = true;
-      this.apiQueryTopology(this.props.overlayName);
-    } else {
-      // Setting auto refresh off
-      document.getElementById("refreshBtn").style.opacity = "0.4";
-      this.autoRefresh = false;
-    }
-    console.log(
-      "Handled refresh, called update with refresh set to",
-      this.autoRefresh
-    );
-  };
-
-  zoomIn = () => {
-    var InitZoomValue = this.cy.zoom() + 0.1;
-    this.cy.zoom(InitZoomValue);
-    this.setState({ zoomValue: InitZoomValue });
-  };
-
-  zoomOut = () => {
-    var InitZoomValue = this.cy.zoom() - 0.1;
-    this.cy.zoom(InitZoomValue);
-    this.setState({ zoomValue: InitZoomValue });
-  };
-
   handleWheel = (e) => {
     this.setState({ zoomValue: this.cy.zoom() });
-  };
-
-  handleSetMinZoom = (e) => {
-    try {
-      this.cy.minZoom(parseFloat(e.target.value));
-      //document.getElementById('zoomSlider').min = parseFloat(e.target.value)
-    } finally {
-      if (this.cy.zoom() < parseFloat(e.target.value)) {
-        this.cy.zoom(parseFloat(e.target.value));
-      }
-      this.setState({ setMinZoom: e.target.value });
-    }
-  };
-
-  handleSetMaxZoom = (e) => {
-    try {
-      this.cy.maxZoom(parseFloat(e.target.value));
-      //document.getElementById('zoomSlider').max = parseFloat(e.target.value)
-    } finally {
-      if (this.cy.zoom() > parseFloat(e.target.value)) {
-        this.cy.zoom(parseFloat(e.target.value));
-      }
-      this.setState({ setMaxZoom: e.target.value });
-    }
-  };
-
-  handleBackToHome = () => {
-    window.location.reload(true);
   };
 
   renderTopology = () => {
@@ -864,78 +695,38 @@ class TopologyView extends React.Component {
       this.cy.elements().removeClass("subgraph");
     } else if (this.state.currentView === "Map") {
       this.setState({ currentView: "Topology" });
-      this.renderGraph();
+      this.renderTopologyContent();
     }
   };
 
-  handleMakerClicked = (node) => {
-    if (this.state.currentSelectedElement.isNode()) {
-      node.trigger("click");
-      document
-        .getElementById(node.data().id + "Marker")
-        .classList.add("selected");
-      this.setState({ switchToggle: false, currentSelectedElement: node });
-    }
-  };
+  // midpoint = (lat1, lng1, lat2, lng2) => {
+  //   lat1 = this.deg2rad(lat1);
+  //   lng1 = this.deg2rad(lng1);
+  //   lat2 = this.deg2rad(lat2);
+  //   lng2 = this.deg2rad(lng2);
 
-  midpoint = (lat1, lng1, lat2, lng2) => {
-    lat1 = this.deg2rad(lat1);
-    lng1 = this.deg2rad(lng1);
-    lat2 = this.deg2rad(lat2);
-    lng2 = this.deg2rad(lng2);
+  //   var dlng = lng2 - lng1;
+  //   var Bx = Math.cos(lat2) * Math.cos(dlng);
+  //   var By = Math.cos(lat2) * Math.sin(dlng);
+  //   var lat3 = Math.atan2(
+  //     Math.sin(lat1) + Math.sin(lat2),
+  //     Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By)
+  //   );
+  //   var lng3 = lng1 + Math.atan2(By, Math.cos(lat1) + Bx);
 
-    var dlng = lng2 - lng1;
-    var Bx = Math.cos(lat2) * Math.cos(dlng);
-    var By = Math.cos(lat2) * Math.sin(dlng);
-    var lat3 = Math.atan2(
-      Math.sin(lat1) + Math.sin(lat2),
-      Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By)
-    );
-    var lng3 = lng1 + Math.atan2(By, Math.cos(lat1) + Bx);
+  //   return [(lat3 * 180) / Math.PI, (lng3 * 180) / Math.PI];
+  // };
 
-    return [(lat3 * 180) / Math.PI, (lng3 * 180) / Math.PI];
-  };
+  // deg2rad = (degrees) => {
+  //   return (degrees * Math.PI) / 180;
+  // };
 
-  deg2rad = (degrees) => {
-    return (degrees * Math.PI) / 180;
-  };
-
-  hasCoordinate = (node) => {
-    if (node.data("coordinate").split(",")[1]) {
-      return true;
-    }
-    return false;
-  };
-
-  renderTools = () => {
-    return <null />;
-  };
-
-  renderCytoscape = () => {
-    return (
-      <section
-        onWheel={this.handleWheel}
-        style={{ width: "100vw", height: "100vh" }}
-      >
-        <div id="cyArea">
-          {Object.keys(this.props.currentTopology).length === 0 ? (
-            <Spinner id="loading" animation="border" variant="info" />
-          ) : (
-            <div id="cyArea">{this.renderGraph()}</div>
-          )}
-        </div>
-      </section>
-    );
-  };
-
-  render() {
-    return (
-      <>
-        {this.renderTools()}
-        {this.renderCytoscape()}
-      </>
-    );
-  }
+  // hasCoordinate = (node) => {
+  //   if (node.data("coordinate").split(",")[1]) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
 
   buildTopoRep = (response) => {
     var graph = [];
@@ -1141,15 +932,108 @@ class TopologyView extends React.Component {
     }
     return linkStyle;
   }
+
+  handleCytoClick(event) {
+    var selectedElement = event.target[0];
+    var adjacentElements;
+    var nonAdjacentElements;
+    if (selectedElement.isNode()) {
+      this.setNodeDetails(selectedElement);
+      adjacentElements = selectedElement
+        .outgoers()
+        .union(selectedElement.incomers())
+        .union(selectedElement);
+      nonAdjacentElements = this.cy
+        .elements()
+        .difference(
+          selectedElement.outgoers().union(selectedElement.incomers())
+        )
+        .not(selectedElement);
+    } else if (selectedElement.isEdge()) {
+      this.setLinkDetails(selectedElement);
+      adjacentElements = selectedElement
+        .connectedNodes()
+        .union(selectedElement);
+      nonAdjacentElements = this.cy
+        .elements()
+        .difference(selectedElement.connectedNodes())
+        .not(selectedElement);
+    } else {
+      console.log("the cytoscape background was clicked");
+    }
+
+    adjacentElements.removeClass("transparent");
+    nonAdjacentElements.addClass("transparent");
+  }
+
+  componentDidMount() {
+    console.log("componentDidMount: TopologyView");
+    this.props.setView({
+      current: "TopologyView",
+      selected: this.props.selectedView,
+    });
+    this.queryTopology();
+    this.autoRefresh = this.props.autoUpdate;
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log("componentDidUpdate: TopologyView");
+    if (this.props.zoomValue !== prevProps.zoomValue) {
+      this.cy.zoom(this.props.zoomValue);
+    }
+    if (this.props.autoUpdate !== prevProps.autoUpdate) {
+      this.autoRefresh = this.props.autoUpdate;
+      if (this.props.autoUpdate) {
+        this.queryTopology();
+      }
+    }    
+  }
+
+  componentWillUnmount() {
+    console.log("componentWillUnMount: TopologyView");
+    this.autoRefresh = false;
+    clearTimeout(this.timeoutId);
+  }
+
+  render() {
+    console.log("render: TopologyView");
+
+    return (
+      <section
+        onWheel={this.handleWheel}
+        style={{ width: "100vw", height: "100vh" }}
+      >
+        <>
+          <div id="cyArea">{this.renderTopologyContent()}</div>
+          <div id="SidePanel">
+            <SideBar
+              // typeahead={this.renderTypeahead()}
+              sideBarDetails={this.renderSidebarDetails()}
+            />
+            <div id="bottomTools">
+              <Tools />
+            </div>
+          </div>
+        </>
+      </section>
+    );
+  }
 }
 
 const mapStateToProps = (state) => ({
+  currentOverlayId: state.overlayId.current,
   currentTopology: state.topology.current,
-  //currentGraph: state.topology.graph,
+  currentView: state.view.current,
+  selectedView: state.view.selected,
+  zoomMinimum: state.tools.zoomMinimum,
+  zoomMaximum: state.tools.zoomMaximum,
+  zoomValue: state.tools.zoomValue,
+  autoUpdate: state.tools.autoUpdate,
 });
 
 const mapDispatchToProps = {
   setView,
+  setTools,
   setTopology,
 };
 

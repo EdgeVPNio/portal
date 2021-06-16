@@ -13,7 +13,7 @@ export default class Overlays {
       return overlayList
     }
 
-    this.getOverlayName = () => {
+    this.getOverlayNames = () => {
       var overlaysName = []
       this.getOverlayList().forEach(overlay => { overlaysName.push(overlay.name) })
       return overlaysName

@@ -1,17 +1,35 @@
 import React from "react";
+//import { connect } from "react-redux";
 import { slide as Menu } from "react-burger-menu";
 import evio_logo from "../../Images/Icons/evio.svg";
-import NavBar from './NavBar'
-import { Typeahead } from "react-bootstrap-typeahead";
-import { setView } from "../../redux/viewSlice";
-import { useDispatch, useSelector, connect } from "react-redux";
+import NavBar from "./NavBar";
+// import { Typeahead } from "react-bootstrap-typeahead";
+// import { setView } from "../../redux/viewSlice";
+// import { setOverlayId } from "../../redux/overlaySlice";
 
 class Sidebar extends React.Component {
-  constructor(props) {
-    super(props);
+  renderTypeahead() {
+    if (this.props.typeahead !== null) {
+      return this.props.typeahead;
+    }
+    //return <Typeahead placeholder={"Search by identifier"} />;
+    return <null />;
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log("componentDidUpdate: SideBar");
+  }
+
+  componentDidMount() {
+    console.log("componentDidMount: SideBar");
+  }
+
+  componentWillUnmount() {
+    console.log("componentWillUnmount: SideBar");
   }
 
   render() {
+    console.log("render: SideBar");
     return (
       // Pass on our props
       <Menu
@@ -21,7 +39,10 @@ class Sidebar extends React.Component {
         width={410}
         disableAutoFocus
       >
-        <div id="evioLabel" style={{ textAlign: "center", top: "8px", fontSize: "medium"}}>
+        <div
+          id="evioLabel"
+          style={{ textAlign: "center", top: "8px", fontSize: "medium" }}
+        >
           {/* <img
             src={evio_logo}
             alt={"Evio Logo"}
@@ -34,22 +55,26 @@ class Sidebar extends React.Component {
           <NavBar />
         </div>
         <div id="searchBar" style={{ margin: "20px 0" }}>
-          <Typeahead placeholder={"Search by identifier"} />
+          {this.renderTypeahead()}
         </div>
-        <div id="sideBarContent" style={{ padding: "8px" }}>
-          {this.props.sideBarContent}
+        <div id="sideBarDetails" style={{ padding: "8px" }}>
+          {this.props.sideBarDetails}
         </div>
       </Menu>
     );
   }
 }
 
-const mapStateToProps = (state) => ({
-  selectedView: state.view.current,
-});
+// const mapStateToProps = (state) => ({
+//   currentView: state.view.current,
+//   selectedView: state.view.selected,
+//   currentOverlayId: state.overlayId.current,
+// });
 
-const mapDispatchToProps = {
-  setView,
-};
+// const mapDispatchToProps = {
+//   setView,
+//   setOverlayId,
+// };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);
+//export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);
+export default Sidebar;
