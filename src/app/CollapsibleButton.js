@@ -3,8 +3,8 @@ import Card from "react-bootstrap/Card";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Accordion from "react-bootstrap/Accordion";
 import Button from "react-bootstrap/Button";
-import DowmArrow from "../../Images/Icons/down-arrow-ic.svg";
-import UpArrow from "../../Images/Icons/up-arrow-ic.svg";
+import DowmArrow from "../images/icons/down-arrow-ic.svg";
+import UpArrow from "../images/icons/up-arrow-ic.svg";
 
 class CollapsibleButton extends React.Component {
   constructor(props) {

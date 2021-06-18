@@ -1,8 +1,8 @@
 import React from "react";
 //import { connect } from "react-redux";
-import { slide as Menu } from "react-burger-menu";
-import evio_logo from "../../Images/Icons/evio.svg";
-import NavBar from "./NavBar";
+import { slide as Slidebar } from "react-burger-menu";
+import evio_logo from "../images/icons/evio.svg";
+import Navbar from "./Navbar";
 // import { Typeahead } from "react-bootstrap-typeahead";
 // import { setView } from "../../redux/viewSlice";
 // import { setOverlayId } from "../../redux/overlaySlice";
@@ -32,7 +32,7 @@ class Sidebar extends React.Component {
     console.log("render: SideBar");
     return (
       // Pass on our props
-      <Menu
+      <Slidebar
         right
         isOpen={true}
         customBurgerIcon={<img src={evio_logo} alt=" " />}
@@ -52,7 +52,7 @@ class Sidebar extends React.Component {
           <label id="evioTitle"> Evio Platform Visualizer </label>
         </div>
         <div id="navBar">
-          <NavBar />
+          <Navbar />
         </div>
         <div id="searchBar" style={{ margin: "20px 0" }}>
           {this.renderTypeahead()}
@@ -60,7 +60,7 @@ class Sidebar extends React.Component {
         <div id="sideBarDetails" style={{ padding: "8px" }}>
           {this.props.sideBarDetails}
         </div>
-      </Menu>
+      </Slidebar>
     );
   }
 }

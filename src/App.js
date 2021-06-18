@@ -1,16 +1,12 @@
-import React, { Component } from "react";
+import React from "react";
 import "react-tippy/dist/tippy.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-//import { CurrentView } from "./Components/Common/CurrentView";
-import "./CSS/Main.css";
-import SideBar from "./Components/Common/Sidebar";
-import NavBar from "./Components/Common/NavBar";
-// import ViewSelector from "./Components/Common/ViewSelector";
-import TopologyView from "./Components/Common/TopologyView";
+import "./index.css";
 import { connect } from "react-redux";
-import OverlaysView from "./Components/Common/OverlaysView";
 import { Spinner } from "react-bootstrap";
-import { setView } from "./redux/viewSlice";
+import { setSelectedView } from "./features/view/viewSlice";
+import OverlaysView from "./app/OverlaysView";
+import TopologyView from "./app/TopologyView";
 
 class App extends React.Component {
   constructor(props) {
@@ -30,7 +26,7 @@ class App extends React.Component {
   }
   componentDidMount() {
     console.log("componentDidMount: AppView");
-    this.props.setView({current: this.props.currentView, selected: "OverlaysView"})
+    this.props.setSelectedView("OverlaysView")
   }
 
   componentDidUpdate() {
@@ -61,13 +57,13 @@ class App extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  currentOverlayId: state.overlayId.current,
+  currentOverlayId: state.evio.overlayId,
   currentView: state.view.current,
   selectedView: state.view.selected,
 });
 
 const mapDispatchToProps = {
-  setView,
+  setSelectedView,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

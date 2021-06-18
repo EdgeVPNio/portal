@@ -1,28 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom";
-//import Card from "react-bootstrap/Card";
-import cytoscape from "cytoscape";
+//import cytoscape from "cytoscape";
 import CytoscapeComponent from "react-cytoscapejs";
 import CollapsibleButton from "./CollapsibleButton";
-import Popover from "react-bootstrap/Popover";
 import cytoscapeStyle from "./cytoscapeStyle.js";
 import { Typeahead } from "react-bootstrap-typeahead";
-import static_ic from "../../Images/Icons/static_ic.svg";
-import OverlayTrigger from "react-bootstrap/OverlayTrigger";
-import ondemand_ic from "../../Images/Icons/ondemand_ic.svg";
-import connected_ic from "../../Images/Icons/connected_ic.svg";
-import no_tunnel_ic from "../../Images/Icons/no_tunnel_ic.svg";
-import successor_ic from "../../Images/Icons/successor_ic.svg";
-import longdistance_ic from "../../Images/Icons/longdistance_ic.svg";
-import not_reporting_ic from "../../Images/Icons/not_reporting_ic.svg";
-import GoogleMapReact from "google-map-react";
 import { Spinner } from "react-bootstrap";
 import SideBar from "./Sidebar";
-import Tools from "./Tools";
-import { useDispatch, useSelector, connect } from "react-redux";
-import { setTopology } from "../../redux/topologySlice";
-import { setView } from "../../redux/viewSlice";
-import { setTools } from "../../redux/toolsSlice";
+import Tools from "./Toolbar";
+import { connect } from "react-redux";
+import { setCy } from "../features/evio/evioSlice";
+import { setCurrentView } from "../features/view/viewSlice";
 
 const nodeStates = {
   connected: "Connected",
@@ -63,7 +51,7 @@ class TopologyView extends React.Component {
       this.apiQueryTopology(this.props.currentOverlayId, this.intervalId)
         .then((res) => {
           if (this.autoRefresh) {
-            this.props.setTopology(this.buildTopoRep(res));
+            this.props.setCy(this.buildTopoRep(res));
             this.intervalId = res[0]._id;
             this.queryTopology();
           }
@@ -91,7 +79,8 @@ class TopologyView extends React.Component {
     perpareSearchElement.then((searchElement) => {
       return (
         <Typeahead
-          id="searchOverlay"
+          clearButton
+          id="searchTopology"
           onChange={(selected) => {
             try {
               this.cy
@@ -968,10 +957,7 @@ class TopologyView extends React.Component {
 
   componentDidMount() {
     console.log("componentDidMount: TopologyView");
-    this.props.setView({
-      current: "TopologyView",
-      selected: this.props.selectedView,
-    });
+    this.props.setCurrentView("TopologyView");
     this.queryTopology();
     this.autoRefresh = this.props.autoUpdate;
   }
@@ -1007,7 +993,7 @@ class TopologyView extends React.Component {
           <div id="cyArea">{this.renderTopologyContent()}</div>
           <div id="SidePanel">
             <SideBar
-              // typeahead={this.renderTypeahead()}
+              typeahead={this.renderTypeahead()}
               sideBarDetails={this.renderSidebarDetails()}
             />
             <div id="bottomTools">
@@ -1021,20 +1007,16 @@ class TopologyView extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  currentOverlayId: state.overlayId.current,
-  currentTopology: state.topology.current,
+  currentOverlayId: state.evio.overlayId,
+  currentTopology: state.evio.cy,
   currentView: state.view.current,
-  selectedView: state.view.selected,
-  zoomMinimum: state.tools.zoomMinimum,
-  zoomMaximum: state.tools.zoomMaximum,
   zoomValue: state.tools.zoomValue,
   autoUpdate: state.tools.autoUpdate,
 });
 
 const mapDispatchToProps = {
-  setView,
-  setTools,
-  setTopology,
+  setCurrentView,
+  setCy,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TopologyView);

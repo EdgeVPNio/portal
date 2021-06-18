@@ -5,15 +5,13 @@ import { Tooltip } from "react-tippy";
 import "bootstrap/dist/css/bootstrap.min.css";
 import CollapsibleButton from "./CollapsibleButton";
 import { Typeahead } from "react-bootstrap-typeahead";
-import "../../CSS/Main.css";
+import "../index.css";
 import Overlays from "./Overlays.js";
-import "../../CSS/Main.css";
 import SideBar from "./Sidebar";
-import Tools from "./Tools";
+import Toolbar from "./Toolbar";
 import { connect } from "react-redux";
-//import { useDispatch, useSelector, connect } from "react-redux";
-import { setOverlayId } from "../../redux/overlaySlice";
-import { setView } from "../../redux/viewSlice";
+import { setOverlayId } from "../features/evio/evioSlice";
+import { setCurrentView } from "../features/view/viewSlice";
 
 class OverlaysView extends React.Component {
   constructor(props) {
@@ -154,10 +152,7 @@ class OverlaysView extends React.Component {
 
   componentDidMount() {
     console.log("componentDidMount: OverlayView");
-    this.props.setView({
-      current: "OverlaysView",
-      selected: this.props.selectedView,
-    });
+    this.props.setCurrentView("OverlaysView");
     this.queryOverlays();
     this.autoRefresh = this.props.autoUpdate;
   }
@@ -189,7 +184,7 @@ class OverlaysView extends React.Component {
             sideBarDetails={this.renderSidebarDetails()}
           />
           <div id="bottomTools">
-            <Tools />
+            <Toolbar />
           </div>
         </div>
       </>
@@ -198,14 +193,12 @@ class OverlaysView extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  // currentOverlayId: state.overlayId.current,
-  // currentView: state.view.current,
   selectedView: state.view.selected,
   autoUpdate: state.tools.autoUpdate,
 });
 
 const mapDispatchToProps = {
-  setView,
+  setCurrentView,
   setOverlayId,
 };
 

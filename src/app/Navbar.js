@@ -3,10 +3,10 @@ import { connect } from "react-redux";
 import { SiGraphql } from "react-icons/si";
 import { BiNetworkChart } from "react-icons/bi";
 import { GrMapLocation } from "react-icons/gr";
-import { setView } from "../../redux/viewSlice";
+import { setSelectedView } from "../features/view/viewSlice";
 
 
-class NavBar extends React.Component {
+class Navbar extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -16,12 +16,12 @@ class NavBar extends React.Component {
 
   handleViewSelector(view) {
     if (this.props.selectedOverlayId.length > 0) {
-      this.props.setView({ current: this.props.currentView, selected: view });
+      this.props.setSelectedView(view);
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: NavBar");
+    console.log("componentDidUpdate: Navbar");
     if (this.props.selectedOverlayId !== prevProps.selectedOverlayId) {
       if (this.props.selectedOverlayId.length > 0) {
         this.setState({ buttonStates: [false, true, true] });
@@ -32,15 +32,15 @@ class NavBar extends React.Component {
   }
 
   componentDidMount() {
-    console.log("componentDidMount: NavBar");
+    console.log("componentDidMount: Navbar");
   }
 
   componentWillUnmount() {
-    console.log("componentWillUnmount: NavBar");
+    console.log("componentWillUnmount: Navbar");
   }
 
   render() {
-    console.log("render: NavBar");
+    console.log("render: Navbar");
 
     console.log("selectedOverlayId: ", this.props.selectedOverlayId);
 
@@ -80,12 +80,11 @@ class NavBar extends React.Component {
 
 const mapStateToProps = (state) => ({
   currentView: state.view.current,
-  //selectedView: state.view.selected,
-  selectedOverlayId: state.overlayId.current,
+  selectedOverlayId: state.evio.overlayId,
 });
 
 const mapDispatchToProps = {
-  setView,
+  setSelectedView,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(NavBar);
+export default connect(mapStateToProps, mapDispatchToProps)(Navbar);

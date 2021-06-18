@@ -9,15 +9,20 @@ const toolsSlice = createSlice({
     autoUpdate: true,
   },
   reducers: {
-    setTools(state, action) {
+    configureZoomRange(state, action) {
       state.zoomMinimum = action.payload.zoomMinimum;
       state.zoomMaximum = action.payload.zoomMaximum;
-      state.zoomValue = action.payload.zoomValue;
-      state.autoUpdate = action.payload.autoUpdate;
+    },
+    setZoomValue(state, action) {
+      state.zoomValue = action.payload;
+    },
+    toggleAutoUpdate(state) {
+      state.autoUpdate = !state.autoUpdate;
     },
   },
 });
 
-export const { setTools } = toolsSlice.actions;
+export const { configureZoomRange, setZoomValue, toggleAutoUpdate } =
+  toolsSlice.actions;
 
 export default toolsSlice.reducer;

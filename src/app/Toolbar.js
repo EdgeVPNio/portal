@@ -1,71 +1,59 @@
 import React from "react";
-import static_ic from "../../Images/Icons/static_ic.svg";
-import ondemand_ic from "../../Images/Icons/ondemand_ic.svg";
-import connected_ic from "../../Images/Icons/connected_ic.svg";
-import no_tunnel_ic from "../../Images/Icons/no_tunnel_ic.svg";
-import successor_ic from "../../Images/Icons/successor_ic.svg";
-import longdistance_ic from "../../Images/Icons/longdistance_ic.svg";
-import not_reporting_ic from "../../Images/Icons/not_reporting_ic.svg";
+import static_ic from "../images/icons/static_ic.svg";
+import ondemand_ic from "../images/icons/ondemand_ic.svg";
+import connected_ic from "../images/icons/connected_ic.svg";
+import no_tunnel_ic from "../images/icons/no_tunnel_ic.svg";
+import successor_ic from "../images/icons/successor_ic.svg";
+import longdistance_ic from "../images/icons/longdistance_ic.svg";
+import not_reporting_ic from "../images/icons/not_reporting_ic.svg";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import { connect } from "react-redux";
-import { setTools } from "../../redux/toolsSlice";
+import {
+  configureZoomRange,
+  setZoomValue,
+  toggleAutoUpdate,
+} from "../features/tools/toolsSlice";
 
-class Tools extends React.Component {
+class Toolbar extends React.Component {
   constructor(props) {
     super(props);
     this.zoomIncrement = 0.1;
     if (this.props.zoomIncrement === null) {
       this.zoomIncrement = this.props.zoomIncrement;
     }
-    //this.autoUpdate = true; //flag to monitor autoUpdate onClick of refresh button
   }
 
   zoomIn = () => {
     var zoomTo = this.props.zoomValue + this.zoomIncrement;
-    this.props.setTools({
+    this.props.setZoomValue({
       zoomValue: zoomTo,
-      zoomMinimum: this.props.zoomMinimum,
-      zoomMaximum: this.props.zoomMaximum,
-      autoUpdate: this.props.autoUpdate,
     });
   };
 
   zoomOut = () => {
     var zoomTo = this.props.zoomValue - this.zoomIncrement;
-    this.props.setTools({
+    this.props.setZoomValue({
       zoomValue: zoomTo,
-      zoomMinimum: this.props.zoomMinimum,
-      zoomMaximum: this.props.zoomMaximum,
-      autoUpdate: this.props.autoUpdate,
     });
   };
 
   setMinZoom = (val) => {
-    this.props.setTools({
-      zoomValue: this.props.zoomValue,
+    this.props.configureZoomRange({
       zoomMinimum: val,
       zoomMaximum: this.props.zoomMaximum,
-      autoUpdate: this.props.autoUpdate,
     });
   };
 
   setMaxZoom = (val) => {
-    this.props.setTools({
-      zoomValue: this.props.zoomValue,
+    this.props.configureZoomRange({
       zoomMinimum: this.props.zoomMinimum,
       zoomMaximum: val,
-      autoUpdate: this.props.autoUpdate,
     });
   };
 
   toggleAutoUpdate = () => {
-    this.props.setTools({
-      zoomValue: this.props.zoomValue,
-      zoomMinimum: this.props.zoomMinimum,
-      zoomMaximum: this.props.zoomMaximum,
-      autoUpdate: !this.props.autoUpdate,
-    });
+    this.props.toggleAutoUpdate();
   };
 
   renderZoomInButton() {
@@ -106,19 +94,6 @@ class Tools extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     console.log("componentDidUpdate: Tools");
-    // if (
-    //   this.props.zoomValue !== prevProps.zoomValue ||
-    //   this.props.zoomMinimum !== prevProps.zoomMinimum ||
-    //   this.props.zoomMaximum !== prevProps.zoomMaximum ||
-    //   this.props.autoUpdate !== prevProps.autoUpdate
-    // ) {
-    //   this.props.setTools({
-    //     zoomValue: this.props.zoomValue,
-    //     zoomMinimum: this.props.zoomMinimum,
-    //     zoomMaximum: this.props.zoomMaximum,
-    //     autoUpdate: this.props.autoUpdate,
-    //   });
-    // }
   }
 
   componentWillUnmount() {
@@ -310,7 +285,9 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  setTools,
+  configureZoomRange,
+  setZoomValue,
+  toggleAutoUpdate,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Tools);
+export default connect(mapStateToProps, mapDispatchToProps)(Toolbar);
