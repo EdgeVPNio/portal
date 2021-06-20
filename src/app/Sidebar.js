@@ -1,11 +1,7 @@
 import React from "react";
-//import { connect } from "react-redux";
 import { slide as Slidebar } from "react-burger-menu";
 import evio_logo from "../images/icons/evio.svg";
 import Navbar from "./Navbar";
-// import { Typeahead } from "react-bootstrap-typeahead";
-// import { setView } from "../../redux/viewSlice";
-// import { setOverlayId } from "../../redux/overlaySlice";
 
 class Sidebar extends React.Component {
   renderTypeahead() {
@@ -14,6 +10,13 @@ class Sidebar extends React.Component {
     }
     //return <Typeahead placeholder={"Search by identifier"} />;
     return <null />;
+  }
+
+  renderDetails() {
+    if(this.props.sidebarDetails !== null) {
+      return this.props.sidebarDetails;
+    }
+    return <null/>
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -57,8 +60,8 @@ class Sidebar extends React.Component {
         <div id="searchBar" style={{ margin: "20px 0" }}>
           {this.renderTypeahead()}
         </div>
-        <div id="sideBarDetails" style={{ padding: "8px" }}>
-          {this.props.sideBarDetails}
+        <div id="sidebarDetails" style={{ padding: "8px" }}>
+          {this.renderDetails()}
         </div>
       </Slidebar>
     );

@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const evioSlice = createSlice({
   name: "evio",
-  initialState: { overlayId: "", nodeId: "", tunnelId: "", cy: {} },
+  initialState: { overlayId: "", nodeId: "", tunnelId: "", cyElements: [] },
   reducers: {
     setOverlayId(state, action) {
       state.overlayId = action.payload;
@@ -13,13 +13,13 @@ const evioSlice = createSlice({
     setTunnelId(state, action) {
       state.tunnelId = action.payload;
     },
-    setCy(state, action) {
-      state.cy = action.payload;
+    setCyElements(state, action) {
+      state.cyElements = action.payload;
     },
   },
 });
 
-export const { setOverlayId, setNodeId, setTunnelId, setCy } =
+export const { setOverlayId, setNodeId, setTunnelId, setCyElements } =
   evioSlice.actions;
 
 export default evioSlice.reducer;

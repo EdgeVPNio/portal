@@ -181,7 +181,7 @@ class OverlaysView extends React.Component {
         <div id="SidePanel">
           <SideBar
             typeahead={this.renderTypeahead()}
-            sideBarDetails={this.renderSidebarDetails()}
+            sidebarDetails={this.renderSidebarDetails()}
           />
           <div id="bottomTools">
             <Toolbar />
