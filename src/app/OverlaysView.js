@@ -8,7 +8,6 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import "../index.css";
 import Overlays from "./Overlays.js";
 import SideBar from "./Sidebar";
-import Toolbar from "./Toolbar";
 import { connect } from "react-redux";
 import { setOverlayId } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
@@ -183,9 +182,9 @@ class OverlaysView extends React.Component {
             typeahead={this.renderTypeahead()}
             sidebarDetails={this.renderSidebarDetails()}
           />
-          <div id="bottomTools">
+          {/* <div id="bottomTools">
             <Toolbar />
-          </div>
+          </div> */}
         </div>
       </>
     );

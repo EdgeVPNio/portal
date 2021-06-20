@@ -7,6 +7,7 @@ import { Spinner } from "react-bootstrap";
 import { setSelectedView } from "./features/view/viewSlice";
 import OverlaysView from "./app/OverlaysView";
 import TopologyView from "./app/TopologyView";
+import Toolbar from "./app/Toolbar";
 
 class App extends React.Component {
   constructor(props) {
@@ -47,6 +48,9 @@ class App extends React.Component {
           style={{ backgroundColor: "#101B2B", color: "white", margin: "auto" }}
         >
           {this.currentView()}
+          <div id="toolsArea">
+            <Toolbar />
+          </div>
           {/* <div id="SidePanel">
             <SideBar />
           </div> */}

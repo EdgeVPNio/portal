@@ -6,7 +6,6 @@ import cytoscapeStyle from "./cytoscapeStyle.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { Spinner } from "react-bootstrap";
 import SideBar from "./Sidebar";
-import Toolbar from "./Toolbar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
@@ -363,9 +362,9 @@ class TopologyView extends React.Component {
               typeahead={this.renderTypeahead()}
               sidebarDetails={this.renderSidebarDetails()}
             />
-            <div id="bottomTools">
+            {/* <div id="bottomTools">
               <Toolbar />
-            </div>
+            </div> */}
           </div>
         </>
       </section>
