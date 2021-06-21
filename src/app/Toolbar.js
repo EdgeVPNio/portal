@@ -26,16 +26,12 @@ class Toolbar extends React.Component {
 
   zoomIn = () => {
     var zoomTo = this.props.zoomValue + this.zoomIncrement;
-    this.props.setZoomValue({
-      zoomValue: zoomTo,
-    });
+    this.props.setZoomValue(zoomTo);
   };
 
   zoomOut = () => {
     var zoomTo = this.props.zoomValue - this.zoomIncrement;
-    this.props.setZoomValue({
-      zoomValue: zoomTo,
-    });
+    this.props.setZoomValue(zoomTo);
   };
 
   setMinZoom = (val) => {

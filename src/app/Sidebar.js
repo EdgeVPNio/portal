@@ -2,14 +2,15 @@ import React from "react";
 import { slide as Slidebar } from "react-burger-menu";
 import evio_logo from "../images/icons/evio.svg";
 import Navbar from "./Navbar";
+import { Typeahead } from "react-bootstrap-typeahead";
 
 class Sidebar extends React.Component {
   renderTypeahead() {
     if (this.props.typeahead !== null) {
       return this.props.typeahead;
     }
-    //return <Typeahead placeholder={"Search by identifier"} />;
-    return <null />;
+    return <Typeahead placeholder={"..."} />;
+    //return <null />;
   }
 
   renderDetails() {

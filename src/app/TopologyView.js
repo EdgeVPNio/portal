@@ -22,6 +22,7 @@ class TopologyView extends React.Component {
     this.intervalId = null;
     this.timeoutId = null;
     this.autoRefresh = this.props.autoUpdate;
+    this.cy = null;
   }
 
   /**
@@ -104,11 +105,10 @@ class TopologyView extends React.Component {
     );
   }
 
-
   renderTopologyContent() {
-    if (this.props.cyElements.length === 0) {
-      return <Spinner id="loading" animation="border" variant="info" />;
-    }
+    // if (this.props.cyElements.length === 0) {
+    //   return <Spinner id="loading" animation="border" variant="info" />;
+    // }
     const topologyContent = (
       <CytoscapeComponent
         id="cy"
@@ -116,7 +116,7 @@ class TopologyView extends React.Component {
           this.cy = cy;
           this.cy.on("click", this.handleCytoClick.bind(this));
           this.cy.maxZoom(this.props.zoomMax);
-          this.cy.minZoom(this.props.ZoomMin);
+          this.cy.minZoom(this.props.zoomMin);
           this.cy.zoom(this.props.zoomValue);
           this.cy.center();
         }}
@@ -130,11 +130,9 @@ class TopologyView extends React.Component {
     return topologyContent;
   }
 
-
   handleWheel = (e) => {
     this.setState({ zoomValue: this.cy.zoom() });
   };
-
 
   buildCyElements = (topology) => {
     var elements = [];
@@ -351,23 +349,23 @@ class TopologyView extends React.Component {
     console.log("render: TopologyView");
 
     return (
-      <section
-        onWheel={this.handleWheel}
-        style={{ width: "100vw", height: "100vh" }}
-      >
-        <>
+      <>
+        <section
+          onWheel={this.handleWheel}
+          style={{ width: "100vw", height: "100vh" }}
+        >
           <div id="cyArea">{this.renderTopologyContent()}</div>
-          <div id="SidePanel">
-            <SideBar
-              typeahead={this.renderTypeahead()}
-              sidebarDetails={this.renderSidebarDetails()}
-            />
-            {/* <div id="bottomTools">
+        </section>
+        <div id="SidePanel">
+          <SideBar
+            typeahead={this.renderTypeahead()}
+            sidebarDetails={this.renderSidebarDetails()}
+          />
+          {/* <div id="bottomTools">
               <Toolbar />
             </div> */}
-          </div>
-        </>
-      </section>
+        </div>
+      </>
     );
   }
 }
@@ -377,6 +375,8 @@ const mapStateToProps = (state) => ({
   cyElements: state.evio.cyElements,
   currentView: state.view.current,
   zoomValue: state.tools.zoomValue,
+  zoomMin: state.tools.zoomMinimum,
+  zoomMax: state.tools.zoomMaximum,
   autoUpdate: state.tools.autoUpdate,
 });
 
