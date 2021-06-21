@@ -77,7 +77,9 @@ class OverlaysView extends React.Component {
             <button
               onClick={this.selectOverlay.bind(this, overlayId)}
               id={overlayId}
-              className="overlay"
+              className={
+                this.props.selectedOverlayId.length > 0 ? "overlaySelected" : "overlay"
+              }
             />
           </Tooltip>
         );
@@ -194,6 +196,7 @@ class OverlaysView extends React.Component {
 const mapStateToProps = (state) => ({
   selectedView: state.view.selected,
   autoUpdate: state.tools.autoUpdate,
+  selectedOverlayId: state.evio.overlayId,
 });
 
 const mapDispatchToProps = {

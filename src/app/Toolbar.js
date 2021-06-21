@@ -22,6 +22,9 @@ class Toolbar extends React.Component {
     if (this.props.zoomIncrement === null) {
       this.zoomIncrement = this.props.zoomIncrement;
     }
+    this.state = {
+      buttonStates: [true, true, true, true, true], //[zoomIn, zoomOut, refresh, config, legend]
+    };
   }
 
   zoomIn = () => {
@@ -34,17 +37,17 @@ class Toolbar extends React.Component {
     this.props.setZoomValue(zoomTo);
   };
 
-  setMinZoom = (val) => {
+  setMinZoom = (e) => {
     this.props.configureZoomRange({
-      zoomMinimum: val,
+      zoomMinimum: e.target.value,
       zoomMaximum: this.props.zoomMaximum,
     });
   };
 
-  setMaxZoom = (val) => {
+  setMaxZoom = (e) => {
     this.props.configureZoomRange({
       zoomMinimum: this.props.zoomMinimum,
-      zoomMaximum: val,
+      zoomMaximum: e.target.value,
     });
   };
 
@@ -57,7 +60,8 @@ class Toolbar extends React.Component {
       <button
         onClick={this.zoomIn}
         id="zoomInBtn"
-        className="bottomToolsBtn"
+        disabled={this.state.buttonStates[0]}
+        className={this.state.buttonStates[0] ? "zoomInBtnDisabled": "zoomInBtn"}
       ></button>
     );
   }
@@ -67,7 +71,8 @@ class Toolbar extends React.Component {
       <button
         onClick={this.zoomOut}
         id="zoomOutBtn"
-        className="bottomToolsBtn"
+        disabled={this.state.buttonStates[1]}
+        className={this.state.buttonStates[1] ? "zoomOutBtnDisabled": "zoomOutBtn"}
       ></button>
     );
   }
@@ -77,8 +82,9 @@ class Toolbar extends React.Component {
       <button
         onClick={this.toggleAutoUpdate}
         id="refreshBtn"
-        className="bottomToolsBtn"
-        title="Disable/Enable Auto Updates"
+        className={this.state.buttonStates[2] ? "refreshBtnDisabled": "refreshBtn"}
+        title="Disable/Enable Auto Updates" 
+        disabled={this.state.buttonStates[2]}
         style={this.props.autoUpdate ? { opacity: 1 } : { opacity: 0.4 }}
       ></button>
     );
@@ -90,6 +96,16 @@ class Toolbar extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     console.log("componentDidUpdate: Tools");
+    if (this.props.currentView !== prevProps.currentView) {
+      if (this.props.currentView == "OverlaysView") {
+        this.setState({ buttonStates: [true, true, false, true, true] });
+        //[zoomIn, zoomOut, refresh, config, legend]
+      } 
+      if (this.props.currentView == "TopologyView") {
+        this.setState({ buttonStates: [false, false, false, false, false] });
+        //[zoomIn, zoomOut, refresh, config, legend]
+      }
+    }
   }
 
   componentWillUnmount() {
@@ -102,7 +118,7 @@ class Toolbar extends React.Component {
       <OverlayTrigger
         rootClose={true}
         trigger="click"
-        placement="right"
+        placement="top"
         overlay={
           <Popover>
             <Popover.Title as="h3">
@@ -194,7 +210,8 @@ class Toolbar extends React.Component {
         <button
           onClick={this.handleInfoToggle}
           id="infoBtn"
-          className="leftToolsBtn"
+          disabled={this.state.buttonStates[4]}
+          className={this.state.buttonStates[4] ? "infoBtnDisabled": "infoBtn"}
         ></button>
       </OverlayTrigger>
     );
@@ -205,7 +222,7 @@ class Toolbar extends React.Component {
       <OverlayTrigger
         rootClose={true}
         trigger="click"
-        placement="right"
+        placement="top"
         overlay={
           <Popover>
             <Popover.Title as="h3">
@@ -223,10 +240,10 @@ class Toolbar extends React.Component {
                     id="minZoomSelector"
                     value={this.props.zoomMinimum}
                   >
-                    <option id="0.1">0.1</option>
-                    <option id="0.3">0.3</option>
-                    <option id="0.5">0.5</option>
-                    <option id="0.9">0.9</option>
+                    <option value="0.1">0.1</option>
+                    <option value="0.3">0.3</option>
+                    <option value="0.5">0.5</option>
+                    <option value="0.9">0.9</option>
                   </select>
                 </div>
               </div>
@@ -241,10 +258,10 @@ class Toolbar extends React.Component {
                     id="maxZoomSelector"
                     value={this.props.zoomMaximum}
                   >
-                    <option>2</option>
-                    <option>3</option>
-                    <option>5</option>
-                    <option>10</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
                   </select>
                 </div>
               </div>
@@ -255,7 +272,8 @@ class Toolbar extends React.Component {
         <button
           onClick={this.handleConfigToggle}
           id="configBtn"
-          className="bottomToolsBtn"
+          disabled={this.state.buttonStates[3]}
+          className={this.state.buttonStates[3] ? "configBtnDisabled": "configBtn"}
         ></button>
       </OverlayTrigger>
     );
@@ -263,13 +281,13 @@ class Toolbar extends React.Component {
 
   render() {
     return (
-      <div id="bottomTools">
+      <>
         <div>{this.renderZoomInButton()}</div>
         <div>{this.renderZoomOutButton()}</div>
         <div>{this.renderRefreshButton()}</div>
         <div>{this.renderConfigButton()}</div>
         <div>{this.renderInfoButton()}</div>
-      </div>
+      </>
     );
   }
 }
@@ -278,6 +296,7 @@ const mapStateToProps = (state) => ({
   zoomMinimum: state.tools.zoomMinimum,
   zoomMaximum: state.tools.zoomMaximum,
   autoUpdate: state.tools.autoUpdate,
+  currentView: state.view.current,
 });
 
 const mapDispatchToProps = {

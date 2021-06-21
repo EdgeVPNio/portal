@@ -1,14 +1,14 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 
@@ -91,17 +91,20 @@ h5 {
 .overlay {
   background: url("./images/icons/overlay_ic.svg") no-repeat;
   background-size: contain;
-  width: 100px;
-  height: 75px;
+  width: 110px;
+  height: 85px;
   border: none;
   outline: none;
   margin: auto;
 }
-.overlay:focus {
-  outline: 4px dotted #e73;
-  outline-offset: 4px;
-  -webkit-box-shadow: none;
-  box-shadow: none;
+.overlaySelected {
+  background: url("./images/icons/overlaySelected_ic.svg") no-repeat;
+  background-size: contain;
+  width: 120px;
+  height: 95px;
+  border: none;
+  outline: none;
+  margin: auto;
 }
 
 .overlayBtn > button,
@@ -201,6 +204,21 @@ h5 {
   /* background-color: #42B2C3; */
 }
 
+#breadcrumbPanelId {
+  display: flex;
+  justify-content: flex-start;
+  position: absolute;
+  top: 21px;
+  left: 21px;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  z-index: 1;
+}
+
 #rightPanel {
   padding: 0.5%;
   color: white;
@@ -213,18 +231,18 @@ h5 {
 }
 
 #toolsArea {
-    display: flex;
-    justify-content: flex-end;
-    position: absolute;
-    bottom: 21px;
-    left: 21px;
-    width    : -webkit-fit-content;
-    width    : -moz-fit-content;
-    width    : fit-content;
-    height   : -webkit-fit-content;
-    height   : -moz-fit-content;
-    height   : fit-content;
-    z-index  : 1;
+  display: flex;
+  justify-content: flex-end;
+  position: absolute;
+  bottom: 21px;
+  left: 21px;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  z-index: 1;
 }
 
 #homeBtn,
@@ -241,6 +259,14 @@ h5 {
   width: 60px;
   height: 60px;
   padding: 0;
+}
+.refreshBtnDisabled,
+.configBtnDisabled,
+.infoBtnDisabled,
+.zoomOutBtnDisabled,
+.zoomInBtnDisabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 #homeBtn {

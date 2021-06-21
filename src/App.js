@@ -8,6 +8,7 @@ import { setSelectedView } from "./features/view/viewSlice";
 import OverlaysView from "./app/OverlaysView";
 import TopologyView from "./app/TopologyView";
 import Toolbar from "./app/Toolbar";
+import Breadcrumb from "./app/Breadcrumb";
 
 class App extends React.Component {
   constructor(props) {
@@ -27,7 +28,7 @@ class App extends React.Component {
   }
   componentDidMount() {
     console.log("componentDidMount: AppView");
-    this.props.setSelectedView("OverlaysView")
+    this.props.setSelectedView("OverlaysView");
   }
 
   componentDidUpdate() {
@@ -54,6 +55,9 @@ class App extends React.Component {
           {/* <div id="SidePanel">
             <SideBar />
           </div> */}
+          <div id="breadcrumbPanelId">
+            <Breadcrumb />
+          </div>
         </div>
       </div>
     );

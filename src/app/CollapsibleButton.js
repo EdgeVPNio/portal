@@ -5,6 +5,7 @@ import Accordion from "react-bootstrap/Accordion";
 import Button from "react-bootstrap/Button";
 import DowmArrow from "../images/icons/down-arrow-ic.svg";
 import UpArrow from "../images/icons/up-arrow-ic.svg";
+import { connect } from "react-redux";
 
 class CollapsibleButton extends React.Component {
   constructor(props) {
@@ -13,6 +14,22 @@ class CollapsibleButton extends React.Component {
       isToggle: this.props.isOpen,
       accordionStyle: this.props.isOpen ? "block" : "none",
     };
+  }
+  componentDidUpdate(prevProps, prevState) {
+    console.log("componentDidUpdate: collapsiblebutton");
+    if (this.props.selectedOverlayId !== prevProps.selectedOverlayId) {
+      if (this.props.selectedOverlayId.length > 0) {
+        this.handleOnClick();
+      }
+    }
+  }
+
+  componentDidMount() {
+    console.log("componentDidMount: collapsiblebutton");
+  }
+
+  componentWillUnmount() {
+    console.log("componentWillUnmount: collapsiblebutton");
   }
 
   handleOnClick = () => {
@@ -70,4 +87,10 @@ class CollapsibleButton extends React.Component {
   }
 }
 
-export default CollapsibleButton;
+const mapStateToProps = (state) => ({
+  selectedOverlayId: state.evio.overlayId,
+});
+
+export default connect(mapStateToProps)(CollapsibleButton);
+
+//export default CollapsibleButton;

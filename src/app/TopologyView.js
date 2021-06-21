@@ -9,6 +9,7 @@ import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
+import { setZoomValue } from "../features/tools/toolsSlice";
 
 const nodeStates = {
   connected: "Connected",
@@ -131,8 +132,14 @@ class TopologyView extends React.Component {
   }
 
   handleWheel = (e) => {
-    this.setState({ zoomValue: this.cy.zoom() });
+    this.props.setZoomValue(this.cy.zoom());
+    //this.setState({ zoomValue: this.cy.zoom() });
   };
+
+  handleRedrawGraph = () => {
+    this.cy.center();
+  }
+
 
   buildCyElements = (topology) => {
     var elements = [];
@@ -331,6 +338,15 @@ class TopologyView extends React.Component {
     if (this.props.zoomValue !== prevProps.zoomValue) {
       this.cy.zoom(this.props.zoomValue);
     }
+    if (this.props.zoomMin !== prevProps.zoomMin) {
+      this.cy.minZoom(this.props.zoomMin);
+    }
+    if (this.props.zoomMax !== prevProps.zoomMax) {
+      this.cy.maxZoom(this.props.zoomMax);
+    }
+    if (this.props.redrawGraph !== prevProps.redrawGraph) {
+      this.handleRedrawGraph();
+    }
     if (this.props.autoUpdate !== prevProps.autoUpdate) {
       this.autoRefresh = this.props.autoUpdate;
       if (this.autoRefresh) {
@@ -382,6 +398,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   setCurrentView,
+  setZoomValue,
   setCyElements,
 };
 
