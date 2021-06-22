@@ -8,6 +8,11 @@ import { Spinner } from "react-bootstrap";
 import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
+import {
+  setSelectedElement,
+  clearSelectedElement,
+  elementTypes,
+} from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 import { setZoomValue } from "../features/tools/toolsSlice";
 
@@ -115,17 +120,17 @@ class TopologyView extends React.Component {
         id="cy"
         cy={(cy) => {
           this.cy = cy;
-          this.cy.on("click", this.handleCytoClick.bind(this));
           this.cy.maxZoom(this.props.zoomMax);
           this.cy.minZoom(this.props.zoomMin);
           this.cy.zoom(this.props.zoomValue);
           this.cy.center();
+          this.cy.layout({ name: "circle", clockwise: true }).run();
+          this.cy.on("click", this.handleCytoClick.bind(this));
         }}
         wheelSensitivity={0.1}
-        elements={JSON.parse(JSON.stringify(this.props.cyElements))} //deep clone of global topo graph
+        elements={JSON.parse(JSON.stringify(this.props.cyElements))} //props.cyElements are frozen
         stylesheet={cytoscapeStyle}
         style={{ width: window.innerWidth, height: window.innerHeight }}
-        layout={{ name: "circle", clockwise: true }}
       />
     );
     return topologyContent;
@@ -138,8 +143,7 @@ class TopologyView extends React.Component {
 
   handleRedrawGraph = () => {
     this.cy.center();
-  }
-
+  };
 
   buildCyElements = (topology) => {
     var elements = [];
@@ -297,33 +301,44 @@ class TopologyView extends React.Component {
     var selectedElement = event.target[0];
     var adjacentElements;
     var nonAdjacentElements;
-    if (selectedElement.isNode()) {
-      this.setNodeDetails(selectedElement);
-      adjacentElements = selectedElement
-        .outgoers()
-        .union(selectedElement.incomers())
-        .union(selectedElement);
-      nonAdjacentElements = this.cy
-        .elements()
-        .difference(
-          selectedElement.outgoers().union(selectedElement.incomers())
-        )
-        .not(selectedElement);
-    } else if (selectedElement.isEdge()) {
-      this.setLinkDetails(selectedElement);
-      adjacentElements = selectedElement
-        .connectedNodes()
-        .union(selectedElement);
-      nonAdjacentElements = this.cy
-        .elements()
-        .difference(selectedElement.connectedNodes())
-        .not(selectedElement);
-    } else {
-      console.log("the cytoscape background was clicked");
+    try {
+      if (selectedElement.isNode()) {
+        this.props.setSelectedElement({
+          elementType: elementTypes.eleNode,
+          nodeId: selectedElement.id(),
+        });
+        adjacentElements = selectedElement
+          .outgoers()
+          .union(selectedElement.incomers())
+          .union(selectedElement);
+        nonAdjacentElements = this.cy
+          .elements()
+          .difference(
+            selectedElement.outgoers().union(selectedElement.incomers())
+          )
+          .not(selectedElement);
+      } else if (selectedElement.isEdge()) {
+        this.props.setSelectedElement({
+          elementType: elementTypes.eleTunnel,
+          tunnelId: selectedElement.id(),
+        });
+        adjacentElements = selectedElement
+          .connectedNodes()
+          .union(selectedElement);
+        nonAdjacentElements = this.cy
+          .elements()
+          .difference(selectedElement.connectedNodes())
+          .not(selectedElement);
+      }
+      adjacentElements.removeClass("transparent");
+      nonAdjacentElements.addClass("transparent");
+    } catch (error) {
+      console.log("Inside Catch: ", error);
+      if (selectedElement === this.cy) {
+        this.props.clearSelectedElement();
+        this.cy.elements().removeClass("transparent");
+      }
     }
-
-    adjacentElements.removeClass("transparent");
-    nonAdjacentElements.addClass("transparent");
   }
 
   componentDidMount() {
@@ -400,6 +415,8 @@ const mapDispatchToProps = {
   setCurrentView,
   setZoomValue,
   setCyElements,
+  setSelectedElement,
+  clearSelectedElement,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TopologyView);
