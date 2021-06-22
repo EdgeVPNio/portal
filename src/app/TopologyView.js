@@ -302,7 +302,10 @@ class TopologyView extends React.Component {
     var adjacentElements;
     var nonAdjacentElements;
     try {
-      if (selectedElement.isNode()) {
+      if (event.target === this.cy) {
+        this.props.clearSelectedElement();
+        this.cy.elements().removeClass("transparent");
+      } else if (selectedElement.isNode()) {
         this.props.setSelectedElement({
           elementType: elementTypes.eleNode,
           nodeId: selectedElement.id(),
@@ -317,6 +320,8 @@ class TopologyView extends React.Component {
             selectedElement.outgoers().union(selectedElement.incomers())
           )
           .not(selectedElement);
+        adjacentElements.removeClass("transparent");
+        nonAdjacentElements.addClass("transparent");
       } else if (selectedElement.isEdge()) {
         this.props.setSelectedElement({
           elementType: elementTypes.eleTunnel,
@@ -329,15 +334,12 @@ class TopologyView extends React.Component {
           .elements()
           .difference(selectedElement.connectedNodes())
           .not(selectedElement);
+        adjacentElements.removeClass("transparent");
+        nonAdjacentElements.addClass("transparent");
       }
-      adjacentElements.removeClass("transparent");
-      nonAdjacentElements.addClass("transparent");
     } catch (error) {
-      console.log("Inside Catch: ", error);
-      if (selectedElement === this.cy) {
-        this.props.clearSelectedElement();
-        this.cy.elements().removeClass("transparent");
-      }
+      this.props.clearSelectedElement();
+      this.cy.elements().removeClass("transparent");
     }
   }
 
