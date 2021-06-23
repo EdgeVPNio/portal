@@ -100,14 +100,53 @@ class TopologyView extends React.Component {
     );
   }
 
+  renderNodeDetails = () => {
+    var selectedEle = JSON.parse(this.props.selectedElementData);
+    var selectedNode = this.cy.getElementById(selectedEle.id);
+    var neighbors = selectedNode.closedNeighborhood();
+    var connectedNodes = neighbors
+      .filter('[id != ' + selectedEle.id + ']')
+      .filter((ele) => ele.isNode());
+    var edges = neighbors.filter((ele) => ele.isEdge());
+    console.log("edges", edges);
+    console.log("closed neighbors", neighbors);
+    console.log("connectedNodes", connectedNodes);
+    if (selectedNode.data("state") === nodeStates.notReporting) {
+      //Not reporting nodes
+      var nodeContent = (
+        <CollapsibleButton
+          id={selectedNode.id + "Btn"}
+          className="detailsNodeBtn"
+          key={selectedNode.id + "Btn"}
+          name={"Details"}
+          isOpen
+        >
+          <div>
+            <h5>{selectedNode.name}</h5>
+
+            <div className="DetailsLabel">Node ID</div>
+            <label id="valueLabel">{selectedNode.id}</label>
+
+            <div className="DetailsLabel">State</div>
+            <label id="valueLabel">{selectedNode.state}</label>
+
+            <div className="DetailsLabel">Location</div>
+            <label id="valueLabel">{"Unknown"}</label>
+            <hr style={{ backgroundColor: "#486186" }} />
+            <br />
+            <br />
+          </div>
+        </CollapsibleButton>
+      );
+
+      return nodeContent;
+    }
+  };
+
   renderSidebarDetails() {
     return (
-      <CollapsibleButton
-        key={"TopologyBtn"}
-        id={"TopologyBtn"}
-        name={"Topology"}
-        className="overlayBtn"
-      ></CollapsibleButton>
+      this.props.selectedElementType === elementTypes.eleNode &&
+      this.renderNodeDetails()
     );
   }
 
@@ -173,7 +212,7 @@ class TopologyView extends React.Component {
             id: node.NodeId,
             label: node.NodeName, //name
             state: nodeStates.noTunnels,
-            coordinate: node.GeoCoordinates,
+            coords: node.GeoCoordinates,
             color: "#f2be22",
           },
         };
@@ -187,7 +226,7 @@ class TopologyView extends React.Component {
           id: node.NodeId,
           label: node.NodeName,
           state: nodeStates.connected,
-          coordinate: node.GeoCoordinates,
+          coords: node.GeoCoordinates,
           color: "#8AA626",
         },
       };
@@ -230,7 +269,7 @@ class TopologyView extends React.Component {
             id: nodeId,
             label: nodeId.slice(0, 15),
             state: nodeStates.notReporting,
-            coordinate: "",
+            coords: "",
             color: "#ADD8E6",
           },
         };
@@ -307,8 +346,8 @@ class TopologyView extends React.Component {
         this.cy.elements().removeClass("transparent");
       } else if (selectedElement.isNode()) {
         this.props.setSelectedElement({
-          elementType: elementTypes.eleNode,
-          nodeId: selectedElement.id(),
+          selectedElementType: elementTypes.eleNode,
+          selectedElementData: selectedElement.data(),
         });
         adjacentElements = selectedElement
           .outgoers()
@@ -324,8 +363,8 @@ class TopologyView extends React.Component {
         nonAdjacentElements.addClass("transparent");
       } else if (selectedElement.isEdge()) {
         this.props.setSelectedElement({
-          elementType: elementTypes.eleTunnel,
-          tunnelId: selectedElement.id(),
+          selectedElementType: elementTypes.eleTunnel,
+          selectedElementData: selectedElement.data(),
         });
         adjacentElements = selectedElement
           .connectedNodes()
@@ -404,7 +443,9 @@ class TopologyView extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  currentOverlayId: state.evio.overlayId,
+  currentOverlayId: state.evio.selectedOverlayId,
+  selectedElementType: state.evio.selectedElementType,
+  selectedElementData: state.evio.selectedElementData,
   cyElements: state.evio.cyElements,
   currentView: state.view.current,
   zoomValue: state.tools.zoomValue,

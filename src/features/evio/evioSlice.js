@@ -9,44 +9,28 @@ export const elementTypes = {
 const evioSlice = createSlice({
   name: "evio",
   initialState: {
-    overlayId: "",
-    nodeId: "",
-    tunnelId: "",
+    selectedOverlayId: "",
     cyElements: [],
-    elementType: elementTypes.eleTypeNone,
-    selectedCyElement: null,
+    selectedElementType: elementTypes.eleTypeNone,
+    selectedElementData: JSON.stringify({}),
     redrawGraph: false,
   },
   reducers: {
-    setOverlayId(state, action) {
-      state.overlayId = action.payload;
-    },
-    setNodeId(state, action) {
-      state.nodeId = action.payload;
-    },
-    setTunnelId(state, action) {
-      state.tunnelId = action.payload;
+    setSelectedOverlayId(state, action) {
+      state.selectedOverlayId = action.payload;
     },
     setCyElements(state, action) {
       state.cyElements = action.payload;
     },
     setSelectedElement(state, action) {
-      state.elementType = action.payload.elementType;
-      state.nodeId = "";
-      state.tunnelId = "";
-      if (action.payload.elementType === elementTypes.eleNode) {
-        state.nodeId = action.payload.nodeId;
-      } else if (action.payload.elementType === elementTypes.eleTunnel) {
-        state.tunnelId = action.payload.tunnelId;
-      }
+      state.selectedElementType = action.payload.selectedElementType;
+      state.selectedElementData = JSON.stringify(
+        action.payload.selectedElementData
+      );
     },
     clearSelectedElement(state) {
       state.elementType = elementTypes.eleNone;
-      state.nodeId = "";
-      state.tunnelId = "";
-    },
-    setBreadcrumbDetails(state, action) {
-      state.selectedCyElement = action.payload.selectedElement;
+      state.selectedElementData = JSON.stringify({});
     },
     setRedrawGraph(state, action) {
       state.redrawGraph = action.payload.redrawGraph;
@@ -55,13 +39,10 @@ const evioSlice = createSlice({
 });
 
 export const {
-  setOverlayId,
-  setNodeId,
-  setTunnelId,
+  setSelectedOverlayId,
   setCyElements,
   setSelectedElement,
   clearSelectedElement,
-  setBreadcrumbDetails,
   setRedrawGraph,
 } = evioSlice.actions;
 

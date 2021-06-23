@@ -9,7 +9,7 @@ import "../index.css";
 import Overlays from "./Overlays.js";
 import SideBar from "./Sidebar";
 import { connect } from "react-redux";
-import { setOverlayId } from "../features/evio/evioSlice";
+import { setSelectedOverlayId } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 
 class OverlaysView extends React.Component {
@@ -78,7 +78,9 @@ class OverlaysView extends React.Component {
               onClick={this.selectOverlay.bind(this, overlayId)}
               id={overlayId}
               className={
-                this.props.selectedOverlayId.length > 0 ? "overlaySelected" : "overlay"
+                this.props.selectedOverlayId.length > 0
+                  ? "overlaySelected"
+                  : "overlay"
               }
             />
           </Tooltip>
@@ -123,32 +125,36 @@ class OverlaysView extends React.Component {
     );
   }
   renderSidebarDetails() {
-    const overlayBtn = this.state.overlays.getOverlayNames().map((overlay) => {
-      return (
-        <CollapsibleButton
-          key={overlay + "Btn"}
-          id={overlay + "Btn"}
-          name={overlay}
-          className="overlayBtn"
-        >
-          <div>
-            Number of nodes : {this.state.overlays.getNumberOfNodes(overlay)}
-            <br />
-            Number of links : {this.state.overlays.getNumberOfLinks(overlay)}
-          </div>
-        </CollapsibleButton>
-      );
-    });
+    const overlayFoldouts = this.state.overlays
+      .getOverlayNames()
+      .map((overlayName) => {
+        return (
+          <CollapsibleButton
+            key={overlayName + "Btn"}
+            id={overlayName + "Btn"}
+            name={overlayName}
+            className="overlayBtn"
+          >
+            <div>
+              Number of nodes :{" "}
+              {this.state.overlays.getNumberOfNodes(overlayName)}
+              <br />
+              Number of links :{" "}
+              {this.state.overlays.getNumberOfLinks(overlayName)}
+            </div>
+          </CollapsibleButton>
+        );
+      });
     return (
       <div>
         <div> Overlays ({this.state.overlays.getOverlayList().length}) </div>
-        <div> {overlayBtn} </div>
+        <div> {overlayFoldouts} </div>
       </div>
     );
   }
 
   selectOverlay = (overlayId) => {
-    this.props.setOverlayId(overlayId);
+    this.props.setSelectedOverlayId(overlayId);
   };
 
   componentDidMount() {
@@ -196,12 +202,12 @@ class OverlaysView extends React.Component {
 const mapStateToProps = (state) => ({
   selectedView: state.view.selected,
   autoUpdate: state.tools.autoUpdate,
-  selectedOverlayId: state.evio.overlayId,
+  selectedOverlayId: state.evio.selectedOverlayId,
 });
 
 const mapDispatchToProps = {
   setCurrentView,
-  setOverlayId,
+  setSelectedOverlayId,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OverlaysView);

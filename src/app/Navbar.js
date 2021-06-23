@@ -80,7 +80,7 @@ class Navbar extends React.Component {
 
 const mapStateToProps = (state) => ({
   currentView: state.view.current,
-  selectedOverlayId: state.evio.overlayId,
+  selectedOverlayId: state.evio.selectedOverlayId,
 });
 
 const mapDispatchToProps = {
