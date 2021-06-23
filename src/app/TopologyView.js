@@ -9,9 +9,10 @@ import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
 import {
-  setSelectedElement,
+  setSelectedElementData,
   clearSelectedElement,
   elementTypes,
+  setRedrawGraph,
 } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 import { setZoomValue } from "../features/tools/toolsSlice";
@@ -181,7 +182,13 @@ class TopologyView extends React.Component {
   };
 
   handleRedrawGraph = () => {
+    this.cy.layout({ name: 'circle' }).run();
+    this.cy.zoom(this.props.zoomValue)
     this.cy.center();
+    //setting the redrawGraph back to false after the action so that it will be again active for next click event in breadcrumb component
+    this.props.setRedrawGraph({
+      redrawGraph: "false",
+    });
   };
 
   buildCyElements = (topology) => {
@@ -344,10 +351,11 @@ class TopologyView extends React.Component {
       if (event.target === this.cy) {
         this.props.clearSelectedElement();
         this.cy.elements().removeClass("transparent");
-      } else if (selectedElement.isNode()) {
-        this.props.setSelectedElement({
-          selectedElementType: elementTypes.eleNode,
-          selectedElementData: selectedElement.data(),
+      } 
+      else if (selectedElement.isNode()) {
+        this.props.setSelectedElementData({
+          elementType: elementTypes.eleNode,
+          selectedCyElementData: selectedElement.data(),
         });
         adjacentElements = selectedElement
           .outgoers()
@@ -362,9 +370,9 @@ class TopologyView extends React.Component {
         adjacentElements.removeClass("transparent");
         nonAdjacentElements.addClass("transparent");
       } else if (selectedElement.isEdge()) {
-        this.props.setSelectedElement({
-          selectedElementType: elementTypes.eleTunnel,
-          selectedElementData: selectedElement.data(),
+        this.props.setSelectedElementData({
+          elementType: elementTypes.eleTunnel,
+          selectedCyElementData: selectedElement.data(),
         });
         adjacentElements = selectedElement
           .connectedNodes()
@@ -401,7 +409,14 @@ class TopologyView extends React.Component {
       this.cy.maxZoom(this.props.zoomMax);
     }
     if (this.props.redrawGraph !== prevProps.redrawGraph) {
-      this.handleRedrawGraph();
+      //if the current view is topology and redrawGraph flag is false then call handleredrawgraph 
+      //else the current view would be overlay view
+      if (
+        this.props.currentView == "TopologyView" &&
+        this.props.redrawGraph !== "false"
+      ) {
+        this.handleRedrawGraph();
+      }
     }
     if (this.props.autoUpdate !== prevProps.autoUpdate) {
       this.autoRefresh = this.props.autoUpdate;
@@ -452,14 +467,17 @@ const mapStateToProps = (state) => ({
   zoomMin: state.tools.zoomMinimum,
   zoomMax: state.tools.zoomMaximum,
   autoUpdate: state.tools.autoUpdate,
+  redrawGraph: state.evio.redrawGraph,
+  selectedCyElementData: state.evio.selectedCyElementData,
 });
 
 const mapDispatchToProps = {
   setCurrentView,
   setZoomValue,
   setCyElements,
-  setSelectedElement,
+  setSelectedElementData,
   clearSelectedElement,
+  setRedrawGraph,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TopologyView);

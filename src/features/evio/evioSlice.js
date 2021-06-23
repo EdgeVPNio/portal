@@ -12,8 +12,8 @@ const evioSlice = createSlice({
     selectedOverlayId: "",
     cyElements: [],
     selectedElementType: elementTypes.eleTypeNone,
-    selectedElementData: JSON.stringify({}),
-    redrawGraph: false,
+    selectedCyElementData:  JSON.stringify({}),
+    redrawGraph: "disable", // disable ,false , true
   },
   reducers: {
     setSelectedOverlayId(state, action) {
@@ -22,15 +22,13 @@ const evioSlice = createSlice({
     setCyElements(state, action) {
       state.cyElements = action.payload;
     },
-    setSelectedElement(state, action) {
-      state.selectedElementType = action.payload.selectedElementType;
-      state.selectedElementData = JSON.stringify(
-        action.payload.selectedElementData
-      );
+    setSelectedElementData(state, action) {
+      state.elementType = action.payload.elementType;
+      state.selectedCyElementData = JSON.stringify(action.payload.selectedCyElementData)
     },
     clearSelectedElement(state) {
       state.elementType = elementTypes.eleNone;
-      state.selectedElementData = JSON.stringify({});
+      state.selectedCyElementData = JSON.stringify({});
     },
     setRedrawGraph(state, action) {
       state.redrawGraph = action.payload.redrawGraph;
@@ -41,7 +39,7 @@ const evioSlice = createSlice({
 export const {
   setSelectedOverlayId,
   setCyElements,
-  setSelectedElement,
+  setSelectedElementData,
   clearSelectedElement,
   setRedrawGraph,
 } = evioSlice.actions;

@@ -65,7 +65,7 @@ class App extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  currentOverlayId: state.evio.overlayId,
+  currentOverlayId: state.evio.selectedOverlayId,
   currentView: state.view.current,
   selectedView: state.view.selected,
 });

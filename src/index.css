@@ -89,16 +89,16 @@ h5 {
 
 /* customize overlay button */
 .overlay {
-  background: url("./images/icons/overlay_ic.svg") no-repeat;
+  background: url("./images/icons/overlaySelected_ic.svg") no-repeat;
   background-size: contain;
-  width: 110px;
-  height: 85px;
+  width: 120px;
+  height: 95px;
   border: none;
   outline: none;
   margin: auto;
 }
 .overlaySelected {
-  background: url("./images/icons/overlaySelected_ic.svg") no-repeat;
+  background: url("./images/icons/overlay_ic.svg") no-repeat;
   background-size: contain;
   width: 120px;
   height: 95px;
@@ -260,18 +260,29 @@ h5 {
   height: 60px;
   padding: 0;
 }
+
+.refreshBtn:hover,
+.configBtn:hover,
+.infoBtn:hover,
+.zoomOutBtn:hover,
+.zoomInBtn:hover {
+  color: rgba(255, 255, 255, 1);
+  box-shadow: 0 5px 8px rgba(139, 255, 236, 0.5);
+}
+
 .refreshBtnDisabled,
 .configBtnDisabled,
 .infoBtnDisabled,
 .zoomOutBtnDisabled,
 .zoomInBtnDisabled {
-  opacity: 0.65;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 #homeBtn {
   background-image: url("./images/icons/home_ic.svg");
   background-size: cover;
+  z-index: 3;
 }
 
 #switchBtn {
@@ -425,24 +436,30 @@ h5 {
 #overlayBreadcrumb {
   background: url("./images/icons/overlayBreadcrumb.svg") no-repeat;
   background-size: contain;
-  -webkit-transform: translateX(25%);
-  -ms-transform: translateX(25%);
-  transform: translateX(25%);
+  -webkit-transform: translateX(-3%);
+  -ms-transform: translateX(-3%);
+  transform: translateX(-3%);
+  z-index: 2;
 }
 
 #elementBreadcrumb {
   background: url("./images/icons/elementBreadcrumb.svg") no-repeat;
   background-size: contain;
-  -webkit-transform: translateX(100%);
-  -ms-transform: translateX(100%);
-  transform: translateX(100%);
+  -webkit-transform: translateX(65%);
+  -ms-transform: translateX(65%);
+  transform: translateX(65%);
 }
 
 .breadcrumbLabel {
   color: white;
-  -webkit-transform: translateX(-6%);
-  -ms-transform: translateX(-6%);
-  transform: translateX(-6%);
+  -webkit-transform: translateX(-4%);
+  -ms-transform: translateX(-4%);
+  transform: translateX(-4%);
+}
+.breadcrumbHomeBtn{
+  -webkit-transform: translateX(-7%);
+  -ms-transform: translateX(-7%);
+  transform: translateX(-7%);
 }
 
 .navBarRow {
@@ -450,7 +467,9 @@ h5 {
   margin-top: 15px;
 }
 
-.navBarBtn {
+.navBarSubGraphBtn,
+.navBarMapBtn,
+.navBarTopologyBtn {
   display: inline-block;
   height: 50px;
   width: 50px;
@@ -460,10 +479,26 @@ h5 {
   transition: all 0.3s ease 0s;
 }
 
-.navBarBtn:hover {
+.navBarSubGraphBtn:hover,
+.navBarMapBtn:hover,
+.navBarTopologyBtn :hover {
   background-color: #56c5bc;
   border-radius: 50px;
   transition: all 0.3s ease 0s;
+}
+
+.navBarTopologyBtnDisabled,
+.navBarSubGraphBtnDisabled,
+.navBarMapBtnDisabled{
+  display: inline-block;
+  height: 50px;
+  width: 50px;
+  border-radius: 6px;
+  border: 3px solid #213758;
+  box-shadow: 0 5px 5px #888888;
+  transition: all 0.3s ease 0s;
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /*.side-bar {

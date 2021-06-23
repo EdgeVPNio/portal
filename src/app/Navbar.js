@@ -48,7 +48,7 @@ class Navbar extends React.Component {
       <div class="navBarRow">
         <button
           title="Topology"
-          class="navBarBtn"
+          class={this.state.buttonStates[0] ? "navBarTopologyBtnDisabled": "navBarTopologyBtn"}
           disabled={this.state.buttonStates[0]}
           onClick={this.handleViewSelector.bind(this, "TopologyView")}
         >
@@ -57,7 +57,7 @@ class Navbar extends React.Component {
         </button>
         <button
           title="SubGraph"
-          class="navBarBtn"
+          class={this.state.buttonStates[1] ? "navBarSubGraphBtnDisabled": "navBarSubGraphBtn"}
           disabled={this.state.buttonStates[1]}
           onClick={this.handleViewSelector.bind(this, "SubgraphView")}
         >
@@ -66,7 +66,7 @@ class Navbar extends React.Component {
         </button>
         <button
           title="Map"
-          class="navBarBtn"
+          class={this.state.buttonStates[2] ? "navBarMapBtnDisabled": "navBarMapBtn"}
           disabled={this.state.buttonStates[2]}
           onClick={this.handleViewSelector.bind(this, "MapView")}
         >
