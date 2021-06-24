@@ -61,7 +61,9 @@ class Toolbar extends React.Component {
         onClick={this.zoomIn}
         id="zoomInBtn"
         disabled={this.state.buttonStates[0]}
-        className={this.state.buttonStates[0] ? "zoomInBtnDisabled": "zoomInBtn"}
+        className={
+          this.state.buttonStates[0] ? "zoomInBtnDisabled" : "zoomInBtn"
+        }
       ></button>
     );
   }
@@ -72,7 +74,9 @@ class Toolbar extends React.Component {
         onClick={this.zoomOut}
         id="zoomOutBtn"
         disabled={this.state.buttonStates[1]}
-        className={this.state.buttonStates[1] ? "zoomOutBtnDisabled": "zoomOutBtn"}
+        className={
+          this.state.buttonStates[1] ? "zoomOutBtnDisabled" : "zoomOutBtn"
+        }
       ></button>
     );
   }
@@ -82,25 +86,24 @@ class Toolbar extends React.Component {
       <button
         onClick={this.toggleAutoUpdate}
         id="refreshBtn"
-        className={this.state.buttonStates[2] ? "refreshBtnDisabled": "refreshBtn"}
-        title="Disable/Enable Auto Updates" 
+        className={
+          this.state.buttonStates[2] ? "refreshBtnDisabled" : "refreshBtn"
+        }
+        title="Disable/Enable Auto Updates"
         disabled={this.state.buttonStates[2]}
         style={this.props.autoUpdate ? { opacity: 1 } : { opacity: 0.4 }}
       ></button>
     );
   }
 
-  componentDidMount() {
-    console.log("componentDidMount: Tools");
-  }
+  componentDidMount() {}
 
   componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: Tools");
     if (this.props.currentView !== prevProps.currentView) {
       if (this.props.currentView == "OverlaysView") {
         this.setState({ buttonStates: [true, true, false, true, true] });
         //[zoomIn, zoomOut, refresh, config, legend]
-      } 
+      }
       if (this.props.currentView == "TopologyView") {
         this.setState({ buttonStates: [false, false, false, false, false] });
         //[zoomIn, zoomOut, refresh, config, legend]
@@ -108,12 +111,9 @@ class Toolbar extends React.Component {
     }
   }
 
-  componentWillUnmount() {
-    console.log("componentWillUnmount: Tools");
-  }
+  componentWillUnmount() {}
 
   renderInfoButton() {
-    console.log("render: Tools");
     return (
       <OverlayTrigger
         rootClose={true}
@@ -211,7 +211,7 @@ class Toolbar extends React.Component {
           onClick={this.handleInfoToggle}
           id="infoBtn"
           disabled={this.state.buttonStates[4]}
-          className={this.state.buttonStates[4] ? "infoBtnDisabled": "infoBtn"}
+          className={this.state.buttonStates[4] ? "infoBtnDisabled" : "infoBtn"}
         ></button>
       </OverlayTrigger>
     );
@@ -273,7 +273,9 @@ class Toolbar extends React.Component {
           onClick={this.handleConfigToggle}
           id="configBtn"
           disabled={this.state.buttonStates[3]}
-          className={this.state.buttonStates[3] ? "configBtnDisabled": "configBtn"}
+          className={
+            this.state.buttonStates[3] ? "configBtnDisabled" : "configBtn"
+          }
         ></button>
       </OverlayTrigger>
     );

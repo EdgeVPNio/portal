@@ -14,26 +14,19 @@ class Sidebar extends React.Component {
   }
 
   renderDetails() {
-    if(this.props.sidebarDetails !== null) {
+    if (this.props.sidebarDetails !== null) {
       return this.props.sidebarDetails;
     }
-    return <null/>
+    return <null />;
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: SideBar");
-  }
+  componentDidUpdate(prevProps, prevState) {}
 
-  componentDidMount() {
-    console.log("componentDidMount: SideBar");
-  }
+  componentDidMount() {}
 
-  componentWillUnmount() {
-    console.log("componentWillUnmount: SideBar");
-  }
+  componentWillUnmount() {}
 
   render() {
-    console.log("render: SideBar");
     return (
       // Pass on our props
       <Slidebar
@@ -69,16 +62,4 @@ class Sidebar extends React.Component {
   }
 }
 
-// const mapStateToProps = (state) => ({
-//   currentView: state.view.current,
-//   selectedView: state.view.selected,
-//   currentOverlayId: state.overlayId.current,
-// });
-
-// const mapDispatchToProps = {
-//   setView,
-//   setOverlayId,
-// };
-
-//export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);
 export default Sidebar;

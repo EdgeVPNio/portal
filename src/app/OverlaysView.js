@@ -9,7 +9,10 @@ import "../index.css";
 import Overlays from "./Overlays.js";
 import SideBar from "./Sidebar";
 import { connect } from "react-redux";
-import { setSelectedOverlayId, clearSelectedElement } from "../features/evio/evioSlice";
+import {
+  setSelectedOverlayId,
+  clearSelectedElement,
+} from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 
 class OverlaysView extends React.Component {
@@ -33,7 +36,6 @@ class OverlaysView extends React.Component {
     var resp = await fetch(url).then((res) => {
       return res.json();
     });
-    console.log("apiQueryOverlays: ", resp);
     return resp;
   }
 
@@ -48,7 +50,7 @@ class OverlaysView extends React.Component {
           }
         })
         .catch((err) => {
-          console.log("query overlays failed ", err);
+          console.warn("query overlays failed ", err);
           if (this.autoRefresh) {
             this.timeoutId = setTimeout(this.queryOverlays.bind(this), 30000);
           }
@@ -97,7 +99,7 @@ class OverlaysView extends React.Component {
           try {
             this.selectOverlay(selected[0]);
           } catch {
-            console.log("No such item exists.");
+            console.warn("Typeahead - No such item exists.");
           }
         }}
         options={
@@ -158,7 +160,6 @@ class OverlaysView extends React.Component {
   };
 
   componentDidMount() {
-    console.log("componentDidMount: OverlayView");
     this.props.setCurrentView("OverlaysView");
     this.queryOverlays();
     this.autoRefresh = this.props.autoUpdate;
@@ -166,7 +167,6 @@ class OverlaysView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: OverlayView");
     if (this.props.autoUpdate !== prevProps.autoUpdate) {
       this.autoRefresh = this.props.autoUpdate;
       if (this.props.autoUpdate) {
@@ -176,13 +176,11 @@ class OverlaysView extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log("componentWillUnmount: OverlayView");
     this.autoRefresh = false;
     clearTimeout(this.timeoutId);
   }
 
   render() {
-    console.log("render: OverlayView");
     return (
       <>
         <div id="overlaysArea">{this.renderOverlaysContent()} </div>
@@ -204,6 +202,7 @@ const mapStateToProps = (state) => ({
   selectedView: state.view.selected,
   autoUpdate: state.tools.autoUpdate,
   selectedOverlayId: state.evio.selectedOverlayId,
+  selectedElementType: state.selectedElementType,
   selectedCyElementData: state.evio.selectedCyElementData,
 });
 

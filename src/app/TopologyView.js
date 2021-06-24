@@ -9,7 +9,7 @@ import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
 import {
-  setSelectedElementData,
+  setSelectedElement,
   clearSelectedElement,
   elementTypes,
   setRedrawGraph,
@@ -58,7 +58,7 @@ class TopologyView extends React.Component {
           }
         })
         .catch((err) => {
-          console.log("query topology failed ", err);
+          console.warn("query topology failed ", err);
           if (this.autoRefresh) {
             this.timeoutId = setTimeout(this.queryTopology.bind(this), 30000);
           }
@@ -78,7 +78,7 @@ class TopologyView extends React.Component {
             //   .trigger("click");
             // this.cy.elements().getElementById(selected[0].data.id).select();
           } catch (e) {
-            console.log(e);
+            console.warn(e);
           }
         }}
         options={[]}
@@ -102,16 +102,16 @@ class TopologyView extends React.Component {
   }
 
   renderNodeDetails = () => {
-    var selectedEle = JSON.parse(this.props.selectedElementData);
+    var selectedEle = JSON.parse(this.props.selectedCyElementData);
     var selectedNode = this.cy.getElementById(selectedEle.id);
     var neighbors = selectedNode.closedNeighborhood();
     var connectedNodes = neighbors
-      .filter('[id != ' + selectedEle.id + ']')
+      .filter("[id != " + selectedEle.id + "]")
       .filter((ele) => ele.isNode());
     var edges = neighbors.filter((ele) => ele.isEdge());
-    console.log("edges", edges);
     console.log("closed neighbors", neighbors);
     console.log("connectedNodes", connectedNodes);
+    console.log("edges", edges);
     if (selectedNode.data("state") === nodeStates.notReporting) {
       //Not reporting nodes
       var nodeContent = (
@@ -182,8 +182,8 @@ class TopologyView extends React.Component {
   };
 
   handleRedrawGraph = () => {
-    this.cy.layout({ name: 'circle' }).run();
-    this.cy.zoom(this.props.zoomValue)
+    this.cy.layout({ name: "circle" }).run();
+    this.cy.zoom(this.props.zoomValue);
     this.cy.center();
     //setting the redrawGraph back to false after the action so that it will be again active for next click event in breadcrumb component
     this.props.setRedrawGraph({
@@ -284,10 +284,6 @@ class TopologyView extends React.Component {
         notReportingNodes.add(nodeId);
       }
     }
-    //console.log("topology:", topology);
-    //console.log("nodeDetails:", nodeDetails);
-    //console.log("edgeDetails: ", edgeDetails);
-    //Logic to display in sorted cyclic order on cytoscape ringObject.keys(o).sort()
     var nodes = Object.keys(nodeDetails).sort();
     nodes.forEach((nodeId) => elements.push(nodeDetails[nodeId]));
 
@@ -351,10 +347,9 @@ class TopologyView extends React.Component {
       if (event.target === this.cy) {
         this.props.clearSelectedElement();
         this.cy.elements().removeClass("transparent");
-      } 
-      else if (selectedElement.isNode()) {
-        this.props.setSelectedElementData({
-          elementType: elementTypes.eleNode,
+      } else if (selectedElement.isNode()) {
+        this.props.setSelectedElement({
+          selectedElementType: elementTypes.eleNode,
           selectedCyElementData: selectedElement.data(),
         });
         adjacentElements = selectedElement
@@ -370,8 +365,8 @@ class TopologyView extends React.Component {
         adjacentElements.removeClass("transparent");
         nonAdjacentElements.addClass("transparent");
       } else if (selectedElement.isEdge()) {
-        this.props.setSelectedElementData({
-          elementType: elementTypes.eleTunnel,
+        this.props.setSelectedElement({
+          selectedElementType: elementTypes.eleTunnel,
           selectedCyElementData: selectedElement.data(),
         });
         adjacentElements = selectedElement
@@ -391,14 +386,12 @@ class TopologyView extends React.Component {
   }
 
   componentDidMount() {
-    console.log("componentDidMount: TopologyView");
     this.props.setCurrentView("TopologyView");
     this.queryTopology();
     this.autoRefresh = this.props.autoUpdate;
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: TopologyView");
     if (this.props.zoomValue !== prevProps.zoomValue) {
       this.cy.zoom(this.props.zoomValue);
     }
@@ -409,10 +402,10 @@ class TopologyView extends React.Component {
       this.cy.maxZoom(this.props.zoomMax);
     }
     if (this.props.redrawGraph !== prevProps.redrawGraph) {
-      //if the current view is topology and redrawGraph flag is false then call handleredrawgraph 
+      //if the current view is topology and redrawGraph flag is false then call handleredrawgraph
       //else the current view would be overlay view
       if (
-        this.props.currentView == "TopologyView" &&
+        this.props.currentView === "TopologyView" &&
         this.props.redrawGraph !== "false"
       ) {
         this.handleRedrawGraph();
@@ -427,14 +420,11 @@ class TopologyView extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log("componentWillUnMount: TopologyView");
     this.autoRefresh = false;
     clearTimeout(this.timeoutId);
   }
 
   render() {
-    console.log("render: TopologyView");
-
     return (
       <>
         <section
@@ -460,7 +450,7 @@ class TopologyView extends React.Component {
 const mapStateToProps = (state) => ({
   currentOverlayId: state.evio.selectedOverlayId,
   selectedElementType: state.evio.selectedElementType,
-  selectedElementData: state.evio.selectedElementData,
+  selectedCyElementData: state.evio.selectedCyElementData,
   cyElements: state.evio.cyElements,
   currentView: state.view.current,
   zoomValue: state.tools.zoomValue,
@@ -468,14 +458,13 @@ const mapStateToProps = (state) => ({
   zoomMax: state.tools.zoomMaximum,
   autoUpdate: state.tools.autoUpdate,
   redrawGraph: state.evio.redrawGraph,
-  selectedCyElementData: state.evio.selectedCyElementData,
 });
 
 const mapDispatchToProps = {
   setCurrentView,
   setZoomValue,
   setCyElements,
-  setSelectedElementData,
+  setSelectedElement,
   clearSelectedElement,
   setRedrawGraph,
 };

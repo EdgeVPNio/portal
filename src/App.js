@@ -27,20 +27,14 @@ class App extends React.Component {
     }
   }
   componentDidMount() {
-    console.log("componentDidMount: AppView");
     this.props.setSelectedView("OverlaysView");
   }
 
-  componentDidUpdate() {
-    console.log("componentDidUpdate: AppView");
-  }
+  componentDidUpdate() {}
 
-  componentWillUnmount() {
-    console.log("componentWillUnmount: AppView");
-  }
+  componentWillUnmount() {}
 
   render() {
-    console.log("render: AppView");
     return (
       <div id="container" className="container-fluid" style={{ padding: "0" }}>
         <div

@@ -5,7 +5,6 @@ import { BiNetworkChart } from "react-icons/bi";
 import { GrMapLocation } from "react-icons/gr";
 import { setSelectedView } from "../features/view/viewSlice";
 
-
 class Navbar extends React.Component {
   constructor(props) {
     super(props);
@@ -21,7 +20,6 @@ class Navbar extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: Navbar");
     if (this.props.selectedOverlayId !== prevProps.selectedOverlayId) {
       if (this.props.selectedOverlayId.length > 0) {
         this.setState({ buttonStates: [false, true, true] });
@@ -31,24 +29,20 @@ class Navbar extends React.Component {
     }
   }
 
-  componentDidMount() {
-    console.log("componentDidMount: Navbar");
-  }
+  componentDidMount() {}
 
-  componentWillUnmount() {
-    console.log("componentWillUnmount: Navbar");
-  }
+  componentWillUnmount() {}
 
   render() {
-    console.log("render: Navbar");
-
-    console.log("selectedOverlayId: ", this.props.selectedOverlayId);
-
     return (
       <div class="navBarRow">
         <button
           title="Topology"
-          class={this.state.buttonStates[0] ? "navBarTopologyBtnDisabled": "navBarTopologyBtn"}
+          class={
+            this.state.buttonStates[0]
+              ? "navBarTopologyBtnDisabled"
+              : "navBarTopologyBtn"
+          }
           disabled={this.state.buttonStates[0]}
           onClick={this.handleViewSelector.bind(this, "TopologyView")}
         >
@@ -57,7 +51,11 @@ class Navbar extends React.Component {
         </button>
         <button
           title="SubGraph"
-          class={this.state.buttonStates[1] ? "navBarSubGraphBtnDisabled": "navBarSubGraphBtn"}
+          class={
+            this.state.buttonStates[1]
+              ? "navBarSubGraphBtnDisabled"
+              : "navBarSubGraphBtn"
+          }
           disabled={this.state.buttonStates[1]}
           onClick={this.handleViewSelector.bind(this, "SubgraphView")}
         >
@@ -66,7 +64,9 @@ class Navbar extends React.Component {
         </button>
         <button
           title="Map"
-          class={this.state.buttonStates[2] ? "navBarMapBtnDisabled": "navBarMapBtn"}
+          class={
+            this.state.buttonStates[2] ? "navBarMapBtnDisabled" : "navBarMapBtn"
+          }
           disabled={this.state.buttonStates[2]}
           onClick={this.handleViewSelector.bind(this, "MapView")}
         >

@@ -9,26 +9,17 @@ import {
 } from "../features/evio/evioSlice";
 
 class Breadcrumb extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  componentDidMount() {
-    console.log("componentDidMount: Breadcrumb");
-  }
+  componentDidMount() {}
 
   componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: Breadcrumb");
     if (this.props.elementType !== prevProps.elementType) {
-      if(this.props.elementType  == elementTypes.eleNone){
+      if (this.props.elementType === elementTypes.eleNone) {
         this.props.clearSelectedElement();
       }
     }
   }
 
-  componentWillUnmount() {
-    console.log("componentWillUnmount: Tools");
-  }
+  componentWillUnmount() {}
 
   handleBackToHome = () => {
     this.props.setSelectedView("OverlaysView");
@@ -46,35 +37,36 @@ class Breadcrumb extends React.Component {
   }
 
   reCenterGraph = () => {
-    if (this.props.currentView == "TopologyView") {
+    if (this.props.currentView === "TopologyView") {
       if (this.props.redrawGraph !== "true") {
         this.props.setRedrawGraph({
-          redrawGraph:"true"
+          redrawGraph: "true",
         });
       }
     }
-    if (this.props.currentView == "OverlaysView") {
+    if (this.props.currentView === "OverlaysView") {
       this.props.setRedrawGraph({
-        redrawGraph:"disable"
+        redrawGraph: "disable",
       });
-    } 
-    
-    
+    }
   };
 
   renderElementBreadcrumb() {
-    console.warn("this.props.selectedCyElementData",this.props.selectedCyElementData );
-    var eleData = JSON.parse(this.props.selectedCyElementData)
-    console.warn("Object.keys(eleData).length",Object.keys(eleData).length );
+    var eleData = JSON.parse(this.props.selectedCyElementData);
     return (
-      <button id="elementBreadcrumb" 
-      className="breadcrumbLabel" 
-      disabled={this.props.currentView !== "OverlaysView" ? false : true}
-      title={this.props.currentView !== "OverlaysView" ? "Selecte a node or Edge!" : "None" }
+      <button
+        id="elementBreadcrumb"
+        className="breadcrumbLabel"
+        disabled={this.props.currentView !== "OverlaysView" ? false : true}
+        title={
+          this.props.currentView !== "OverlaysView"
+            ? "Selecte a node or Edge!"
+            : "None"
+        }
       >
         <div className="breadcrumbLabel">
-          { Object.keys(eleData).length > 0 
-            ? this.props.elementType == elementTypes.eleNode
+          {Object.keys(eleData).length > 0
+            ? this.props.elementType === elementTypes.eleNode
               ? "Node : " + eleData.label
               : "Tunnel : " + eleData.label
             : "None."}
@@ -85,12 +77,14 @@ class Breadcrumb extends React.Component {
 
   renderOverlayBreadcrumb() {
     return (
-      <button id="overlayBreadcrumb" 
-      className="breadcrumbLabel" 
-      disabled={this.props.currentView !== "OverlaysView" ? false : true} onClick={this.reCenterGraph}
-      title="Selecte an Overlay!"
+      <button
+        id="overlayBreadcrumb"
+        className="breadcrumbLabel"
+        disabled={this.props.currentView !== "OverlaysView" ? false : true}
+        onClick={this.reCenterGraph}
+        title="Selecte an Overlay!"
       >
-        <div className="breadcrumbLabel" >
+        <div className="breadcrumbLabel">
           Overlay : {this.props.selectedOverlayId}
         </div>
       </button>
@@ -113,7 +107,7 @@ const mapStateToProps = (state) => ({
   redrawGraph: state.evio.redrawGraph,
   selectedOverlayId: state.evio.selectedOverlayId,
   currentView: state.view.current,
-  elementType: state.evio.elementType,
+  elementType: state.evio.selectedElementType,
 });
 
 const mapDispatchToProps = {
