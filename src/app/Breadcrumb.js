@@ -24,6 +24,10 @@ class Breadcrumb extends React.Component {
   handleBackToHome = () => {
     this.props.setSelectedView("OverlaysView");
     this.props.setSelectedOverlayId("");
+    var selectedOverlayBtnList =document.getElementById("overlaysArea").getElementsByClassName("overlaySelected");
+    for (var element of selectedOverlayBtnList) {
+      element.classList.remove("overlaySelected");
+    }
   };
 
   homeButton() {

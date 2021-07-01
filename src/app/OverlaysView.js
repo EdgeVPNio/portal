@@ -57,6 +57,35 @@ class OverlaysView extends React.Component {
         });
   }
 
+  toggleOverlayBtn = (overlayId, btnElements, selectedElement) => {
+    for (var element of btnElements) {
+      element.classList.remove("overlaySelected");
+    }
+    let olId = this.props.selectedOverlayId;
+    this.props.setSelectedOverlayId("");
+    if (olId !== overlayId) {
+      this.props.setSelectedOverlayId(overlayId);
+      selectedElement.classList.add("overlaySelected");
+    }
+  };
+
+  onTypeheadChange = (overlayId) => {
+    var selectedOverlayBtnList = document
+      .getElementById("overlaysArea")
+      .getElementsByClassName("overlaySelected");
+    this.toggleOverlayBtn(
+      overlayId,
+      selectedOverlayBtnList,
+      document.getElementById(overlayId)
+    );
+  };
+  onOverlayClick = (overlayId, e) => {
+    var selectedOverlayBtnList = document
+      .getElementById("overlaysArea")
+      .getElementsByClassName("overlaySelected");
+    this.toggleOverlayBtn(overlayId, selectedOverlayBtnList, e.target);
+  };
+
   renderOverlaysContent = () => {
     if (this.state.overlays.getOverlayList().length === 0) {
       return <Spinner id="loading" animation="border" variant="info" />;
@@ -77,13 +106,11 @@ class OverlaysView extends React.Component {
             html={<div>{overlayId}</div>}
           >
             <button
-              onClick={this.selectOverlay.bind(this, overlayId)}
+              onClick={(e) => {
+                this.onOverlayClick(overlayId, e);
+              }}
               id={overlayId}
-              className={
-                this.props.selectedOverlayId.length > 0
-                  ? "overlaySelected"
-                  : "overlay"
-              }
+              className="overlay"
             />
           </Tooltip>
         );
@@ -97,7 +124,9 @@ class OverlaysView extends React.Component {
         id="searchOverlay"
         onChange={(selected) => {
           try {
-            this.selectOverlay(selected[0]);
+            if (selected[0] !== undefined) {
+              this.onTypeheadChange(selected[0]);
+            }
           } catch {
             console.warn("Typeahead - No such item exists.");
           }

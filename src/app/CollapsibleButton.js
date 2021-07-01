@@ -10,13 +10,10 @@ import { connect } from "react-redux";
 class CollapsibleButton extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      isToggle: this.props.isOpen,
-      accordionStyle: this.props.isOpen ? "block" : "none",
-    };
+    this.isToggle = false;
+    this.accordionStyle = this.props.isOpen ? "block" : "none"
   }
   componentDidUpdate(prevProps, prevState) {
-    console.log("componentDidUpdate: collapsiblebutton");
     if (this.props.selectedOverlayId !== prevProps.selectedOverlayId) {
       if (this.props.selectedOverlayId.length > 0) {
         this.handleOnClick();
@@ -24,21 +21,13 @@ class CollapsibleButton extends React.Component {
     }
   }
 
-  componentDidMount() {
-    console.log("componentDidMount: collapsiblebutton");
-  }
+  componentDidMount() {}
 
-  componentWillUnmount() {
-    console.log("componentWillUnmount: collapsiblebutton");
-  }
+  componentWillUnmount() {}
 
-  handleOnClick = () => {
-    this.setState((prevState) => {
-      return {
-        isToggle: !prevState.isToggle,
-        accordionStyle: prevState.accordionStyle === "block" ? "none" : "block",
-      };
-    });
+  handleOnClick(){
+    this.isToggle = !this.isToggle;
+    this.accordionStyle = this.isToggle ?  "block" : "none";
   };
 
   render() {
@@ -49,7 +38,7 @@ class CollapsibleButton extends React.Component {
         style={this.props.style}
       >
         <Accordion.Toggle
-          onClick={this.handleOnClick}
+          onClick={this.handleOnClick.bind(this)}
           as={Button}
           style={{
             color: "white",
@@ -62,7 +51,7 @@ class CollapsibleButton extends React.Component {
           <div className="row">
             <div className="col">{this.props.name}</div>
             <div className="col" style={{ textAlign: "right" }}>
-              {this.state.isToggle ? (
+              {this.props.isToggle ? (
                 <img className="arrow" src={UpArrow} alt="up-arrow" />
               ) : (
                 <img className="arrow" src={DowmArrow} alt="down-arrow" />
@@ -76,7 +65,7 @@ class CollapsibleButton extends React.Component {
           style={{
             backgroundColor: "#213758",
             padding: "1%",
-            display: this.state.accordionStyle,
+            display: this.props.selectedOverlayId === this.props.name ? "block" : this.props.accordionStyle,
             overflowWrap: "break-word",
           }}
         >
@@ -88,9 +77,7 @@ class CollapsibleButton extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  selectedOverlayId: state.evio.overlayId,
+  selectedOverlayId: state.evio.selectedOverlayId,
 });
 
 export default connect(mapStateToProps)(CollapsibleButton);
-
-//export default CollapsibleButton;
