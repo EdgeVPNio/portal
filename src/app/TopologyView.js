@@ -42,7 +42,7 @@ class TopologyView extends React.Component {
     var resp = await fetch(url).then((res) => {
       return res.json();
     });
-    console.log("apiQueryTopology: ", resp);
+    //console.log("apiQueryTopology: ", resp);
     return resp;
   }
 
@@ -145,6 +145,7 @@ class TopologyView extends React.Component {
   };
 
   renderSidebarDetails() {
+    return <null />;
     return (
       this.props.selectedElementType === elementTypes.eleNode &&
       this.renderNodeDetails()
@@ -152,6 +153,11 @@ class TopologyView extends React.Component {
   }
 
   renderTopologyContent() {
+    // if (this.cy) {
+    //   console.log("renderTopologyContent cy zoom val before", this.cy.zoom());
+    //   this.cy.zoom(this.props.zoomValue);
+    //   console.log("renderTopologyContent cy zoom val after", this.cy.zoom());
+    // } else console.log("renderTopologyContent no cy yet");
     // if (this.props.cyElements.length === 0) {
     //   return <Spinner id="loading" animation="border" variant="info" />;
     // }
@@ -160,10 +166,12 @@ class TopologyView extends React.Component {
         id="cy"
         cy={(cy) => {
           this.cy = cy;
-          this.cy.maxZoom(this.props.zoomMax);
-          this.cy.minZoom(this.props.zoomMin);
-          this.cy.zoom(this.props.zoomValue);
-          this.cy.center();
+          //this.cy.maxZoom(this.props.zoomMax);
+          //this.cy.minZoom(this.props.zoomMin);
+          // console.log("cy zoom val before", this.cy.zoom());
+          // this.cy.zoom(this.props.zoomValue);
+          // console.log("cy zoom val after", this.cy.zoom());
+          //this.cy.center();
           this.cy.layout({ name: "circle", clockwise: true }).run();
           this.cy.on("click", this.handleCytoClick.bind(this));
         }}
@@ -173,13 +181,13 @@ class TopologyView extends React.Component {
         style={{ width: window.innerWidth, height: window.innerHeight }}
       />
     );
+
     return topologyContent;
   }
 
-  handleWheel = (e) => {
+  handleWheel(e) {
     this.props.setZoomValue(this.cy.zoom());
-    //this.setState({ zoomValue: this.cy.zoom() });
-  };
+  }
 
   handleRedrawGraph = () => {
     this.cy.layout({ name: "circle" }).run();
@@ -191,109 +199,76 @@ class TopologyView extends React.Component {
     });
   };
 
-  buildCyElements = (topology) => {
+  buildCyElements = (topologies) => {
     var elements = [];
-    //var edges = {};
     var nodeDetails = {};
-    var edgeDetails = {};
-    var nodeSet = new Set(); //all nodeIds reported and inferred
-    var notReportingNodes = new Set(); //nodeIds of not reporting nodes
 
-    if (topology.length < 1) {
-      return elements;
-    }
-    // return {
-    //   graph: elements,
-    //   nodeDetails: nodeDetails,
-    //   edgeDetails: edgeDetails,
-    //   notReportingNodes: notReportingNodes,
-    // };
+    if (topologies.length < 1) return elements;
+    var topology = topologies[0];
 
-    for (var nid in topology[0].Nodes) {
-      var node = topology[0].Nodes[nid];
-      if (node.Edges.length === 0) {
-        //No tunnels node - NT
-        var nodeDataNT = {
-          group: "nodes",
-          data: {
-            id: node.NodeId,
-            label: node.NodeName, //name
-            state: nodeStates.noTunnels,
-            coords: node.GeoCoordinates,
-            color: "#f2be22",
-          },
-        };
-        nodeDetails[node.NodeId] = nodeDataNT;
-        continue;
-      }
-      //Connected nodes - CN
-      var nodeDataCN = {
+    for (var nid in topology.Nodes) {
+      var node = topology.Nodes[nid];
+      var nodeData = {
         group: "nodes",
         data: {
           id: node.NodeId,
-          label: node.NodeName,
-          state: nodeStates.connected,
-          coords: node.GeoCoordinates,
-          color: "#8AA626",
         },
       };
-      nodeDetails[node.NodeId] = nodeDataCN;
-
-      for (var edgeId in node.Edges) {
-        //Processing edges for each connected node
-        var edge = node.Edges[edgeId];
-        nodeSet.add(edge.PeerId);
-        var edgeData = {
-          group: "edges",
-          data: {
-            id: edge.EdgeId,
-            label: edge.EdgeId.slice(0, 15),
-            tapName: edge.TapName,
-            mac: edge.MAC,
-            source: node.NodeId,
-            target: edge.PeerId,
-            state: edge.State,
-            type: edge.Type,
-            color: this.getLinkColor(edge.Type),
-            style: this.getLinkStyle(edge.State),
-          },
-        };
-        elements.push(edgeData);
-
-        if (!edgeDetails[edge.EdgeId]) {
-          edgeDetails[edge.EdgeId] = {};
+      if (node.hasOwnProperty("NodeName"))
+        nodeData["data"]["label"] = node.NodeName;
+      else
+        nodeData["data"]["label"] = node.NodeId.slice(0, 12);
+      if (node.hasOwnProperty("Version"))
+        nodeData["data"]["version"] = node.Version;
+      if (node.hasOwnProperty("GeoCoordinates"))
+        nodeData["data"]["coords"] = node.GeoCoordinates;
+      if (node.hasOwnProperty("Edges")) {
+        nodeData["data"]["edges"] = node.Edges;
+        if (node.Edges.length === 0) {
+          nodeData["data"]["state"] = nodeStates.noTunnels;
+          nodeData["data"]["color"] = "#F2BE22";
+        } else {
+          nodeData["data"]["state"] = nodeStates.connected;
+          nodeData["data"]["color"] = "#8AA626";
         }
-        edgeDetails[edge.EdgeId][node.NodeId] = edgeData;
+      } else {
+        nodeData["data"]["state"] = nodeStates.notReporting;
+        nodeData["data"]["color"] = "#ADD8E6";
       }
+      nodeDetails[node.NodeId] = nodeData;
     }
-
-    for (var nodeId of nodeSet) {
-      if (!nodeDetails[nodeId]) {
-        //not reported nodes -NR
-        var nodeDataNR = {
-          group: "nodes",
-          data: {
-            id: nodeId,
-            label: nodeId.slice(0, 15),
-            state: nodeStates.notReporting,
-            coords: "",
-            color: "#ADD8E6",
-          },
-        };
-        nodeDetails[nodeId] = nodeDataNR;
-        notReportingNodes.add(nodeId);
+    for (var edgeId in topology.Edges) {
+      var edge = topology.Edges[edgeId];
+      var edgeData = {
+        group: "edges",
+        data: edge,
+      };
+      edgeData["data"]["label"] = edge.EdgeId.slice(0, 12);
+      edgeData["data"]["source"] = edge["Descriptor"][0].Source;
+      edgeData["data"]["target"] = edge["Descriptor"][0].Target;
+      edgeData["data"]["color"] = this.getLinkColor(edge["Descriptor"][0].Type);
+      edgeData["data"]["style"] = this.getLinkStyle(
+        edge["Descriptor"][0].State
+      );
+      if (
+        edge["Descriptor"].length === 2 &&
+        edge["Descriptor"][0].Source > edge["Descriptor"][1].Source
+      ) {
+        edgeData["data"]["source"] = edge["Descriptor"][1].Source;
+        edgeData["data"]["target"] = edge["Descriptor"][1].Target;
+        edgeData["data"]["color"] = this.getLinkColor(
+          edge["Descriptor"][1].Type
+        );
+        edgeData["data"]["style"] = this.getLinkStyle(
+          edge["Descriptor"][1].State
+        );
       }
+      elements.push(edgeData);
     }
     var nodes = Object.keys(nodeDetails).sort();
     nodes.forEach((nodeId) => elements.push(nodeDetails[nodeId]));
 
     return elements;
-    //{
-    //graph: elements,
-    // nodeDetails: nodeDetails,
-    // edgeDetails: edgeDetails,
-    // notReportingNodes: notReportingNodes,
-    //};
   };
 
   getLinkColor(type) {
@@ -392,15 +367,32 @@ class TopologyView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.zoomValue !== prevProps.zoomValue) {
-      this.cy.zoom(this.props.zoomValue);
-    }
-    if (this.props.zoomMin !== prevProps.zoomMin) {
-      this.cy.minZoom(this.props.zoomMin);
-    }
-    if (this.props.zoomMax !== prevProps.zoomMax) {
-      this.cy.maxZoom(this.props.zoomMax);
-    }
+    // console.log(
+    //   "componentDidUpdate: cyzoom min < val < max",
+    //   this.cy.minZoom(),
+    //   this.cy.zoom(),
+    //   this.cy.maxZoom()
+    // );
+    this.cy.zoom(this.props.zoomValue);
+    this.cy.minZoom(this.props.zoomMin);
+    this.cy.maxZoom(this.props.zoomMax);
+    //this.cy.center();
+    // console.log(
+    //   "componentDidUpdate after: cyzoom min < val < max",
+    //   this.cy.minZoom(),
+    //   this.cy.zoom(),
+    //   this.cy.maxZoom()
+    // );
+    // if (this.props.zoomValue !== prevProps.zoomValue) {
+    //   console.log("componentDidUpdate: updating cy zoom val");
+    //   this.cy.zoom(this.props.zoomValue);
+    // }
+    // if (this.props.zoomMin !== prevProps.zoomMin) {
+    //   this.cy.minZoom(this.props.zoomMin);
+    // }
+    // if (this.props.zoomMax !== prevProps.zoomMax) {
+    //   this.cy.maxZoom(this.props.zoomMax);
+    // }
     if (this.props.redrawGraph !== prevProps.redrawGraph) {
       //if the current view is topology and redrawGraph flag is false then call handleredrawgraph
       //else the current view would be overlay view
@@ -428,7 +420,7 @@ class TopologyView extends React.Component {
     return (
       <>
         <section
-          onWheel={this.handleWheel}
+          onWheel={this.handleWheel.bind(this)}
           style={{ width: "100vw", height: "100vh" }}
         >
           <div id="cyArea">{this.renderTopologyContent()}</div>

@@ -70,13 +70,13 @@ const overlaySchema = new mongoose.Schema(
 //     NodeName:String,
 //     Version: String,
 //     GeoCoordinates:String,
-//     Edges:[edgeSchema]
 // }, { _id: false });
 
 var internalOverlaySchema = new mongoose.Schema(
   {
     OverlayId: String,
     Nodes: {},
+    Edges: {},
   },
   { _id: false }
 );

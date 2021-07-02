@@ -29,11 +29,17 @@ class Toolbar extends React.Component {
 
   zoomIn = () => {
     var zoomTo = this.props.zoomValue + this.zoomIncrement;
+    if (zoomTo > this.props.zoomMaximum){
+      zoomTo = this.props.zoomMaximum;
+    }
     this.props.setZoomValue(zoomTo);
   };
 
   zoomOut = () => {
     var zoomTo = this.props.zoomValue - this.zoomIncrement;
+    if (zoomTo < this.props.zoomMinimum) {
+      zoomTo = this.props.zoomMinimum;
+    }
     this.props.setZoomValue(zoomTo);
   };
 
@@ -100,11 +106,11 @@ class Toolbar extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (this.props.currentView !== prevProps.currentView) {
-      if (this.props.currentView == "OverlaysView") {
+      if (this.props.currentView === "OverlaysView") {
         this.setState({ buttonStates: [true, true, false, true, true] });
         //[zoomIn, zoomOut, refresh, config, legend]
       }
-      if (this.props.currentView == "TopologyView") {
+      if (this.props.currentView === "TopologyView") {
         this.setState({ buttonStates: [false, false, false, false, false] });
         //[zoomIn, zoomOut, refresh, config, legend]
       }

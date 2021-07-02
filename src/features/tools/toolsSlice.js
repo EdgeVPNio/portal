@@ -4,8 +4,8 @@ const toolsSlice = createSlice({
   name: "tools",
   initialState: {
     zoomMinimum: 0.5,
-    zoomMaximum: 2,
-    zoomValue: 1,
+    zoomMaximum: 2.0,
+    zoomValue: 1.0,
     autoUpdate: true,
   },
   reducers: {

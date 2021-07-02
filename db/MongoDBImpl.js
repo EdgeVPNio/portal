@@ -58,6 +58,7 @@ class MongoDBImpl extends DataBaseInterface {
         var dataTrasformer = new DataTransformer();
         // The data is transformed to the required form and returned as an array of arrays.
         var transformedData = dataTrasformer.transformData(data);
+        //console.log("transformedData: ", JSON.stringify(transformedData));
         var overlaySaveData = new overlayModel({
             _id: timestamp,
             Overlays: transformedData[0] // Overlays array

@@ -31,75 +31,88 @@ class DataTransformer {
    * @param {JSON} data Json raw aggregated data.
    */
   transformData(data) {
-    var topologyDict = {};
-    var overlayDict = {};
+    var topologies = {};
+    var overlays = {};
     var topologyArray = [];
     var overlaysArray = [];
     for (var timeStampId in data) {
       var visData = data[timeStampId]["VizData"];
+      var nodeId = data[timeStampId]["NodeId"];
       for (var overlayId in visData) {
-        if (topologyDict.hasOwnProperty(overlayId)) {
-          var overlayData = topologyDict[overlayId];
+        var topoData;
+        var overlaySummary;
+        if (topologies.hasOwnProperty(overlayId)) {
+          topoData = topologies[overlayId];
         } else {
-          var overlayData = {
+          topoData = {
             OverlayId: overlayId,
             Nodes: {},
+            Edges: {},
           };
-          topologyDict[overlayId] = overlayData;
+          topologies[overlayId] = topoData;
         }
-        if (overlayDict.hasOwnProperty(overlayId)) {
-          var highLevelOverlayData = overlayDict[overlayId];
+        if (overlays.hasOwnProperty(overlayId)) {
+          overlaySummary = overlays[overlayId];
         } else {
-          var highLevelOverlayData = {
+          overlaySummary = {
             OverlayId: overlayId,
             Nodes: new Set(),
             Edges: new Set(),
           };
+          overlays[overlayId] = overlaySummary;
         }
-        overlayData["OverlayId"] = overlayId;
-        var linkManagerData = visData[overlayId]["LinkManager"];
-        var topologyData = visData[overlayId]["Topology"];
-        var nodeObject = {
-          NodeId: data[timeStampId]["NodeId"],
-          NodeName: data[timeStampId]["NodeName"],
-          Version: data[timeStampId]["Version"],
-          GeoCoordinates: data[timeStampId]["GeoCoordinate"],
-          Edges: [],
-        };
-
-        for (var nodeId in linkManagerData) {
-          var edgeData = linkManagerData[nodeId];
-          for (var edgeId in edgeData) {
-            highLevelOverlayData["Edges"].add(edgeId);
-            var edgeObject = {
-              EdgeId: edgeId,
-              PeerId: topologyData[edgeId]["PeerId"],
-              CreatedTime: topologyData[edgeId]["CreatedTime"],
-              ConnectedTime: topologyData[edgeId]["ConnectedTime"],
-              State: topologyData[edgeId]["State"],
-              Type: topologyData[edgeId]["Type"],
-              TapName: linkManagerData[nodeId][edgeId]["TapName"],
-              MAC: linkManagerData[nodeId][edgeId]["MAC"],
-            };
-            nodeObject["Edges"].push(edgeObject);
+        var nodeObject = {}; 
+        if (topoData["Nodes"].hasOwnProperty(nodeId)){
+          nodeObject = topoData["Nodes"][nodeId]
+        }
+        nodeObject["NodeId"] = nodeId
+        nodeObject["NodeName"] = data[timeStampId]["NodeName"];
+        nodeObject["Version"] = data[timeStampId]["Version"];
+        nodeObject["GeoCoordinates"] = data[timeStampId]["GeoCoordinate"];
+        nodeObject["Edges"] = [];
+        overlaySummary["Nodes"].add(nodeObject.NodeId);
+        topoData["Nodes"][nodeObject.NodeId] = nodeObject;
+        
+        var edges = visData[overlayId]["Tunnels"];
+        for (var edgeId in edges) {
+          nodeObject["Edges"].push(edgeId);
+          var edgeData = edges[edgeId];
+          var edgeObject = {"Descriptor": []};
+          if (topoData["Edges"].hasOwnProperty(edgeId)) {
+            edgeObject = topoData["Edges"][edgeId];
           }
+          edgeObject["EdgeId"] = edgeId;
+          edgeObject["Descriptor"].push({
+            Source: nodeId,
+            Target: edgeData["PeerId"],
+            CreatedTime: edgeData["CreatedTime"],
+            ConnectedTime: edgeData["ConnectedTime"],
+            State: edgeData["State"],
+            Type: edgeData["Type"],
+            TapName: edgeData["TapName"],
+            MAC: edgeData["MAC"],
+          });
 
-          highLevelOverlayData["Nodes"].add(nodeObject.NodeId);
-          overlayData["Nodes"][nodeObject.NodeId] = nodeObject;
-          //console.log("overlayData: ", overlayData)
+          overlaySummary["Nodes"].add(edgeData["PeerId"]); //add data about the edge's target
+          if (!topoData["Nodes"].hasOwnProperty(edgeData["PeerId"])) {
+            topoData["Nodes"][edgeData["PeerId"]] = {
+              NodeId: edgeData["PeerId"],
+            };
+          } // only add topo data about the edge's target node is it has not yet been reported
+
+          overlaySummary["Edges"].add(edgeId);
+          topoData["Edges"][edgeObject.EdgeId] = edgeObject;
         }
-        topologyDict[overlayId] = overlayData;
-        overlayDict[overlayId] = highLevelOverlayData;
       }
     }
-    Object.keys(topologyDict).forEach(function (item) {
-      topologyArray.push(topologyDict[item]);
+    Object.keys(topologies).forEach(function (olid) {
+      topologyArray.push(topologies[olid]);
     });
-    Object.keys(overlayDict).forEach(function (item) {
+    Object.keys(overlays).forEach(function (olid) {
       var overlayObject = {
-        OverlayId: overlayDict[item]["OverlayId"],
-        NumNodes: overlayDict[item]["Nodes"].size,
-        NumEdges: overlayDict[item]["Edges"].size,
+        OverlayId: overlays[olid]["OverlayId"],
+        NumNodes: overlays[olid]["Nodes"].size,
+        NumEdges: overlays[olid]["Edges"].size,
       };
       overlaysArray.push(overlayObject);
     });
