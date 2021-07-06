@@ -33,7 +33,7 @@ exports.findAllIntervals = (req, res, dbInstance) => {
     }
     dbInstance.getIntervals(tableName)
       .then(data => {
-          console.log("Interval data:", data);
+          //console.log("Interval data:", data);
           res.send(data);
       })
       .catch(err => {
@@ -58,7 +58,7 @@ exports.findAllIntervals = (req, res, dbInstance) => {
     }
   dbInstance.getOverlays(tableName, intervalId)
     .then(data => {
-          console.log("Overlay data:", JSON.stringify(data));
+          //console.log("Overlay data:", JSON.stringify(data));
           res.send(data);
     })
     .catch(err => {

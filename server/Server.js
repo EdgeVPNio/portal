@@ -89,7 +89,7 @@ setInterval(function(){
     var _data = Data;
     Data = {}
     if (Object.keys(_data).length !== 0) {
-      console.log("Nodes interval data: ", JSON.stringify(_data))
+      //console.log("Nodes interval data: ", JSON.stringify(_data))
       dbInstance.insertInto(_data, timeStamp);
     }
 }, 30000)
