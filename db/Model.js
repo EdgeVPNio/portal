@@ -20,7 +20,6 @@
  * THE SOFTWARE.
  */
 
-const { Decimal128 } = require("mongodb");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 

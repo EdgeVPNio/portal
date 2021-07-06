@@ -21,13 +21,9 @@
  */
 
 const mongoose = require("mongoose");
-const Model = require("./Model");
 const { DataBaseInterface } = require("./DatabaseInterface");
-const mongo = require("mongodb");
 const { overlayModel, topologyModel } = require("./Model");
 const { DataTransformer } = require("../controllers/DataTransformer");
-const { performance } = require("perf_hooks");
-const { data } = require("jquery");
 
 class MongoDBImpl extends DataBaseInterface {
   // Stores the url and dbname and is available for every instance

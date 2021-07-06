@@ -28,7 +28,6 @@ const overlays = require("../controllers/Overlays.controller.js");
 const topology = require("../controllers/Topology.controller.js");
 const dotenv = require('dotenv')
 const {InfluxDBImpl} = require('../db/InfluxDBImpl')
-
 const app = express()
 
 // parse requests of content-type - application/json
@@ -87,10 +86,11 @@ app.put('/EVIO/*', (req, res) => {
 
 setInterval(function(){
     var timeStamp = Date.now()
-    var dataCopy = Data;
+    var _data = Data;
     Data = {}
-    if (Object.keys(dataCopy).length !== 0) {
-      dbInstance.insertInto(dataCopy, timeStamp);
+    if (Object.keys(_data).length !== 0) {
+      console.log("Nodes interval data: ", JSON.stringify(_data))
+      dbInstance.insertInto(_data, timeStamp);
     }
 }, 30000)
 
