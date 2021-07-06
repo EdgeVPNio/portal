@@ -61,28 +61,28 @@ class DataTransformer {
           };
           overlays[overlayId] = overlaySummary;
         }
-        var nodeObject = {}; 
-        if (topoData["Nodes"].hasOwnProperty(nodeId)){
-          nodeObject = topoData["Nodes"][nodeId]
+        var nodeObject = {};
+        if (topoData["Nodes"].hasOwnProperty(nodeId)) {
+          nodeObject = topoData["Nodes"][nodeId];
         }
-        nodeObject["NodeId"] = nodeId
+        nodeObject["NodeId"] = nodeId;
         nodeObject["NodeName"] = data[timeStampId]["NodeName"];
         nodeObject["Version"] = data[timeStampId]["Version"];
         nodeObject["GeoCoordinates"] = data[timeStampId]["GeoCoordinate"];
         nodeObject["Edges"] = [];
         overlaySummary["Nodes"].add(nodeObject.NodeId);
         topoData["Nodes"][nodeObject.NodeId] = nodeObject;
-        
+
         var edges = visData[overlayId]["Tunnels"];
         for (var edgeId in edges) {
           nodeObject["Edges"].push(edgeId);
           var edgeData = edges[edgeId];
-          var edgeObject = {"Descriptor": []};
+          var edgeObject = { Descriptor: [] };
           if (topoData["Edges"].hasOwnProperty(edgeId)) {
             edgeObject = topoData["Edges"][edgeId];
           }
           edgeObject["EdgeId"] = edgeId;
-          edgeObject["Descriptor"].push({
+          let desc = {
             Source: nodeId,
             Target: edgeData["PeerId"],
             CreatedTime: edgeData["CreatedTime"],
@@ -91,8 +91,18 @@ class DataTransformer {
             Type: edgeData["Type"],
             TapName: edgeData["TapName"],
             MAC: edgeData["MAC"],
-          });
-
+          };
+          var isFound = false;
+          for (let i = 0; i < edgeObject["Descriptor"].length; i++) {
+            if (edgeObject["Descriptor"][i].Source === nodeId) {
+              edgeObject["Descriptor"][i] = desc;
+              isFound = true;
+              break;
+            }
+          }
+          if (!isFound) {
+            edgeObject["Descriptor"].push(desc);
+          }
           overlaySummary["Nodes"].add(edgeData["PeerId"]); //add data about the edge's target
           if (!topoData["Nodes"].hasOwnProperty(edgeData["PeerId"])) {
             topoData["Nodes"][edgeData["PeerId"]] = {
