@@ -123,12 +123,8 @@ class OverlaysView extends React.Component {
       <Typeahead
         id="searchOverlay"
         onChange={(selected) => {
-          try {
-            if (selected[0] !== undefined) {
-              this.onTypeheadChange(selected[0]);
-            }
-          } catch {
-            console.warn("Typeahead - No such item exists.");
+          if (selected.length > 0) {
+            this.onTypeheadChange(selected[0]);
           }
         }}
         options={
@@ -138,7 +134,7 @@ class OverlaysView extends React.Component {
         }
         selected={this.state.selected}
         selectHintOnEnter
-        placeholder="Search overlay"
+        placeholder="Search by overlay ID"
         renderMenuItemChildren={(option) => {
           return (
             <div className="searchResult">

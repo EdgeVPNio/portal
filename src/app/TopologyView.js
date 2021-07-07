@@ -30,6 +30,7 @@ class TopologyView extends React.Component {
     this.timeoutId = null;
     this.autoRefresh = this.props.autoUpdate;
     this.cy = null;
+    this._typeahead = null;
   }
 
   /**
@@ -42,7 +43,7 @@ class TopologyView extends React.Component {
     var resp = await fetch(url).then((res) => {
       return res.json();
     });
-    //console.log("apiQueryTopology: ", resp);
+    console.log("apiQueryTopology: ", resp);
     return resp;
   }
 
@@ -70,19 +71,20 @@ class TopologyView extends React.Component {
       <Typeahead
         id="searchTopology"
         onChange={(selected) => {
-          try {
-            console.log("typeahead selected", selected);
-            // this.cy
-            //   .elements()
-            //   .getElementById(selected[0].data.id)
-            //   .trigger("click");
-            // this.cy.elements().getElementById(selected[0].data.id).select();
-          } catch (e) {
-            console.warn(e);
+          if (selected.length > 0) {
+            let selectedEle = this.cy
+              .elements()
+              .getElementById(selected[0].data.id);
+            this.cy.elements().unselect();
+            selectedEle.select();
+            let part = this.partitionElements(selectedEle);
+            part.neighborhood.removeClass("transparent");
+            part.excluded.addClass("transparent");
           }
         }}
-        options={[]}
-        placeholder={"select a node or tunnel"}
+        ref={(ref) => (this._typeahead = ref)}
+        options={this.props.cyElements}
+        placeholder={"search by node or tunnel ID"}
         labelKey={(option) => {
           return `${option.data.label}`;
         }}
@@ -145,11 +147,9 @@ class TopologyView extends React.Component {
   };
 
   renderSidebarDetails() {
+    if (this.props.selectedElementType === elementTypes.eleNode)
+      return this.renderNodeDetails();
     return <null />;
-    return (
-      this.props.selectedElementType === elementTypes.eleNode &&
-      this.renderNodeDetails()
-    );
   }
 
   renderTopologyContent() {
@@ -193,7 +193,8 @@ class TopologyView extends React.Component {
     this.cy.layout({ name: "circle" }).run();
     this.cy.zoom(this.props.zoomValue);
     this.cy.center();
-    //setting the redrawGraph back to false after the action so that it will be again active for next click event in breadcrumb component
+    //setting the redrawGraph back to false after the action so that
+    //it will be again active for next click event in breadcrumb component
     this.props.setRedrawGraph({
       redrawGraph: "false",
     });
@@ -216,8 +217,7 @@ class TopologyView extends React.Component {
       };
       if (node.hasOwnProperty("NodeName"))
         nodeData["data"]["label"] = node.NodeName;
-      else
-        nodeData["data"]["label"] = node.NodeId.slice(0, 12);
+      else nodeData["data"]["label"] = node.NodeId.slice(0, 12);
       if (node.hasOwnProperty("Version"))
         nodeData["data"]["version"] = node.Version;
       if (node.hasOwnProperty("GeoCoordinates"))
@@ -239,10 +239,18 @@ class TopologyView extends React.Component {
     }
     for (var edgeId in topology.Edges) {
       var edge = topology.Edges[edgeId];
+      if (edge["Descriptor"].length > 2) {
+        console.error(
+          "Too many edge descriptors reported ",
+          JSON.stringify(edge["Descriptor"])
+        );
+      }
       var edgeData = {
         group: "edges",
-        data: edge,
+        data: {},
       };
+      edgeData["data"]["id"] = edge.EdgeId;
+      edgeData["data"]["descriptor"] = edge["Descriptor"];
       edgeData["data"]["label"] = edge.EdgeId.slice(0, 12);
       edgeData["data"]["source"] = edge["Descriptor"][0].Source;
       edgeData["data"]["target"] = edge["Descriptor"][0].Target;
@@ -314,45 +322,52 @@ class TopologyView extends React.Component {
     return linkStyle;
   }
 
+  partitionElements(selectedElement) {
+    var neighborhood;
+    var excluded;
+    if (selectedElement.isNode()) {
+      this.props.setSelectedElement({
+        selectedElementType: elementTypes.eleNode,
+        selectedCyElementData: selectedElement.data(),
+      });
+      neighborhood = selectedElement
+        .outgoers()
+        .union(selectedElement.incomers())
+        .union(selectedElement);
+      excluded = this.cy
+        .elements()
+        .difference(
+          selectedElement.outgoers().union(selectedElement.incomers())
+        )
+        .not(selectedElement);
+    } else if (selectedElement.isEdge()) {
+      this.props.setSelectedElement({
+        selectedElementType: elementTypes.eleTunnel,
+        selectedCyElementData: selectedElement.data(),
+      });
+      neighborhood = selectedElement
+        .connectedNodes()
+        .union(selectedElement);
+      excluded = this.cy
+        .elements()
+        .difference(selectedElement.connectedNodes())
+        .not(selectedElement);
+    }
+    return { neighborhood, excluded };
+  }
+
   handleCytoClick(event) {
     var selectedElement = event.target[0];
-    var adjacentElements;
-    var nonAdjacentElements;
+    var part;
     try {
       if (event.target === this.cy) {
         this.props.clearSelectedElement();
         this.cy.elements().removeClass("transparent");
-      } else if (selectedElement.isNode()) {
-        this.props.setSelectedElement({
-          selectedElementType: elementTypes.eleNode,
-          selectedCyElementData: selectedElement.data(),
-        });
-        adjacentElements = selectedElement
-          .outgoers()
-          .union(selectedElement.incomers())
-          .union(selectedElement);
-        nonAdjacentElements = this.cy
-          .elements()
-          .difference(
-            selectedElement.outgoers().union(selectedElement.incomers())
-          )
-          .not(selectedElement);
-        adjacentElements.removeClass("transparent");
-        nonAdjacentElements.addClass("transparent");
-      } else if (selectedElement.isEdge()) {
-        this.props.setSelectedElement({
-          selectedElementType: elementTypes.eleTunnel,
-          selectedCyElementData: selectedElement.data(),
-        });
-        adjacentElements = selectedElement
-          .connectedNodes()
-          .union(selectedElement);
-        nonAdjacentElements = this.cy
-          .elements()
-          .difference(selectedElement.connectedNodes())
-          .not(selectedElement);
-        adjacentElements.removeClass("transparent");
-        nonAdjacentElements.addClass("transparent");
+        this._typeahead.clear();
+      } else {
+        part = this.partitionElements(selectedElement);
+        part.neighborhood.removeClass("transparent");
+        part.excluded.addClass("transparent");
       }
     } catch (error) {
       this.props.clearSelectedElement();
@@ -414,6 +429,8 @@ class TopologyView extends React.Component {
   componentWillUnmount() {
     this.autoRefresh = false;
     clearTimeout(this.timeoutId);
+    this.props.clearSelectedElement();
+    this.props.setCyElements([]);
   }
 
   render() {

@@ -29,7 +29,7 @@ const evioSlice = createSlice({
       );
     },
     clearSelectedElement(state) {
-      state.elementType = elementTypes.eleNone;
+      state.selectedElementType = elementTypes.eleNone;
       state.selectedCyElementData = JSON.stringify({});
     },
     setRedrawGraph(state, action) {
