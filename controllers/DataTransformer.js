@@ -82,6 +82,15 @@ class DataTransformer {
             edgeObject = topoData["Edges"][edgeId];
           }
           edgeObject["EdgeId"] = edgeId;
+          let localEp = { Proto: "", Internal: "", External: "" };
+          let remoteEp = localEp;
+          if (
+            edgeData.hasOwnProperty("LocalEndpoint") &&
+            edgeData.hasOwnProperty("RemoteEndpoint")
+          ) {
+            localEp = edgeData["LocalEndpoint"];
+            remoteEp = edgeData["RemoteEndpoint"];
+          }
           let desc = {
             Source: nodeId,
             Target: edgeData["PeerId"],
@@ -91,6 +100,15 @@ class DataTransformer {
             Type: edgeData["Type"],
             TapName: edgeData["TapName"],
             MAC: edgeData["MAC"],
+            LocalEndpoint: {
+              Proto: localEp["Proto"],
+              Internal: localEp["Internal"],
+              External: localEp["External"],
+            },
+            RemoteEndpoint: {
+              Proto: remoteEp["Proto"],
+              External: remoteEp["External"],
+            },
           };
           var isFound = false;
           for (let i = 0; i < edgeObject["Descriptor"].length; i++) {

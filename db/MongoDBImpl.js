@@ -56,31 +56,35 @@ class MongoDBImpl extends DataBaseInterface {
    */
   async insertInto(data, timestamp) {
     var dataTrasformer = new DataTransformer();
-    // The data is transformed to the required form and returned as an array of arrays.
-    var transformedData = dataTrasformer.transformData(data);
-    //console.log("transformedData: ", JSON.stringify(transformedData));
-    var overlaySaveData = new overlayModel({
-      _id: timestamp,
-      Overlays: transformedData[0], // Overlays array
-    });
-    // Overlay data is put into the db with the below call.
-    overlaySaveData.save(function (err) {
-      if (err) {
-        console.log(err.stack);
-      }
-      //console.log("Saved Overlay data for timestamp: " + timestamp);
-    });
-    var topologySaveData = new topologyModel({
-      _id: timestamp,
-      Topology: transformedData[1], // Topology Array
-    });
-    // Topology data is put into the db with the below call.
-    topologySaveData.save(function (err) {
-      if (err) {
-        console.log(err.stack);
-      }
-      //console.log("Saved Topology data for timestamp:" + timestamp);
-    });
+    try {
+      // The data is transformed to the required form and returned as an array of arrays.
+      var transformedData = dataTrasformer.transformData(data);
+      //console.log("transformedData: ", JSON.stringify(transformedData));
+      var overlaySaveData = new overlayModel({
+        _id: timestamp,
+        Overlays: transformedData[0], // Overlays array
+      });
+      // Overlay data is put into the db with the below call.
+      overlaySaveData.save(function (err) {
+        if (err) {
+          console.log(err.stack);
+        }
+        //console.log("Saved Overlay data for timestamp: " + timestamp);
+      });
+      var topologySaveData = new topologyModel({
+        _id: timestamp,
+        Topology: transformedData[1], // Topology Array
+      });
+      // Topology data is put into the db with the below call.
+      topologySaveData.save(function (err) {
+        if (err) {
+          console.log(err.stack);
+        }
+        //console.log("Saved Topology data for timestamp:" + timestamp);
+      });
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   /**
