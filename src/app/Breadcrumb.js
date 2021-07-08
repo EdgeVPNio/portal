@@ -12,8 +12,8 @@ class Breadcrumb extends React.Component {
   componentDidMount() {}
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.elementType !== prevProps.elementType) {
-      if (this.props.elementType === elementTypes.eleNone) {
+    if (this.props.selectedElementType !== prevProps.selectedElementType) {
+      if (this.props.selectedElementType === elementTypes.eleNone) {
         this.props.clearSelectedElement();
       }
     }
@@ -24,9 +24,13 @@ class Breadcrumb extends React.Component {
   handleBackToHome = () => {
     this.props.setSelectedView("OverlaysView");
     this.props.setSelectedOverlayId("");
-    var selectedOverlayBtnList =document.getElementById("overlaysArea").getElementsByClassName("overlaySelected");
-    for (var element of selectedOverlayBtnList) {
-      element.classList.remove("overlaySelected");
+    if (this.props.currentView === "OverlaysView") {
+      var selectedOverlayBtnList = document
+        .getElementById("overlaysArea")
+        .getElementsByClassName("overlaySelected");
+      for (var element of selectedOverlayBtnList) {
+        element.classList.remove("overlaySelected");
+      }
     }
   };
 
@@ -70,7 +74,7 @@ class Breadcrumb extends React.Component {
       >
         <div className="breadcrumbLabel">
           {Object.keys(eleData).length > 0
-            ? this.props.elementType === elementTypes.eleNode
+            ? this.props.selectedElementType === elementTypes.eleNode
               ? "Node : " + eleData.label
               : "Tunnel : " + eleData.label
             : "None."}
@@ -111,7 +115,7 @@ const mapStateToProps = (state) => ({
   redrawGraph: state.evio.redrawGraph,
   selectedOverlayId: state.evio.selectedOverlayId,
   currentView: state.view.current,
-  elementType: state.evio.selectedElementType,
+  selectedElementType: state.evio.selectedElementType,
 });
 
 const mapDispatchToProps = {

@@ -103,52 +103,178 @@ class TopologyView extends React.Component {
     );
   }
 
+  getNotReportingNodeDetails(notReportingNode) {
+    var nodeContent = (
+      <CollapsibleButton
+        id={notReportingNode.data().id + "Btn"}
+        className="detailsNodeBtn"
+        key={notReportingNode.data().id + "Btn"}
+        name={"Details"}
+        isOpen
+      >
+        <div>
+          <h5>{notReportingNode.data().label}</h5>
+          <div className="DetailsLabel">Node ID</div>
+          <label id="valueLabel">{notReportingNode.data().id}</label>
+          <div className="DetailsLabel">State</div>
+          <label id="valueLabel">{notReportingNode.data().state}</label>
+          <div className="DetailsLabel">Location</div>
+          <label id="valueLabel">{"Unknown"}</label>
+          <hr style={{ backgroundColor: "#486186" }} />
+        </div>
+      </CollapsibleButton>
+    );
+    return nodeContent;
+  }
+  getConnectedLinkDetails(source, tgt, connectedEdges) {
+    for (var edge of connectedEdges) {
+      if (
+        (source.data().id === edge._private.data.source &&
+          tgt.id === edge._private.data.target) ||
+        (source.data().id === edge._private.data.target &&
+          tgt.id === edge._private.data.source)
+      ) {
+        for (var descriptorItem of edge._private.data.descriptor) {
+          if (
+            source.data().id === descriptorItem.Source &&
+            tgt.id === descriptorItem.Target
+          ) {
+            return [descriptorItem, edge._private.data.id];
+          }
+        }
+      }
+    }
+  }
+  getConnectedNodeDetails(sourceNode, connectedNodes, connectedEdges) {
+    var sidebarNodeslist = [];
+    for (var el of connectedNodes) {
+      if (sourceNode.data() !== el._private.data) {
+        sidebarNodeslist.push(el._private.data);
+      }
+    }
+    var nodeContent = (
+      <CollapsibleButton
+        id={sourceNode.data().id + "Btn"}
+        className="detailsNodeBtn"
+        key={sourceNode.data().id + "Btn"}
+        name={"Details"}
+        isOpen
+      >
+        <div>
+          <h5>{sourceNode.data().name}</h5>
+          <div id="DetailsLabel">Node ID</div>
+          <label id="valueLabel">{sourceNode.data().id}</label>
+          <div className="DetailsLabel">State</div>
+          <label id="valueLabel">{sourceNode.data().state}</label>
+          <div className="DetailsLabel">Location</div>
+          <label id="valueLabel">{"Unknown"}</label>
+          <hr style={{ backgroundColor: "#486186" }} />
+          <div id="connectedNode" style={{ overflow: "auto" }}>
+            {sidebarNodeslist.map((connectedNode) => {
+              try {
+                let [connectedlinkDetail, tunnelId] =
+                  this.getConnectedLinkDetails(
+                    sourceNode,
+                    connectedNode,
+                    connectedEdges
+                  );
+                var connectedNodeBtn = (
+                  <CollapsibleButton
+                    id={connectedNode.id + "Btn"}
+                    className="connectedNodeBtn"
+                    key={connectedNode.id + "Btn"}
+                    eventKey={connectedNode.label}
+                    name={connectedNode.label}
+                  >
+                    <div className="DetailsLabel">Node ID</div>
+                    <label id="valueLabel">{connectedNode.id}</label>
+                    <div className="DetailsLabel">Tunnel ID</div>
+                    <label id="valueLabel">{tunnelId}</label>
+                    <div className="DetailsLabel">Interface Name</div>
+                    <label id="valueLabel">{connectedlinkDetail.TapName}</label>
+                    <div className="DetailsLabel">MAC</div>
+                    <label id="valueLabel">{connectedlinkDetail.MAC}</label>
+                    <div className="DetailsLabel">State</div>
+                    <label id="valueLabel">
+                      {connectedlinkDetail.State.slice(
+                        7,
+                        connectedlinkDetail.State.length
+                      )}
+                    </label>
+                    <div className="DetailsLabel">Tunnel Type</div>
+                    <label id="valueLabel">
+                      {connectedlinkDetail.Type.slice(
+                        6,
+                        connectedlinkDetail.Type.length
+                      )}
+                    </label>
+                  </CollapsibleButton>
+                );
+
+                return connectedNodeBtn;
+              } catch (e) {
+                //console.log(e)
+                return false;
+              }
+            })}
+          </div>
+        </div>
+      </CollapsibleButton>
+    );
+    return nodeContent;
+  }
+  getNotConnectedNodeDetails(notConnectedNode) {
+    var nodeContent = (
+      <CollapsibleButton
+        id={notConnectedNode.data().id + "Btn"}
+        className="detailsNodeBtn"
+        key={notConnectedNode.data().id + "Btn"}
+        name={"Details"}
+        isOpen
+      >
+        <div>
+          <h5>{notConnectedNode.data().label}</h5>
+          <div className="DetailsLabel">Node ID</div>
+          <label id="valueLabel">{notConnectedNode.data().id}</label>
+          <div className="DetailsLabel">State</div>
+          <label id="valueLabel">{notConnectedNode.data().state}</label>
+          <div className="DetailsLabel">Location</div>
+          <label id="valueLabel">{"Unknown"}</label>
+          <hr style={{ backgroundColor: "#486186" }} />
+        </div>
+      </CollapsibleButton>
+    );
+    return nodeContent;
+  }
+
   renderNodeDetails = () => {
     var selectedEle = JSON.parse(this.props.selectedCyElementData);
     var selectedNode = this.cy.getElementById(selectedEle.id);
-    var neighbors = selectedNode.closedNeighborhood();
-    var connectedNodes = neighbors
-      .filter("[id != " + selectedEle.id + "]")
-      .filter((ele) => ele.isNode());
-    var edges = neighbors.filter((ele) => ele.isEdge());
-    console.log("closed neighbors", neighbors);
-    console.log("connectedNodes", connectedNodes);
-    console.log("edges", edges);
-    if (selectedNode.data("state") === nodeStates.notReporting) {
-      //Not reporting nodes
-      var nodeContent = (
-        <CollapsibleButton
-          id={selectedNode.id + "Btn"}
-          className="detailsNodeBtn"
-          key={selectedNode.id + "Btn"}
-          name={"Details"}
-          isOpen
-        >
-          <div>
-            <h5>{selectedNode.name}</h5>
-
-            <div className="DetailsLabel">Node ID</div>
-            <label id="valueLabel">{selectedNode.id}</label>
-
-            <div className="DetailsLabel">State</div>
-            <label id="valueLabel">{selectedNode.state}</label>
-
-            <div className="DetailsLabel">Location</div>
-            <label id="valueLabel">{"Unknown"}</label>
-            <hr style={{ backgroundColor: "#486186" }} />
-            <br />
-            <br />
-          </div>
-        </CollapsibleButton>
-      );
-
-      return nodeContent;
+    var partitionElements = this.partitionElements(selectedNode);
+    var connectedNodes = partitionElements.neighborhood.filter((ele) =>
+      ele.isNode()
+    );
+    var connectedEdges = partitionElements.neighborhood.filter((ele) =>
+      ele.isEdge()
+    );
+    if (selectedEle.state === nodeStates.notReporting) {
+      return this.getNotReportingNodeDetails(selectedNode); //Not reporting nodes
+    } else if (selectedEle.state === nodeStates.connected) {
+      return this.getConnectedNodeDetails(
+        selectedNode,
+        connectedNodes,
+        connectedEdges
+      ); //Connected nodes
+    } else if (selectedEle.state === nodeStates.notConnectedNode) {
+      return this.getNotConnectedNodeDetails(selectedNode); //Not connected node
     }
   };
 
   renderSidebarDetails() {
     if (this.props.selectedElementType === elementTypes.eleNode)
       return this.renderNodeDetails();
+    else if (this.props.selectedElementType === elementTypes.eleTunnel)
+      return <null />;
     return <null />;
   }
 
@@ -346,8 +472,8 @@ class TopologyView extends React.Component {
         selectedCyElementData: selectedElement.data(),
       });
       neighborhood = selectedElement
-        .connectedNodes()
-        .union(selectedElement);
+      .connectedNodes()
+      .union(selectedElement);
       excluded = this.cy
         .elements()
         .difference(selectedElement.connectedNodes())
