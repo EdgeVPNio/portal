@@ -109,7 +109,7 @@ class TopologyView extends React.Component {
         id={notReportingNode.data().id + "Btn"}
         className="detailsNodeBtn"
         key={notReportingNode.data().id + "Btn"}
-        name={"Details"}
+        name={notReportingNode.data().label}
         isOpen
       >
         <div>
@@ -157,7 +157,7 @@ class TopologyView extends React.Component {
         id={sourceNode.data().id + "Btn"}
         className="detailsNodeBtn"
         key={sourceNode.data().id + "Btn"}
-        name={"Details"}
+        name={sourceNode.data().label}
         isOpen
       >
         <div>
@@ -229,7 +229,7 @@ class TopologyView extends React.Component {
         id={notConnectedNode.data().id + "Btn"}
         className="detailsNodeBtn"
         key={notConnectedNode.data().id + "Btn"}
-        name={"Details"}
+        name={notConnectedNode.data().label}
         isOpen
       >
         <div>
@@ -251,6 +251,7 @@ class TopologyView extends React.Component {
     var selectedEle = JSON.parse(this.props.selectedCyElementData);
     var selectedNode = this.cy.getElementById(selectedEle.id);
     var partitionElements = this.partitionElements(selectedNode);
+    var nodeDetails = null;
     var connectedNodes = partitionElements.neighborhood.filter((ele) =>
       ele.isNode()
     );
@@ -258,16 +259,22 @@ class TopologyView extends React.Component {
       ele.isEdge()
     );
     if (selectedEle.state === nodeStates.notReporting) {
-      return this.getNotReportingNodeDetails(selectedNode); //Not reporting nodes
+      nodeDetails = this.getNotReportingNodeDetails(selectedNode); //Not reporting nodes
     } else if (selectedEle.state === nodeStates.connected) {
-      return this.getConnectedNodeDetails(
+      nodeDetails = this.getConnectedNodeDetails(
         selectedNode,
         connectedNodes,
         connectedEdges
       ); //Connected nodes
     } else if (selectedEle.state === nodeStates.notConnectedNode) {
-      return this.getNotConnectedNodeDetails(selectedNode); //Not connected node
+      nodeDetails = this.getNotConnectedNodeDetails(selectedNode); //Not connected node
     }
+    return (
+      <div>
+        <div> Node Details </div>
+        <div> {nodeDetails} </div>
+      </div>
+    );
   };
 
   renderSidebarDetails() {
@@ -471,9 +478,7 @@ class TopologyView extends React.Component {
         selectedElementType: elementTypes.eleTunnel,
         selectedCyElementData: selectedElement.data(),
       });
-      neighborhood = selectedElement
-      .connectedNodes()
-      .union(selectedElement);
+      neighborhood = selectedElement.connectedNodes().union(selectedElement);
       excluded = this.cy
         .elements()
         .difference(selectedElement.connectedNodes())
