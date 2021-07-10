@@ -158,7 +158,6 @@ class MongoDBImpl extends DataBaseInterface {
       overlayData = [newData.fullDocument];
       overlayChangeStream.close();
     }
-    //console.log("overlayData", JSON.stringify(overlayData));
     return overlayData;
   }
 
@@ -176,21 +175,16 @@ class MongoDBImpl extends DataBaseInterface {
       overlayId
     );
     if (Object.keys(topologyData).length === 0) {
-      //console.log("No data found, setting data to null.")
-      const pipeline = [{ $match: { operationType: "insert" } }]; //watch for insert operation
+      const pipeline = [{ $match: { operationType: "insert" } }];
       const topologyChangeStream = this.db
         .db("Evio")
         .collection("Topology")
         .watch(pipeline);
-
       await Promise.resolve(topologyChangeStream.hasNext());
-      let newData = await Promise.resolve(topologyChangeStream.next());
-      topologyData = [newData.fullDocument];
+      topologyChangeStream.close();
+      topologyData = await this.findTopology(tableName, intervalId, overlayId);
     }
-    //console.log("topologyData ", JSON.stringify(topologyData));
-
     return topologyData;
   }
 }
-
 module.exports = { MongoDBImpl };
