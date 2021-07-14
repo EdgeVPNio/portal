@@ -101,11 +101,11 @@ class Breadcrumb extends React.Component {
 
   render() {
     return (
-      <div id="breadcrumbPanelId">
+      <>
         <div>{this.homeButton()}</div>
         <div>{this.renderOverlayBreadcrumb()}</div>
         <div>{this.renderElementBreadcrumb()}</div>
-      </div>
+      </>
     );
   }
 }
