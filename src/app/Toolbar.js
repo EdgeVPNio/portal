@@ -246,10 +246,10 @@ class Toolbar extends React.Component {
                     id="minZoomSelector"
                     value={this.props.zoomMinimum}
                   >
+                    <option value="0.05">0.05</option>
                     <option value="0.1">0.1</option>
-                    <option value="0.3">0.3</option>
+                    <option value="0.25">0.25</option>
                     <option value="0.5">0.5</option>
-                    <option value="0.9">0.9</option>
                   </select>
                 </div>
               </div>
@@ -264,10 +264,10 @@ class Toolbar extends React.Component {
                     id="maxZoomSelector"
                     value={this.props.zoomMaximum}
                   >
+                    <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
-                    <option value="5">5</option>
-                    <option value="10">10</option>
+                    <option value="4">4</option>
                   </select>
                 </div>
               </div>

@@ -10,8 +10,8 @@ const toolsSlice = createSlice({
   },
   reducers: {
     configureZoomRange(state, action) {
-      state.zoomMinimum = action.payload.zoomMinimum;
-      state.zoomMaximum = action.payload.zoomMaximum;
+      state.zoomMinimum = parseFloat(action.payload.zoomMinimum);
+      state.zoomMaximum = parseFloat(action.payload.zoomMaximum);
     },
     setZoomValue(state, action) {
       state.zoomValue = action.payload;
