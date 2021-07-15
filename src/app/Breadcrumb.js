@@ -76,7 +76,7 @@ class Breadcrumb extends React.Component {
           {Object.keys(eleData).length > 0
             ? this.props.selectedElementType === elementTypes.eleNode
               ? "Node : " + eleData.label
-              : "Tunnel : " + eleData.label
+              : "Tunnel : " + eleData.label.slice(0,7)
             : "None."}
         </div>
       </button>
