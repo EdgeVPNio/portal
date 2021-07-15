@@ -22,7 +22,7 @@ export default class Overlays {
       this.getOverlayList().forEach((overlay) => {
         overlaysName.push(overlay.name);
       });
-      return overlaysName;
+      return overlaysName.sort();
     };
 
     this.getOverlay = (overlay) => {
