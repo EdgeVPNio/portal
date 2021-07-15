@@ -181,7 +181,7 @@ class TopologyView extends React.Component {
         id={sourceNode.data().label + "Btn"}
         className="detailsNodeBtn"
         key={sourceNode.data().label + "Btn"}
-        name={"Details"}
+        name={sourceNode.data().label}
       >
         <div>
           <h5>{sourceNode.data().label}</h5>
@@ -291,7 +291,7 @@ class TopologyView extends React.Component {
         connectedEdges
       ); //Connected nodes
     } else if (selectedEle.state === nodeStates.noTunnels) {
-      return this.getNotConnectedNodeDetails(selectedNode); //Not connected node
+      nodeDetails = this.getNotConnectedNodeDetails(selectedNode); //Not connected node
     }
     return (
       <div>
@@ -353,7 +353,7 @@ class TopologyView extends React.Component {
         id={sourceNodeLinkDetails.TapName + "Btn"}
         className="detailsLinkBtn"
         key={selectedTunnel.id + "Btn"}
-        name={"Details"}
+        name={sourceNodeLinkDetails.TapName}
         isOpen={true}
       >
         <div>
@@ -464,7 +464,7 @@ class TopologyView extends React.Component {
         id={sourceNodeLinkDetails.TapName + "Btn"}
         className="detailsLinkBtn"
         key={sourceNodeLinkDetails.TapName + "Btn"}
-        name={"Details"}
+        name={sourceNodeLinkDetails.TapName}
         isOpen
       >
         <div>
