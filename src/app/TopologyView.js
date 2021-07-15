@@ -26,6 +26,9 @@ const nodeStates = {
 class TopologyView extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      isSwapToggle: false,
+    };
     this.intervalId = null;
     this.timeoutId = null;
     this.autoRefresh = this.props.autoUpdate;
@@ -66,6 +69,27 @@ class TopologyView extends React.Component {
         });
   }
 
+  async queryGeoCoordinates(coordinates) {
+    coordinates = coordinates.split(",");
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates[0]},${coordinates[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`;
+      const res = await fetch(url);
+      console.log("res.ok", res.ok);
+      var data = await res.json();
+      console.log("data", data);
+      console.log("data.results", data.results);
+      console.log("data.results.length", data.results.length);
+      console.log(
+        "data.results[data.results.length - 1].formatted_address",
+        data.results[data.results.length - 1].formatted_address
+      );
+      var nodeLocation =
+        data.results[data.results.length - 1].formatted_address;
+      return nodeLocation.slice(7, nodeLocation.length);
+    } catch (err) {
+      return "-";
+    }
+  }
   renderTypeahead() {
     return (
       <Typeahead
@@ -154,14 +178,13 @@ class TopologyView extends React.Component {
     }
     var nodeContent = (
       <CollapsibleButton
-        id={sourceNode.data().id + "Btn"}
+        id={sourceNode.data().label + "Btn"}
         className="detailsNodeBtn"
-        key={sourceNode.data().id + "Btn"}
-        name={sourceNode.data().label}
-        isOpen
+        key={sourceNode.data().label + "Btn"}
+        name={"Details"}
       >
         <div>
-          <h5>{sourceNode.data().name}</h5>
+          <h5>{sourceNode.data().label}</h5>
           <div id="DetailsLabel">Node ID</div>
           <label id="valueLabel">{sourceNode.data().id}</label>
           <div className="DetailsLabel">State</div>
@@ -180,9 +203,9 @@ class TopologyView extends React.Component {
                   );
                 var connectedNodeBtn = (
                   <CollapsibleButton
-                    id={connectedNode.id + "Btn"}
+                    id={connectedNode.label + "Btn"}
                     className="connectedNodeBtn"
-                    key={connectedNode.id + "Btn"}
+                    key={connectedNode.label + "Btn"}
                     eventKey={connectedNode.label}
                     name={connectedNode.label}
                   >
@@ -225,6 +248,7 @@ class TopologyView extends React.Component {
   }
   getNotConnectedNodeDetails(notConnectedNode) {
     var nodeContent = (
+      //No tunnels node
       <CollapsibleButton
         id={notConnectedNode.data().id + "Btn"}
         className="detailsNodeBtn"
@@ -266,8 +290,8 @@ class TopologyView extends React.Component {
         connectedNodes,
         connectedEdges
       ); //Connected nodes
-    } else if (selectedEle.state === nodeStates.notConnectedNode) {
-      nodeDetails = this.getNotConnectedNodeDetails(selectedNode); //Not connected node
+    } else if (selectedEle.state === nodeStates.noTunnels) {
+      return this.getNotConnectedNodeDetails(selectedNode); //Not connected node
     }
     return (
       <div>
@@ -276,13 +300,320 @@ class TopologyView extends React.Component {
       </div>
     );
   };
+  getSourceAndTargetDetails(selectedTunnel) {
+    var sourceNodeLinkDetails;
+    var targetNodeLinkDetails;
+    var srcNode;
+    var tgtNode;
+    for (var descriptor of selectedTunnel.descriptor) {
+      if (
+        descriptor.Source === selectedTunnel.source &&
+        descriptor.Target === selectedTunnel.target
+      ) {
+        sourceNodeLinkDetails = descriptor;
+        srcNode = this.cy.getElementById(sourceNodeLinkDetails.Source)._private
+          .data;
+        if (selectedTunnel.descriptor.length === 1) {
+          tgtNode = this.cy.getElementById(sourceNodeLinkDetails.Target)
+            ._private.data;
+        }
+      } else if (
+        descriptor.Target === selectedTunnel.source &&
+        descriptor.Source === selectedTunnel.target
+      ) {
+        targetNodeLinkDetails = descriptor;
+        tgtNode = this.cy.getElementById(targetNodeLinkDetails.Source)._private
+          .data;
+      }
+    }
+    if (this.state.isSwapToggle === false) {
+      return [sourceNodeLinkDetails, srcNode, tgtNode];
+    } else {
+      //if swapbutton toggled then swap source and node details
+      if (selectedTunnel.descriptor.length === 1)
+        return [sourceNodeLinkDetails, tgtNode, srcNode];
+      return [targetNodeLinkDetails, tgtNode, srcNode];
+    }
+  }
+  handleSwitch = () => {
+    this.setState({ isSwapToggle: !this.state.isSwapToggle });
+  };
+  getTunnelWithBothReportingNodes(selectedTunnel) {
+    var LocalEndpointInternal;
+    var [sourceNodeLinkDetails, srcNode, tgtNode] =
+      this.getSourceAndTargetDetails(selectedTunnel);
+    if (sourceNodeLinkDetails.LocalEndpoint.Internal === ":0") {
+      LocalEndpointInternal = "NA";
+    } else {
+      LocalEndpointInternal = sourceNodeLinkDetails.LocalEndpoint.Internal;
+    }
 
+    var linkContent = (
+      <CollapsibleButton
+        id={sourceNodeLinkDetails.TapName + "Btn"}
+        className="detailsLinkBtn"
+        key={selectedTunnel.id + "Btn"}
+        name={"Details"}
+        isOpen={true}
+      >
+        <div>
+          <h5>{sourceNodeLinkDetails.TapName}</h5>
+          <div className="row">
+            <div className="col-10" style={{ paddingRight: "0" }}>
+              <CollapsibleButton
+                id={srcNode.label + "Btn"}
+                className="sourceNodeBtn"
+                key={srcNode.label + "Btn"}
+                eventKey={srcNode.label + "Btn"}
+                name={srcNode.label}
+                style={{
+                  marginBottom: "2.5%",
+                  backgroundColor: "#8aa626",
+                  border: `solid #8aa626`,
+                }}
+              >
+                <div className="DetailsLabel">Node ID</div>
+                <label id="valueLabel">{srcNode.id.slice(0, 7)}</label>
+                <div className="DetailsLabel">State</div>
+                <label id="valueLabel">{srcNode.state}</label>
+                <div className="DetailsLabel">Location</div>
+                {/* <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label> */}
+                <label id="valueLabel">{"Unknown"}</label>
+              </CollapsibleButton>
+
+              <CollapsibleButton
+                id={tgtNode.label + "Btn"}
+                className="targetNodeBtn"
+                key={tgtNode.label + "Btn"}
+                eventKey={tgtNode.label + "Btn"}
+                name={tgtNode.label}
+                style={{
+                  marginBottom: "2.5%",
+                  backgroundColor: "#8aa626",
+                  border: `solid #8aa626`,
+                }}
+              >
+                <div className="DetailsLabel">Node ID</div>
+                <label id="valueLabel">{tgtNode.id.slice(0, 7)}</label>
+                <div className="DetailsLabel">State</div>
+                <label id="valueLabel">{tgtNode.state}</label>
+                <div className="DetailsLabel">Location</div>
+                {/* <label id="valueLabel">{targetLocation.slice(7, targetLocation.length)}</label> */}
+                <label id="valueLabel">{"Unknown"}</label>
+              </CollapsibleButton>
+            </div>
+            <div
+              className="col"
+              style={{ margin: "auto", padding: "0", textAlign: "center" }}
+            >
+              <button onClick={this.handleSwitch} id="switchBtn" />
+            </div>
+          </div>
+          <hr style={{ backgroundColor: "#486186" }} />
+          <div className="DetailsLabel">Tunnel ID</div>
+          <label id="valueLabel">{selectedTunnel.id}</label>
+          <div className="DetailsLabel">Interface Name</div>
+          <label id="valueLabel">{sourceNodeLinkDetails.TapName}</label>
+          <div className="DetailsLabel">MAC</div>
+          <label id="valueLabel">{sourceNodeLinkDetails.MAC}</label>
+          <div className="DetailsLabel">State</div>
+          <label id="valueLabel">
+            {sourceNodeLinkDetails.State.slice(
+              7,
+              sourceNodeLinkDetails.State.length
+            )}
+          </label>
+          <div className="DetailsLabel">Tunnel Type</div>
+          <label id="valueLabel">
+            {sourceNodeLinkDetails.Type.slice(
+              6,
+              sourceNodeLinkDetails.Type.length
+            )}
+          </label>
+          <div className="DetailsLabel">LocalEndpoint</div>
+          <label id="valueLabel" style={{ fontSize: "16px" }}>
+            {sourceNodeLinkDetails.LocalEndpoint.Proto}
+            {`://`}
+            {sourceNodeLinkDetails.LocalEndpoint.External}
+            {"<>"}
+            {LocalEndpointInternal}
+          </label>
+          <div className="DetailsLabel">RemoteEndpoint</div>
+          <label id="valueLabel" style={{ fontSize: "16px" }}>
+            {sourceNodeLinkDetails.RemoteEndpoint.Proto}
+            {`://`}
+            {sourceNodeLinkDetails.RemoteEndpoint.External}
+          </label>
+        </div>
+      </CollapsibleButton>
+    );
+    return linkContent;
+  }
+
+  getTunnelWithEitherOneReportingNodes(selectedTunnel) {
+    var LocalEndpointInternal;
+    var [sourceNodeLinkDetails, srcNode, tgtNode] =
+      this.getSourceAndTargetDetails(selectedTunnel);
+    if (sourceNodeLinkDetails.LocalEndpoint.Internal === ":0") {
+      LocalEndpointInternal = "NA";
+    } else {
+      LocalEndpointInternal = sourceNodeLinkDetails.LocalEndpoint.Internal;
+    }
+    var linkContent = (
+      <CollapsibleButton
+        id={sourceNodeLinkDetails.TapName + "Btn"}
+        className="detailsLinkBtn"
+        key={sourceNodeLinkDetails.TapName + "Btn"}
+        name={"Details"}
+        isOpen
+      >
+        <div>
+          <h5>{sourceNodeLinkDetails.TapName}</h5>
+          <div className="row">
+            <div className="col-10" style={{ paddingRight: "0" }}>
+              <CollapsibleButton
+                id={srcNode.label + "Btn"}
+                className="sourceNodeBtn"
+                key={srcNode.label + "Btn"}
+                eventKey={srcNode.label + "Btn"}
+                name={srcNode.label}
+                style={{
+                  marginBottom: "2.5%",
+                  backgroundColor: "#8aa626",
+                  border: `solid #8aa626`,
+                }}
+              >
+                <div className="DetailsLabel">Node ID</div>
+                <label id="valueLabel">{srcNode.id.slice(0, 7)}</label>
+                <div className="DetailsLabel">State</div>
+                <label id="valueLabel">{srcNode.state}</label>
+                <div className="DetailsLabel">Location</div>
+                {/* <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label> */}
+                <label id="valueLabel">{"Unknown"}</label>
+              </CollapsibleButton>
+
+              <CollapsibleButton
+                id={tgtNode.label + "Btn"}
+                className="targetNodeBtn"
+                key={tgtNode.label + "Btn"}
+                eventKey={tgtNode.label + "Btn"}
+                name={tgtNode.label}
+                style={{
+                  marginBottom: "2.5%",
+                  backgroundColor: "#8aa626",
+                  border: `solid #8aa626`,
+                }}
+              >
+                <div className="DetailsLabel">Node ID</div>
+                <label id="valueLabel">{tgtNode.id.slice(0, 7)}</label>
+                <div className="DetailsLabel">State</div>
+                <label id="valueLabel">{tgtNode.state}</label>
+                <div className="DetailsLabel">Location</div>
+                {/* <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label> */}
+                <label id="valueLabel">{"Unknown"}</label>
+              </CollapsibleButton>
+            </div>
+            <div
+              className="col"
+              style={{ margin: "auto", padding: "0", textAlign: "center" }}
+            >
+              <button onClick={this.handleSwitch} id="switchBtn" />
+            </div>
+          </div>
+          <hr style={{ backgroundColor: "#486186" }} />
+          <div className="DetailsLabel">Tunnel ID</div>
+          <label id="valueLabel">{selectedTunnel.id}</label>
+          <div className="DetailsLabel">Interface Name</div>
+          <label id="valueLabel">{sourceNodeLinkDetails.TapName}</label>
+          <div className="DetailsLabel">MAC</div>
+          <label id="valueLabel">{sourceNodeLinkDetails.MAC}</label>
+          <div className="DetailsLabel">State</div>
+          <label id="valueLabel">
+            {sourceNodeLinkDetails.State.slice(
+              7,
+              sourceNodeLinkDetails.State.length
+            )}
+          </label>
+          <div className="DetailsLabel">Tunnel Type</div>
+          <label id="valueLabel">
+            {sourceNodeLinkDetails.Type.slice(
+              6,
+              sourceNodeLinkDetails.Type.length
+            )}
+          </label>
+          <div className="DetailsLabel">LocalEndpoint</div>
+          <label id="valueLabel" style={{ fontSize: "16px" }}>
+            {sourceNodeLinkDetails.LocalEndpoint.Proto}
+            {`://`}
+            {sourceNodeLinkDetails.LocalEndpoint.External}
+            {"<>"}
+            {LocalEndpointInternal}
+          </label>
+          <div className="DetailsLabel">RemoteEndpoint</div>
+          <label id="valueLabel" style={{ fontSize: "16px" }}>
+            {sourceNodeLinkDetails.RemoteEndpoint.Proto}
+            {`://`}
+            {sourceNodeLinkDetails.RemoteEndpoint.External}
+          </label>
+        </div>
+      </CollapsibleButton>
+    );
+    return linkContent;
+  }
+  getTunnelWithNoReportingNodes() {
+    var linkContentNR = (
+      <CollapsibleButton
+        id={"notReportingBtn"}
+        className="detailsLinkBtn"
+        key={"notReportingBtn"}
+        name={"Details"}
+      >
+        <div>
+          <label id="valueLabel">{"Data not available"}</label>
+        </div>
+      </CollapsibleButton>
+    );
+    return linkContentNR;
+  }
+  renderTunnelDetails = () => {
+    var selectedTunnelNodesDetails = [];
+    var selectedEle = JSON.parse(this.props.selectedCyElementData);
+    var selectedTunnel = this.cy.getElementById(selectedEle.id);
+    var partitionElements = this.partitionElements(selectedTunnel);
+    for (var node of partitionElements.neighborhood) {
+      if (node._private.group === "nodes") {
+        selectedTunnelNodesDetails.push(node._private.data);
+      }
+    }
+    if (
+      selectedTunnelNodesDetails[0].state === nodeStates.connected &&
+      selectedTunnelNodesDetails[1].state === nodeStates.connected
+    ) {
+      return this.getTunnelWithBothReportingNodes(selectedEle);
+    } else if (
+      (selectedTunnelNodesDetails[0].state === nodeStates.connected &&
+        selectedTunnelNodesDetails[1].state === nodeStates.notReporting) ||
+      (selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
+        selectedTunnelNodesDetails[1].state === nodeStates.connected)
+    ) {
+      return this.getTunnelWithEitherOneReportingNodes(selectedEle);
+    } else if (
+      selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
+      selectedTunnelNodesDetails[1].state === nodeStates.notReporting
+    ) {
+      return this.getTunnelWithNoReportingNodes();
+    }
+  };
   renderSidebarDetails() {
-    if (this.props.selectedElementType === elementTypes.eleNode)
-      return this.renderNodeDetails();
-    else if (this.props.selectedElementType === elementTypes.eleTunnel)
+    try {
+      if (this.props.selectedElementType === elementTypes.eleNode)
+        return this.renderNodeDetails();
+      else if (this.props.selectedElementType === elementTypes.eleTunnel)
+        return this.renderTunnelDetails();
       return <null />;
-    return <null />;
+    } catch (e) {
+      return <null />; //when selected tunnel broken on refresh then returns null
+    }
   }
 
   renderTopologyContent() {
@@ -593,6 +924,7 @@ const mapStateToProps = (state) => ({
   selectedCyElementData: state.evio.selectedCyElementData,
   cyElements: state.evio.cyElements,
   currentView: state.view.current,
+  selectedView: state.view.selected,
   zoomValue: state.tools.zoomValue,
   zoomMin: state.tools.zoomMinimum,
   zoomMax: state.tools.zoomMaximum,
