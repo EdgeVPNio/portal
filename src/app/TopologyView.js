@@ -1,10 +1,11 @@
 import React from "react";
 //import cytoscape from "cytoscape";
-import CytoscapeComponent from "react-cytoscapejs";
+import Cytoscape from "react-cytoscapejs";
+//import CytoscapeComponent from "react-cytoscapejs";
 import CollapsibleButton from "./CollapsibleButton";
 import cytoscapeStyle from "./cytoscapeStyle.js";
 import { Typeahead } from "react-bootstrap-typeahead";
-import { Spinner } from "react-bootstrap";
+//import { Spinner } from "react-bootstrap";
 import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
@@ -56,7 +57,7 @@ class TopologyView extends React.Component {
         .then((res) => {
           if (this.autoRefresh) {
             this.props.setCyElements(this.buildCyElements(res[0].Topology));
-            console.log("cyElements:", this.props.cyElements);
+            //console.log("cyElements:", this.props.cyElements);
             this.intervalId = res[0]._id;
             this.queryTopology();
           }
@@ -90,6 +91,7 @@ class TopologyView extends React.Component {
       return "-";
     }
   }
+  
   renderTypeahead() {
     return (
       <Typeahead
@@ -169,6 +171,7 @@ class TopologyView extends React.Component {
       }
     }
   }
+
   getConnectedNodeDetails(sourceNode, connectedNodes, connectedEdges) {
     var sidebarNodeslist = [];
     for (var el of connectedNodes) {
@@ -246,6 +249,7 @@ class TopologyView extends React.Component {
     );
     return nodeContent;
   }
+
   getNotConnectedNodeDetails(notConnectedNode) {
     var nodeContent = (
       //No tunnels node
@@ -300,6 +304,7 @@ class TopologyView extends React.Component {
       </div>
     );
   };
+
   getSourceAndTargetDetails(selectedTunnel) {
     var sourceNodeLinkDetails;
     var targetNodeLinkDetails;
@@ -335,9 +340,11 @@ class TopologyView extends React.Component {
       return [targetNodeLinkDetails, tgtNode, srcNode];
     }
   }
+
   handleSwitch = () => {
     this.setState({ isSwapToggle: !this.state.isSwapToggle });
   };
+
   getTunnelWithBothReportingNodes(selectedTunnel) {
     var LocalEndpointInternal;
     var [sourceNodeLinkDetails, srcNode, tgtNode] =
@@ -560,6 +567,7 @@ class TopologyView extends React.Component {
     );
     return linkContent;
   }
+
   getTunnelWithNoReportingNodes() {
     var linkContentNR = (
       <CollapsibleButton
@@ -575,6 +583,7 @@ class TopologyView extends React.Component {
     );
     return linkContentNR;
   }
+
   renderTunnelDetails = () => {
     var selectedTunnelNodesDetails = [];
     var selectedEle = JSON.parse(this.props.selectedCyElementData);
@@ -604,6 +613,7 @@ class TopologyView extends React.Component {
       return this.getTunnelWithNoReportingNodes();
     }
   };
+
   renderSidebarDetails() {
     try {
       if (this.props.selectedElementType === elementTypes.eleNode)
@@ -617,27 +627,24 @@ class TopologyView extends React.Component {
   }
 
   renderTopologyContent() {
-    // if (this.cy) {
-    //   console.log("renderTopologyContent cy zoom val before", this.cy.zoom());
-    //   this.cy.zoom(this.props.zoomValue);
-    //   console.log("renderTopologyContent cy zoom val after", this.cy.zoom());
-    // } else console.log("renderTopologyContent no cy yet");
-    // if (this.props.cyElements.length === 0) {
-    //   return <Spinner id="loading" animation="border" variant="info" />;
-    // }
     const topologyContent = (
-      <CytoscapeComponent
+      <Cytoscape
         id="cy"
         cy={(cy) => {
           this.cy = cy;
-          //this.cy.maxZoom(this.props.zoomMax);
-          //this.cy.minZoom(this.props.zoomMin);
-          // console.log("cy zoom val before", this.cy.zoom());
-          // this.cy.zoom(this.props.zoomValue);
-          // console.log("cy zoom val after", this.cy.zoom());
-          //this.cy.center();
-          this.cy.layout({ name: "circle", clockwise: true }).run();
+          this.cy
+            .layout({
+              name: "circle",
+              clockwise: true,
+              animate: true,
+              animationDuration: 400,
+            })
+            .run();
           this.cy.on("click", this.handleCytoClick.bind(this));
+          this.cy.maxZoom(this.props.zoomMax);
+          this.cy.minZoom(this.props.zoomMin);
+          this.cy.zoom(this.props.zoomValue); // has to be set after the other operations or it gets reset
+          //this.cy.center();
         }}
         wheelSensitivity={0.1}
         elements={JSON.parse(JSON.stringify(this.props.cyElements))} //props.cyElements are frozen
@@ -653,15 +660,9 @@ class TopologyView extends React.Component {
     this.props.setZoomValue(this.cy.zoom());
   }
 
-  handleRedrawGraph = () => {
-    this.cy.layout({ name: "circle" }).run();
-    this.cy.zoom(this.props.zoomValue);
+  resetGraph = () => {
     this.cy.center();
-    //setting the redrawGraph back to false after the action so that
-    //it will be again active for next click event in breadcrumb component
-    this.props.setRedrawGraph({
-      redrawGraph: "false",
-    });
+    this.props.setRedrawGraph(false);
   };
 
   buildCyElements = (topologies) => {
@@ -839,46 +840,24 @@ class TopologyView extends React.Component {
 
   componentDidMount() {
     this.props.setCurrentView("TopologyView");
-    this.queryTopology();
     this.autoRefresh = this.props.autoUpdate;
+    if (this.autoRefresh) {
+      this.queryTopology();
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    // console.log(
-    //   "componentDidUpdate: cyzoom min < val < max",
-    //   this.cy.minZoom(),
-    //   this.cy.zoom(),
-    //   this.cy.maxZoom()
-    // );
-    this.cy.zoom(this.props.zoomValue);
-    this.cy.minZoom(this.props.zoomMin);
-    this.cy.maxZoom(this.props.zoomMax);
-    //this.cy.center();
-    // console.log(
-    //   "componentDidUpdate after: cyzoom min < val < max",
-    //   this.cy.minZoom(),
-    //   this.cy.zoom(),
-    //   this.cy.maxZoom()
-    // );
-    // if (this.props.zoomValue !== prevProps.zoomValue) {
-    //   console.log("componentDidUpdate: updating cy zoom val");
-    //   this.cy.zoom(this.props.zoomValue);
-    // }
-    // if (this.props.zoomMin !== prevProps.zoomMin) {
-    //   this.cy.minZoom(this.props.zoomMin);
-    // }
-    // if (this.props.zoomMax !== prevProps.zoomMax) {
-    //   this.cy.maxZoom(this.props.zoomMax);
-    // }
-    if (this.props.redrawGraph !== prevProps.redrawGraph) {
-      //if the current view is topology and redrawGraph flag is false then call handleredrawgraph
-      //else the current view would be overlay view
-      if (
-        this.props.currentView === "TopologyView" &&
-        this.props.redrawGraph !== "false"
-      ) {
-        this.handleRedrawGraph();
-      }
+    if (this.props.zoomValue !== prevProps.zoomValue) {
+      this.cy.zoom(this.props.zoomValue);
+    }
+    if (this.props.zoomMin !== prevProps.zoomMin) {
+      this.cy.minZoom(this.props.zoomMin);
+    }
+    if (this.props.zoomMax !== prevProps.zoomMax) {
+      this.cy.maxZoom(this.props.zoomMax);
+    }
+    if (this.props.currentView === "TopologyView" && this.props.redrawGraph) {
+      this.resetGraph();
     }
     if (this.props.autoUpdate !== prevProps.autoUpdate) {
       this.autoRefresh = this.props.autoUpdate;

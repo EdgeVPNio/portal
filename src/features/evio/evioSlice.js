@@ -13,7 +13,7 @@ const evioSlice = createSlice({
     cyElements: [],
     selectedElementType: elementTypes.eleTypeNone,
     selectedCyElementData: JSON.stringify({}),
-    redrawGraph: "disable", // disable ,false , true
+    redrawGraph: false,
   },
   reducers: {
     setSelectedOverlayId(state, action) {
@@ -33,7 +33,7 @@ const evioSlice = createSlice({
       state.selectedCyElementData = JSON.stringify({});
     },
     setRedrawGraph(state, action) {
-      state.redrawGraph = action.payload.redrawGraph;
+      state.redrawGraph = action.payload;
     },
   },
 });

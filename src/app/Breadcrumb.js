@@ -44,18 +44,9 @@ class Breadcrumb extends React.Component {
     );
   }
 
-  reCenterGraph = () => {
-    if (this.props.currentView === "TopologyView") {
-      if (this.props.redrawGraph !== "true") {
-        this.props.setRedrawGraph({
-          redrawGraph: "true",
-        });
-      }
-    }
-    if (this.props.currentView === "OverlaysView") {
-      this.props.setRedrawGraph({
-        redrawGraph: "disable",
-      });
+  resetGraph = () => {
+    if (this.props.currentView === "TopologyView" && !this.props.redrawGraph) {
+      this.props.setRedrawGraph(true);
     }
   };
 
@@ -76,7 +67,7 @@ class Breadcrumb extends React.Component {
           {Object.keys(eleData).length > 0
             ? this.props.selectedElementType === elementTypes.eleNode
               ? "Node : " + eleData.label
-              : "Tunnel : " + eleData.label.slice(0,7)
+              : "Tunnel : " + eleData.label.slice(0, 7)
             : "None."}
         </div>
       </button>
@@ -89,7 +80,7 @@ class Breadcrumb extends React.Component {
         id="overlayBreadcrumb"
         className="breadcrumbLabel"
         disabled={this.props.currentView !== "OverlaysView" ? false : true}
-        onClick={this.reCenterGraph}
+        onClick={this.resetGraph}
         title="Selecte an Overlay!"
       >
         <div className="breadcrumbLabel">
