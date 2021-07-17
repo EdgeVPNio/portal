@@ -45,8 +45,8 @@ class Breadcrumb extends React.Component {
   }
 
   resetGraph = () => {
-    if (this.props.currentView === "TopologyView" && !this.props.redrawGraph) {
-      this.props.setRedrawGraph(true);
+    if (this.props.currentView === "TopologyView") {
+      this.props.setRedrawGraph(!this.props.redrawGraph);
     }
   };
 

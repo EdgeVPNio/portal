@@ -91,7 +91,7 @@ class TopologyView extends React.Component {
       return "-";
     }
   }
-  
+
   renderTypeahead() {
     return (
       <Typeahead
@@ -660,11 +660,6 @@ class TopologyView extends React.Component {
     this.props.setZoomValue(this.cy.zoom());
   }
 
-  resetGraph = () => {
-    this.cy.center();
-    this.props.setRedrawGraph(false);
-  };
-
   buildCyElements = (topologies) => {
     var elements = [];
     var nodeDetails = {};
@@ -856,8 +851,8 @@ class TopologyView extends React.Component {
     if (this.props.zoomMax !== prevProps.zoomMax) {
       this.cy.maxZoom(this.props.zoomMax);
     }
-    if (this.props.currentView === "TopologyView" && this.props.redrawGraph) {
-      this.resetGraph();
+    if (this.props.redrawGraph !== prevState.redrawGraph) {
+      this.cy.center();
     }
     if (this.props.autoUpdate !== prevProps.autoUpdate) {
       this.autoRefresh = this.props.autoUpdate;
