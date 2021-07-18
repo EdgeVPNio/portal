@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 //import cytoscape from "cytoscape";
 import Cytoscape from "react-cytoscapejs";
 //import CytoscapeComponent from "react-cytoscapejs";
@@ -10,9 +11,9 @@ import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
 import {
-  setSelectedElement,
-  clearSelectedElement,
-  elementTypes,
+  //setSelectedElement,
+  //clearSelectedElement,
+  //elementTypes,
   setRedrawGraph,
 } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
@@ -70,25 +71,172 @@ class TopologyView extends React.Component {
         });
   }
 
+  buildCyElements = (topologies) => {
+    var elements = [];
+    var nodeDetails = {};
+
+    if (topologies.length < 1) return elements;
+    var topology = topologies[0];
+
+    for (var nid in topology.Nodes) {
+      var node = topology.Nodes[nid];
+      var nodeData = {
+        group: "nodes",
+        data: {
+          id: node.NodeId,
+        },
+      };
+      if (node.hasOwnProperty("NodeName"))
+        nodeData["data"]["label"] = node.NodeName;
+      else nodeData["data"]["label"] = node.NodeId.slice(0, 12);
+      if (node.hasOwnProperty("Version"))
+        nodeData["data"]["version"] = node.Version;
+      else nodeData["data"]["version"] = "0.0.0";
+      if (node.hasOwnProperty("GeoCoordinates"))
+        nodeData["data"]["coords"] = node.GeoCoordinates;
+      else nodeData["data"]["coords"] = "0,0";
+      if (node.hasOwnProperty("Edges")) {
+        nodeData["data"]["edges"] = node.Edges;
+        if (node.Edges.length === 0) {
+          nodeData["data"]["state"] = nodeStates.noTunnels;
+          nodeData["data"]["color"] = "#F2BE22";
+        } else {
+          nodeData["data"]["state"] = nodeStates.connected;
+          nodeData["data"]["color"] = "#8AA626";
+        }
+      } else {
+        nodeData["data"]["state"] = nodeStates.notReporting;
+        nodeData["data"]["color"] = "#ADD8E6";
+      }
+      nodeDetails[node.NodeId] = nodeData;
+    }
+    for (var edgeId in topology.Edges) {
+      var edge = topology.Edges[edgeId];
+      if (edge["Descriptor"].length > 2) {
+        console.error(
+          "Too many edge descriptors reported ",
+          JSON.stringify(edge["Descriptor"])
+        );
+      }
+      var edgeData = {
+        group: "edges",
+        data: {},
+      };
+      edgeData["data"]["id"] = edge.EdgeId;
+      edgeData["data"]["descriptor"] = edge["Descriptor"];
+      edgeData["data"]["label"] = edge.EdgeId.slice(0, 12);
+      edgeData["data"]["source"] = edge["Descriptor"][0].Source;
+      edgeData["data"]["target"] = edge["Descriptor"][0].Target;
+      edgeData["data"]["color"] = this.getLinkColor(edge["Descriptor"][0].Type);
+      edgeData["data"]["style"] = this.getLinkStyle(
+        edge["Descriptor"][0].State
+      );
+      if (
+        edge["Descriptor"].length === 2 &&
+        edge["Descriptor"][0].Source > edge["Descriptor"][1].Source
+      ) {
+        edgeData["data"]["source"] = edge["Descriptor"][1].Source;
+        edgeData["data"]["target"] = edge["Descriptor"][1].Target;
+        edgeData["data"]["color"] = this.getLinkColor(
+          edge["Descriptor"][1].Type
+        );
+        edgeData["data"]["style"] = this.getLinkStyle(
+          edge["Descriptor"][1].State
+        );
+      }
+      elements.push(edgeData);
+    }
+    var nodes = Object.keys(nodeDetails).sort();
+    nodes.forEach((nodeId) => elements.push(nodeDetails[nodeId]));
+
+    return elements;
+  };
+
+  getLinkColor(type) {
+    var linkColor;
+    switch (type) {
+      case "CETypeILongDistance":
+        linkColor = "#5E4FA2";
+        break;
+      case "CETypeLongDistance":
+        linkColor = "#5E4FA2";
+        break;
+      case "CETypePredecessor":
+        linkColor = "#01665E";
+        break;
+      case "CETypeSuccessor":
+        linkColor = "#01665E";
+        break;
+      default:
+        break;
+    }
+    return linkColor;
+  }
+
+  getLinkStyle(state) {
+    var linkStyle;
+    switch (state) {
+      case "CEStateInitialized":
+      case "CEStatePreAuth":
+      case "CEStateAuthorized":
+      case "CEStateCreated":
+        linkStyle = "dotted";
+        break;
+      case "CEStateConnected":
+        linkStyle = "solid";
+        break;
+      case "CEStateDisconnected":
+      case "CEStateDeleting":
+        linkStyle = "dashed";
+        break;
+      default:
+        break;
+    }
+    return linkStyle;
+  }
+
+  partitionElements(selectedElement) {
+    var neighborhood;
+    var excluded;
+    if (selectedElement.isNode()) {
+      neighborhood = selectedElement
+        .outgoers()
+        .union(selectedElement.incomers())
+        .union(selectedElement);
+      excluded = this.cy
+        .elements()
+        .difference(
+          selectedElement.outgoers().union(selectedElement.incomers())
+        )
+        .not(selectedElement);
+      let adj = selectedElement.neighborhood();
+      let abscomp = adj.absoluteComplement();
+      // console.log("nei", neighborhood, "adj", adj);
+      // console.log("excluded", excluded, "abscomp", abscomp);
+    } else if (selectedElement.isEdge()) {
+      neighborhood = selectedElement.connectedNodes().union(selectedElement);
+      excluded = this.cy
+        .elements()
+        .difference(selectedElement.connectedNodes())
+        .not(selectedElement);
+    }
+    return { neighborhood, excluded };
+  }
+
   async queryGeoCoordinates(coordinates) {
     coordinates = coordinates.split(",");
+    if (coordinates.length < 2) return "Unknown";
     try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates[0]},${coordinates[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`;
-      const res = await fetch(url);
-      console.log("res.ok", res.ok);
-      var data = await res.json();
-      console.log("data", data);
-      console.log("data.results", data.results);
-      console.log("data.results.length", data.results.length);
-      console.log(
-        "data.results[data.results.length - 1].formatted_address",
-        data.results[data.results.length - 1].formatted_address
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates[0]},${coordinates[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`
       );
+      var data = await res.json();
       var nodeLocation =
         data.results[data.results.length - 1].formatted_address;
+      console.log("formatted_address", nodeLocation);
       return nodeLocation.slice(7, nodeLocation.length);
     } catch (err) {
-      return "-";
+      return "Unknown";
     }
   }
 
@@ -99,7 +247,7 @@ class TopologyView extends React.Component {
         onChange={(selected) => {
           if (selected.length > 0) {
             let selectedEle = this.cy
-              .elements()
+              //.elements()
               .getElementById(selected[0].data.id);
             this.cy.elements().unselect();
             selectedEle.select();
@@ -152,55 +300,36 @@ class TopologyView extends React.Component {
     );
     return nodeContent;
   }
-  getConnectedLinkDetails(source, tgt, connectedEdges) {
-    for (var edge of connectedEdges) {
-      if (
-        (source.data().id === edge._private.data.source &&
-          tgt.id === edge._private.data.target) ||
-        (source.data().id === edge._private.data.target &&
-          tgt.id === edge._private.data.source)
-      ) {
-        for (var descriptorItem of edge._private.data.descriptor) {
-          if (
-            source.data().id === descriptorItem.Source &&
-            tgt.id === descriptorItem.Target
-          ) {
-            return [descriptorItem, edge._private.data.id];
-          }
-        }
-      }
-    }
-  }
 
-  getConnectedNodeDetails(sourceNode, connectedNodes, connectedEdges) {
+  getConnectedNodeDetails(cyNode, connectedNodes, connectedEdges) {
     var sidebarNodeslist = [];
     for (var el of connectedNodes) {
-      if (sourceNode.data() !== el._private.data) {
-        sidebarNodeslist.push(el._private.data);
+      if (cyNode.data() !== el.data()) {
+        sidebarNodeslist.push(el.data());
       }
     }
     var nodeContent = (
       <CollapsibleButton
-        id={sourceNode.data().label + "Btn"}
+        id={cyNode.data().label + "Btn"}
         className="detailsNodeBtn"
-        key={sourceNode.data().label + "Btn"}
-        name={sourceNode.data().label}
+        key={cyNode.data().label + "Btn"}
+        name={cyNode.data().label}
       >
         <div>
-          <h5>{sourceNode.data().label}</h5>
+          <h5>{cyNode.data().label}</h5>
           <div id="DetailsLabel">Node ID</div>
-          <label id="valueLabel">{sourceNode.data().id}</label>
+          <label id="valueLabel">{cyNode.data().id}</label>
           <div className="DetailsLabel">State</div>
-          <label id="valueLabel">{sourceNode.data().state}</label>
+          <label id="valueLabel">{cyNode.data().state}</label>
           <div className="DetailsLabel">Location</div>
-          <label id="valueLabel">{"Unknown"}</label>
+          <label id="valueLabel">{cyNode.data().location}</label>
           <hr style={{ backgroundColor: "#486186" }} />
           <div id="connectedNode" style={{ overflow: "auto" }}>
             {sidebarNodeslist.map((connectedNode) => {
               try {
                 let [connectedlinkDetail, tunnelId] =
                   this.getConnectedLinkDetails(
-                    sourceNode,
+                    cyNode,
                     connectedNode,
                     connectedEdges
                   );
@@ -239,7 +368,7 @@ class TopologyView extends React.Component {
 
                 return connectedNodeBtn;
               } catch (e) {
-                //console.log(e)
+                console.log(e);
                 return false;
               }
             })}
@@ -250,24 +379,24 @@ class TopologyView extends React.Component {
     return nodeContent;
   }
 
-  getNotConnectedNodeDetails(notConnectedNode) {
+  getNotConnectedNodeDetails(cyNode) {
     var nodeContent = (
       //No tunnels node
       <CollapsibleButton
-        id={notConnectedNode.data().id + "Btn"}
+        id={cyNode.data().id + "Btn"}
         className="detailsNodeBtn"
-        key={notConnectedNode.data().id + "Btn"}
-        name={notConnectedNode.data().label}
+        key={cyNode.data().id + "Btn"}
+        name={cyNode.data().label}
         isOpen
       >
         <div>
-          <h5>{notConnectedNode.data().label}</h5>
+          <h5>{cyNode.data().label}</h5>
           <div className="DetailsLabel">Node ID</div>
-          <label id="valueLabel">{notConnectedNode.data().id}</label>
+          <label id="valueLabel">{cyNode.data().id}</label>
           <div className="DetailsLabel">State</div>
-          <label id="valueLabel">{notConnectedNode.data().state}</label>
+          <label id="valueLabel">{cyNode.data().state}</label>
           <div className="DetailsLabel">Location</div>
-          <label id="valueLabel">{"Unknown"}</label>
+          <label id="valueLabel">{cyNode.data().location}</label>
           <hr style={{ backgroundColor: "#486186" }} />
         </div>
       </CollapsibleButton>
@@ -275,52 +404,72 @@ class TopologyView extends React.Component {
     return nodeContent;
   }
 
-  renderNodeDetails = () => {
-    var selectedEle = JSON.parse(this.props.selectedCyElementData);
-    var selectedNode = this.cy.getElementById(selectedEle.id);
-    var partitionElements = this.partitionElements(selectedNode);
+  renderNodeDetails = (cyNode, adj) => {
+    var connectedNodes = adj.nodes();
+    var connectedEdges = adj.edges();
     var nodeDetails = null;
-    var connectedNodes = partitionElements.neighborhood.filter((ele) =>
-      ele.isNode()
-    );
-    var connectedEdges = partitionElements.neighborhood.filter((ele) =>
-      ele.isEdge()
-    );
-    if (selectedEle.state === nodeStates.notReporting) {
-      nodeDetails = this.getNotReportingNodeDetails(selectedNode); //Not reporting nodes
-    } else if (selectedEle.state === nodeStates.connected) {
-      nodeDetails = this.getConnectedNodeDetails(
-        selectedNode,
-        connectedNodes,
-        connectedEdges
-      ); //Connected nodes
-    } else if (selectedEle.state === nodeStates.noTunnels) {
-      nodeDetails = this.getNotConnectedNodeDetails(selectedNode); //Not connected node
-    }
-    return (
-      <div>
-        <div> Node Details </div>
-        <div> {nodeDetails} </div>
-      </div>
-    );
+    this.queryGeoCoordinates(cyNode.data("coords"))
+      .then((loc) => {
+        cyNode.data("location", loc);
+        if (cyNode.data("state") === nodeStates.notReporting) {
+          nodeDetails = this.getNotReportingNodeDetails(cyNode);
+        } else if (cyNode.data("state") === nodeStates.connected) {
+          nodeDetails = this.getConnectedNodeDetails(
+            cyNode,
+            connectedNodes,
+            connectedEdges
+          );
+        } else if (cyNode.data("state") === nodeStates.noTunnels) {
+          nodeDetails = this.getNotConnectedNodeDetails(cyNode);
+        }
+        ReactDOM.render(
+          <div>
+            <div> Node Details </div>
+            <div> {nodeDetails} </div>
+          </div>,
+          document.getElementById("sideBarContent")
+        );
+      })
+      .catch((err) => {
+        console.warn(err);
+      });
   };
 
-  getSourceAndTargetDetails(selectedTunnel) {
+  getConnectedLinkDetails(source, tgt, connectedEdges) {
+    for (var edge of connectedEdges) {
+      if (
+        (source.data().id === edge.data("source") &&
+          tgt.id === edge.data("target")) ||
+        (source.data().id === edge.data.target &&
+          tgt.id === edge.data("source"))
+      ) {
+        for (var descriptorItem of edge.data("descriptor")) {
+          if (
+            source.data().id === descriptorItem.Source &&
+            tgt.id === descriptorItem.Target
+          ) {
+            return [descriptorItem, edge.data("id")];
+          }
+        }
+      }
+    }
+  }
+
+  getSourceAndTargetDetails(cyEdge) {
     var sourceNodeLinkDetails;
     var targetNodeLinkDetails;
     var srcNode;
     var tgtNode;
+    var selectedTunnel = cyEdge.data();
     for (var descriptor of selectedTunnel.descriptor) {
       if (
         descriptor.Source === selectedTunnel.source &&
         descriptor.Target === selectedTunnel.target
       ) {
         sourceNodeLinkDetails = descriptor;
-        srcNode = this.cy.getElementById(sourceNodeLinkDetails.Source)._private
-          .data;
+        srcNode = this.cy.getElementById(sourceNodeLinkDetails.Source).data();
         if (selectedTunnel.descriptor.length === 1) {
-          tgtNode = this.cy.getElementById(sourceNodeLinkDetails.Target)
-            ._private.data;
+          tgtNode = this.cy.getElementById(sourceNodeLinkDetails.Target).data();
         }
       } else if (
         descriptor.Target === selectedTunnel.source &&
@@ -340,10 +489,6 @@ class TopologyView extends React.Component {
       return [targetNodeLinkDetails, tgtNode, srcNode];
     }
   }
-
-  handleSwitch = () => {
-    this.setState({ isSwapToggle: !this.state.isSwapToggle });
-  };
 
   getTunnelWithBothReportingNodes(selectedTunnel) {
     var LocalEndpointInternal;
@@ -584,252 +729,75 @@ class TopologyView extends React.Component {
     return linkContentNR;
   }
 
-  renderTunnelDetails = () => {
+  renderTunnelDetails = (cyEdge) => {
+    var tunnelDetails;
     var selectedTunnelNodesDetails = [];
-    var selectedEle = JSON.parse(this.props.selectedCyElementData);
-    var selectedTunnel = this.cy.getElementById(selectedEle.id);
-    var partitionElements = this.partitionElements(selectedTunnel);
-    for (var node of partitionElements.neighborhood) {
-      if (node._private.group === "nodes") {
-        selectedTunnelNodesDetails.push(node._private.data);
+    try {
+      var partitionElements = this.partitionElements(cyEdge);
+      for (var node of partitionElements.neighborhood) {
+        if (node._private.group === "nodes") {
+          selectedTunnelNodesDetails.push(node.data());
+        }
       }
-    }
-    if (
-      selectedTunnelNodesDetails[0].state === nodeStates.connected &&
-      selectedTunnelNodesDetails[1].state === nodeStates.connected
-    ) {
-      return this.getTunnelWithBothReportingNodes(selectedEle);
-    } else if (
-      (selectedTunnelNodesDetails[0].state === nodeStates.connected &&
-        selectedTunnelNodesDetails[1].state === nodeStates.notReporting) ||
-      (selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
-        selectedTunnelNodesDetails[1].state === nodeStates.connected)
-    ) {
-      return this.getTunnelWithEitherOneReportingNodes(selectedEle);
-    } else if (
-      selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
-      selectedTunnelNodesDetails[1].state === nodeStates.notReporting
-    ) {
-      return this.getTunnelWithNoReportingNodes();
+      if (
+        selectedTunnelNodesDetails[0].state === nodeStates.connected &&
+        selectedTunnelNodesDetails[1].state === nodeStates.connected
+      ) {
+        tunnelDetails = this.getTunnelWithBothReportingNodes(cyEdge);
+      } else if (
+        (selectedTunnelNodesDetails[0].state === nodeStates.connected &&
+          selectedTunnelNodesDetails[1].state === nodeStates.notReporting) ||
+        (selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
+          selectedTunnelNodesDetails[1].state === nodeStates.connected)
+      ) {
+        tunnelDetails = this.getTunnelWithEitherOneReportingNodes(cyEdge);
+      } else if (
+        selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
+        selectedTunnelNodesDetails[1].state === nodeStates.notReporting
+      ) {
+        tunnelDetails = this.getTunnelWithNoReportingNodes();
+      }
+      ReactDOM.render(
+        <div>
+          <div> Tunnel Details </div>
+          <div> {tunnelDetails} </div>
+        </div>,
+        document.getElementById("sideBarContent")
+      );
+    } catch (err) {
+      console.warn(err);
     }
   };
 
-  renderSidebarDetails() {
-    try {
-      if (this.props.selectedElementType === elementTypes.eleNode)
-        return this.renderNodeDetails();
-      else if (this.props.selectedElementType === elementTypes.eleTunnel)
-        return this.renderTunnelDetails();
-      return <null />;
-    } catch (e) {
-      return <null />; //when selected tunnel broken on refresh then returns null
-    }
-  }
-
-  renderTopologyContent() {
-    const topologyContent = (
-      <Cytoscape
-        id="cy"
-        cy={(cy) => {
-          this.cy = cy;
-          this.cy
-            .layout({
-              name: "circle",
-              clockwise: true,
-              animate: true,
-              animationDuration: 400,
-            })
-            .run();
-          this.cy.on("click", this.handleCytoClick.bind(this));
-          this.cy.maxZoom(this.props.zoomMax);
-          this.cy.minZoom(this.props.zoomMin);
-          this.cy.zoom(this.props.zoomValue); // has to be set after the other operations or it gets reset
-          //this.cy.center();
-        }}
-        wheelSensitivity={0.1}
-        elements={JSON.parse(JSON.stringify(this.props.cyElements))} //props.cyElements are frozen
-        stylesheet={cytoscapeStyle}
-        style={{ width: window.innerWidth, height: window.innerHeight }}
-      />
-    );
-
-    return topologyContent;
-  }
+  handleSwitch = () => {
+    this.setState({ isSwapToggle: !this.state.isSwapToggle });
+  };
 
   handleWheel(e) {
     this.props.setZoomValue(this.cy.zoom());
   }
 
-  buildCyElements = (topologies) => {
-    var elements = [];
-    var nodeDetails = {};
-
-    if (topologies.length < 1) return elements;
-    var topology = topologies[0];
-
-    for (var nid in topology.Nodes) {
-      var node = topology.Nodes[nid];
-      var nodeData = {
-        group: "nodes",
-        data: {
-          id: node.NodeId,
-        },
-      };
-      if (node.hasOwnProperty("NodeName"))
-        nodeData["data"]["label"] = node.NodeName;
-      else nodeData["data"]["label"] = node.NodeId.slice(0, 12);
-      if (node.hasOwnProperty("Version"))
-        nodeData["data"]["version"] = node.Version;
-      if (node.hasOwnProperty("GeoCoordinates"))
-        nodeData["data"]["coords"] = node.GeoCoordinates;
-      if (node.hasOwnProperty("Edges")) {
-        nodeData["data"]["edges"] = node.Edges;
-        if (node.Edges.length === 0) {
-          nodeData["data"]["state"] = nodeStates.noTunnels;
-          nodeData["data"]["color"] = "#F2BE22";
-        } else {
-          nodeData["data"]["state"] = nodeStates.connected;
-          nodeData["data"]["color"] = "#8AA626";
-        }
-      } else {
-        nodeData["data"]["state"] = nodeStates.notReporting;
-        nodeData["data"]["color"] = "#ADD8E6";
-      }
-      nodeDetails[node.NodeId] = nodeData;
-    }
-    for (var edgeId in topology.Edges) {
-      var edge = topology.Edges[edgeId];
-      if (edge["Descriptor"].length > 2) {
-        console.error(
-          "Too many edge descriptors reported ",
-          JSON.stringify(edge["Descriptor"])
-        );
-      }
-      var edgeData = {
-        group: "edges",
-        data: {},
-      };
-      edgeData["data"]["id"] = edge.EdgeId;
-      edgeData["data"]["descriptor"] = edge["Descriptor"];
-      edgeData["data"]["label"] = edge.EdgeId.slice(0, 12);
-      edgeData["data"]["source"] = edge["Descriptor"][0].Source;
-      edgeData["data"]["target"] = edge["Descriptor"][0].Target;
-      edgeData["data"]["color"] = this.getLinkColor(edge["Descriptor"][0].Type);
-      edgeData["data"]["style"] = this.getLinkStyle(
-        edge["Descriptor"][0].State
-      );
-      if (
-        edge["Descriptor"].length === 2 &&
-        edge["Descriptor"][0].Source > edge["Descriptor"][1].Source
-      ) {
-        edgeData["data"]["source"] = edge["Descriptor"][1].Source;
-        edgeData["data"]["target"] = edge["Descriptor"][1].Target;
-        edgeData["data"]["color"] = this.getLinkColor(
-          edge["Descriptor"][1].Type
-        );
-        edgeData["data"]["style"] = this.getLinkStyle(
-          edge["Descriptor"][1].State
-        );
-      }
-      elements.push(edgeData);
-    }
-    var nodes = Object.keys(nodeDetails).sort();
-    nodes.forEach((nodeId) => elements.push(nodeDetails[nodeId]));
-
-    return elements;
-  };
-
-  getLinkColor(type) {
-    var linkColor;
-    switch (type) {
-      case "CETypeILongDistance":
-        linkColor = "#5E4FA2";
-        break;
-      case "CETypeLongDistance":
-        linkColor = "#5E4FA2";
-        break;
-      case "CETypePredecessor":
-        linkColor = "#01665E";
-        break;
-      case "CETypeSuccessor":
-        linkColor = "#01665E";
-        break;
-      default:
-        break;
-    }
-    return linkColor;
-  }
-
-  getLinkStyle(state) {
-    var linkStyle;
-    switch (state) {
-      case "CEStateInitialized":
-      case "CEStatePreAuth":
-      case "CEStateAuthorized":
-      case "CEStateCreated":
-        linkStyle = "dotted";
-        break;
-      case "CEStateConnected":
-        linkStyle = "solid";
-        break;
-      case "CEStateDisconnected":
-      case "CEStateDeleting":
-        linkStyle = "dashed";
-        break;
-      default:
-        break;
-    }
-    return linkStyle;
-  }
-
-  partitionElements(selectedElement) {
-    var neighborhood;
-    var excluded;
-    if (selectedElement.isNode()) {
-      this.props.setSelectedElement({
-        selectedElementType: elementTypes.eleNode,
-        selectedCyElementData: selectedElement.data(),
-      });
-      neighborhood = selectedElement
-        .outgoers()
-        .union(selectedElement.incomers())
-        .union(selectedElement);
-      excluded = this.cy
-        .elements()
-        .difference(
-          selectedElement.outgoers().union(selectedElement.incomers())
-        )
-        .not(selectedElement);
-    } else if (selectedElement.isEdge()) {
-      this.props.setSelectedElement({
-        selectedElementType: elementTypes.eleTunnel,
-        selectedCyElementData: selectedElement.data(),
-      });
-      neighborhood = selectedElement.connectedNodes().union(selectedElement);
-      excluded = this.cy
-        .elements()
-        .difference(selectedElement.connectedNodes())
-        .not(selectedElement);
-    }
-    return { neighborhood, excluded };
-  }
-
   handleCytoClick(event) {
-    var selectedElement = event.target[0];
-    var part;
+    var cyEle = event.target[0];
     try {
       if (event.target === this.cy) {
-        this.props.clearSelectedElement();
+        //this.props.clearSelectedElement();
         this.cy.elements().removeClass("transparent");
         this._typeahead.clear();
-      } else {
-        part = this.partitionElements(selectedElement);
-        part.neighborhood.removeClass("transparent");
-        part.excluded.addClass("transparent");
+        return;
+      }
+      var part = this.partitionElements(cyEle);
+      part.neighborhood.removeClass("transparent");
+      part.excluded.addClass("transparent");
+      if (cyEle.isNode()) {
+        this.renderNodeDetails(cyEle, cyEle.neighborhood());
+      } else if (cyEle.isEdge()) {
+        this.renderTunnelDetails(cyEle, part.neighborhood);
       }
     } catch (error) {
-      this.props.clearSelectedElement();
+      //this.props.clearSelectedElement();
       this.cy.elements().removeClass("transparent");
+      console.warn(error);
     }
   }
 
@@ -865,8 +833,38 @@ class TopologyView extends React.Component {
   componentWillUnmount() {
     this.autoRefresh = false;
     clearTimeout(this.timeoutId);
-    this.props.clearSelectedElement();
+    //this.props.clearSelectedElement();
     this.props.setCyElements([]);
+  }
+
+  renderTopologyContent() {
+    const topologyContent = (
+      <Cytoscape
+        id="cy"
+        cy={(cy) => {
+          this.cy = cy;
+          this.cy
+            .layout({
+              name: "circle",
+              clockwise: true,
+              animate: true,
+              animationDuration: 400,
+            })
+            .run();
+          this.cy.on("click", this.handleCytoClick.bind(this));
+          this.cy.maxZoom(this.props.zoomMax);
+          this.cy.minZoom(this.props.zoomMin);
+          this.cy.zoom(this.props.zoomValue); // has to be set after the other operations or it gets reset
+          //this.cy.center();
+        }}
+        wheelSensitivity={0.1}
+        elements={JSON.parse(JSON.stringify(this.props.cyElements))} //props.cyElements are frozen
+        stylesheet={cytoscapeStyle}
+        style={{ width: window.innerWidth, height: window.innerHeight }}
+      />
+    );
+
+    return topologyContent;
   }
 
   render() {
@@ -879,13 +877,7 @@ class TopologyView extends React.Component {
           <div id="cyArea">{this.renderTopologyContent()}</div>
         </section>
         <div id="SidePanel">
-          <SideBar
-            typeahead={this.renderTypeahead()}
-            sidebarDetails={this.renderSidebarDetails()}
-          />
-          {/* <div id="bottomTools">
-              <Toolbar />
-            </div> */}
+          <SideBar typeahead={this.renderTypeahead()} />
         </div>
       </>
     );
@@ -894,8 +886,8 @@ class TopologyView extends React.Component {
 
 const mapStateToProps = (state) => ({
   currentOverlayId: state.evio.selectedOverlayId,
-  selectedElementType: state.evio.selectedElementType,
-  selectedCyElementData: state.evio.selectedCyElementData,
+  //selectedElementType: state.evio.selectedElementType,
+  //selectedCyElementData: state.evio.selectedCyElementData,
   cyElements: state.evio.cyElements,
   currentView: state.view.current,
   selectedView: state.view.selected,
@@ -910,8 +902,8 @@ const mapDispatchToProps = {
   setCurrentView,
   setZoomValue,
   setCyElements,
-  setSelectedElement,
-  clearSelectedElement,
+  //setSelectedElement,
+  //clearSelectedElement,
   setRedrawGraph,
 };
 

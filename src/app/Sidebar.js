@@ -54,8 +54,8 @@ class Sidebar extends React.Component {
         <div id="searchBar" style={{ margin: "20px 0" }}>
           {this.renderTypeahead()}
         </div>
-        <div id="sidebarDetails" style={{ padding: "8px" }}>
-          {this.renderDetails()}
+        <div id="sideBarContent" style={{ padding: "8px" }}>
+          {this.props.sidebarDetails}
         </div>
       </Slidebar>
     );
