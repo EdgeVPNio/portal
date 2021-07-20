@@ -181,6 +181,23 @@ h5 {
   background-size: contain;
 }
 
+.collapse-header {
+  cursor: pointer;
+  padding: 10px;
+  color: white;
+  background: #405b80;
+  border-radius: 5px;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.collapse-content {
+  padding: 8px;
+  color: white;
+  background: transparent;
+  border-radius: 5px;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
 .overlayBtn,
 .connectedNodeBtn,
 .detailsNodeBtn,
