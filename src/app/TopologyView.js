@@ -1,19 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom";
-//import cytoscape from "cytoscape";
 import Cytoscape from "react-cytoscapejs";
-//import CytoscapeComponent from "react-cytoscapejs";
-import CollapsibleButton from "./CollapsibleButton";
+import CollapseButton from "./CustomCollapsibleButton";
 import cytoscapeStyle from "./cytoscapeStyle.js";
 import { Typeahead } from "react-bootstrap-typeahead";
-//import { Spinner } from "react-bootstrap";
 import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
 import {
-  //setSelectedElement,
-  //clearSelectedElement,
-  //elementTypes,
   setRedrawGraph,
 } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
@@ -28,9 +22,7 @@ const nodeStates = {
 class TopologyView extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      isSwapToggle: false,
-    };
+    this.isSwapToggle = false;
     this.intervalId = null;
     this.timeoutId = null;
     this.autoRefresh = this.props.autoUpdate;
@@ -211,8 +203,6 @@ class TopologyView extends React.Component {
         .not(selectedElement);
       let adj = selectedElement.neighborhood();
       let abscomp = adj.absoluteComplement();
-      // console.log("nei", neighborhood, "adj", adj);
-      // console.log("excluded", excluded, "abscomp", abscomp);
     } else if (selectedElement.isEdge()) {
       neighborhood = selectedElement.connectedNodes().union(selectedElement);
       excluded = this.cy
@@ -233,7 +223,6 @@ class TopologyView extends React.Component {
       var data = await res.json();
       var nodeLocation =
         data.results[data.results.length - 1].formatted_address;
-      console.log("formatted_address", nodeLocation);
       return nodeLocation.slice(7, nodeLocation.length);
     } catch (err) {
       return "Unknown";
@@ -277,26 +266,20 @@ class TopologyView extends React.Component {
     );
   }
 
-  getNotReportingNodeDetails(notReportingNode) {
+  getNotReportingNodeDetails(cyNode) {
     var nodeContent = (
-      <CollapsibleButton
-        id={notReportingNode.data().id + "Btn"}
-        className="detailsNodeBtn"
-        key={notReportingNode.data().id + "Btn"}
-        name={notReportingNode.data().label}
-        isOpen
-      >
+      <CollapseButton title={cyNode.data().label}>
         <div>
-          <h5>{notReportingNode.data().label}</h5>
+          <h5>{cyNode.data().label}</h5>
           <div className="DetailsLabel">Node ID</div>
-          <label id="valueLabel">{notReportingNode.data().id}</label>
+          <label id="valueLabel">{cyNode.data().id}</label>
           <div className="DetailsLabel">State</div>
-          <label id="valueLabel">{notReportingNode.data().state}</label>
+          <label id="valueLabel">{cyNode.data().state}</label>
           <div className="DetailsLabel">Location</div>
-          <label id="valueLabel">{"Unknown"}</label>
+          <label id="valueLabel">{cyNode.data().location}</label>
           <hr style={{ backgroundColor: "#486186" }} />
         </div>
-      </CollapsibleButton>
+      </CollapseButton>
     );
     return nodeContent;
   }
@@ -309,72 +292,63 @@ class TopologyView extends React.Component {
       }
     }
     var nodeContent = (
-      <CollapsibleButton
-        id={cyNode.data().label + "Btn"}
-        className="detailsNodeBtn"
-        key={cyNode.data().label + "Btn"}
-        name={cyNode.data().label}
-      >
-        <div>
-          <h5>{cyNode.data().label}</h5>
-          <div id="DetailsLabel">Node ID</div>
-          <label id="valueLabel">{cyNode.data().id}</label>
-          <div className="DetailsLabel">State</div>
-          <label id="valueLabel">{cyNode.data().state}</label>
-          <div className="DetailsLabel">Location</div>
-          <label id="valueLabel">{cyNode.data().location}</label>
-          <hr style={{ backgroundColor: "#486186" }} />
-          <div id="connectedNode" style={{ overflow: "auto" }}>
-            {sidebarNodeslist.map((connectedNode) => {
-              try {
-                let [connectedlinkDetail, tunnelId] =
-                  this.getConnectedLinkDetails(
-                    cyNode,
-                    connectedNode,
-                    connectedEdges
-                  );
-                var connectedNodeBtn = (
-                  <CollapsibleButton
-                    id={connectedNode.label + "Btn"}
-                    className="connectedNodeBtn"
-                    key={connectedNode.label + "Btn"}
-                    eventKey={connectedNode.label}
-                    name={connectedNode.label}
-                  >
-                    <div className="DetailsLabel">Node ID</div>
-                    <label id="valueLabel">{connectedNode.id}</label>
-                    <div className="DetailsLabel">Tunnel ID</div>
-                    <label id="valueLabel">{tunnelId}</label>
-                    <div className="DetailsLabel">Interface Name</div>
-                    <label id="valueLabel">{connectedlinkDetail.TapName}</label>
-                    <div className="DetailsLabel">MAC</div>
-                    <label id="valueLabel">{connectedlinkDetail.MAC}</label>
-                    <div className="DetailsLabel">State</div>
-                    <label id="valueLabel">
-                      {connectedlinkDetail.State.slice(
-                        7,
-                        connectedlinkDetail.State.length
-                      )}
-                    </label>
-                    <div className="DetailsLabel">Tunnel Type</div>
-                    <label id="valueLabel">
-                      {connectedlinkDetail.Type.slice(
-                        6,
-                        connectedlinkDetail.Type.length
-                      )}
-                    </label>
-                  </CollapsibleButton>
-                );
-
-                return connectedNodeBtn;
-              } catch (e) {
-                console.log(e);
-                return false;
-              }
-            })}
+      <CollapseButton
+        title={cyNode.data().label}
+        expanded={true}
+        description={
+          <div>
+            <div id="DetailsLabel">Node ID</div>
+            <label id="valueLabel">{cyNode.data().id}</label>
+            <div className="DetailsLabel">State</div>
+            <label id="valueLabel">{cyNode.data().state}</label>
+            <div className="DetailsLabel">Location</div>
+            <label id="valueLabel">{cyNode.data().location}</label>
+            <hr style={{ backgroundColor: "#486186" }} />
+            <div id="connectedNode" style={{ overflow: "auto" }}></div>
           </div>
-        </div>
-      </CollapsibleButton>
+        }
+      >
+        {sidebarNodeslist.map((connectedNode) => {
+          try {
+            var [connectedlinkDetail, tunnelId] = this.getConnectedLinkDetails(
+              cyNode,
+              connectedNode,
+              connectedEdges
+            );
+            var connectedNodeBtn = (
+              <CollapseButton title={connectedNode.label}>
+                <div className="DetailsLabel">Node ID</div>
+                <label id="valueLabel">{connectedNode.id}</label>
+                <div className="DetailsLabel">Tunnel ID</div>
+                <label id="valueLabel">{tunnelId}</label>
+                <div className="DetailsLabel">Interface Name</div>
+                <label id="valueLabel">{connectedlinkDetail.TapName}</label>
+                <div className="DetailsLabel">MAC</div>
+                <label id="valueLabel">{connectedlinkDetail.MAC}</label>
+                <div className="DetailsLabel">State</div>
+                <label id="valueLabel">
+                  {connectedlinkDetail.State.slice(
+                    7,
+                    connectedlinkDetail.State.length
+                  )}
+                </label>
+                <div className="DetailsLabel">Tunnel Type</div>
+                <label id="valueLabel">
+                  {connectedlinkDetail.Type.slice(
+                    6,
+                    connectedlinkDetail.Type.length
+                  )}
+                </label>
+              </CollapseButton>
+            );
+            return connectedNodeBtn;
+          } catch (e) {
+            console.log(e);
+            return false;
+          }
+        })}
+        <br />
+      </CollapseButton>
     );
     return nodeContent;
   }
@@ -382,13 +356,7 @@ class TopologyView extends React.Component {
   getNotConnectedNodeDetails(cyNode) {
     var nodeContent = (
       //No tunnels node
-      <CollapsibleButton
-        id={cyNode.data().id + "Btn"}
-        className="detailsNodeBtn"
-        key={cyNode.data().id + "Btn"}
-        name={cyNode.data().label}
-        isOpen
-      >
+      <CollapseButton title={cyNode.data().label} expanded={true}>
         <div>
           <h5>{cyNode.data().label}</h5>
           <div className="DetailsLabel">Node ID</div>
@@ -399,7 +367,7 @@ class TopologyView extends React.Component {
           <label id="valueLabel">{cyNode.data().location}</label>
           <hr style={{ backgroundColor: "#486186" }} />
         </div>
-      </CollapsibleButton>
+      </CollapseButton>
     );
     return nodeContent;
   }
@@ -408,6 +376,27 @@ class TopologyView extends React.Component {
     var connectedNodes = adj.nodes();
     var connectedEdges = adj.edges();
     var nodeDetails = null;
+    if(cyNode.data().hasOwnProperty("location")){
+      if (cyNode.data("state") === nodeStates.notReporting) {
+        nodeDetails = this.getNotReportingNodeDetails(cyNode);
+      } else if (cyNode.data("state") === nodeStates.connected) {
+        nodeDetails = this.getConnectedNodeDetails(
+          cyNode,
+          connectedNodes,
+          connectedEdges
+        );
+      } else if (cyNode.data("state") === nodeStates.noTunnels) {
+        nodeDetails = this.getNotConnectedNodeDetails(cyNode);
+      }
+      ReactDOM.render(
+        <div>
+          <div> Node Details </div>
+          <div> {nodeDetails} </div>
+        </div>,
+        document.getElementById("sideBarContent")
+      );
+    }
+    else{
     this.queryGeoCoordinates(cyNode.data("coords"))
       .then((loc) => {
         cyNode.data("location", loc);
@@ -433,22 +422,23 @@ class TopologyView extends React.Component {
       .catch((err) => {
         console.warn(err);
       });
+    }
   };
 
   getConnectedLinkDetails(source, tgt, connectedEdges) {
     for (var edge of connectedEdges) {
       if (
-        (source.data().id === edge.data("source") &&
-          tgt.id === edge.data("target")) ||
-        (source.data().id === edge.data.target &&
-          tgt.id === edge.data("source"))
+        (source.data().id === edge._private.data.source &&
+          tgt.id === edge._private.data.target) ||
+        (source.data().id === edge._private.data.target &&
+          tgt.id === edge._private.data.source)
       ) {
-        for (var descriptorItem of edge.data("descriptor")) {
+        for (var descriptorItem of edge._private.data.descriptor) {
           if (
             source.data().id === descriptorItem.Source &&
             tgt.id === descriptorItem.Target
           ) {
-            return [descriptorItem, edge.data("id")];
+            return [descriptorItem, edge._private.data.id];
           }
         }
       }
@@ -480,7 +470,7 @@ class TopologyView extends React.Component {
           .data;
       }
     }
-    if (this.state.isSwapToggle === false) {
+    if (this.isSwapToggle === false) {
       return [sourceNodeLinkDetails, srcNode, tgtNode];
     } else {
       //if swapbutton toggled then swap source and node details
@@ -490,7 +480,7 @@ class TopologyView extends React.Component {
     }
   }
 
-  getTunnelWithBothReportingNodes(selectedTunnel) {
+  getTunnelWithBothReportingNodes(selectedTunnel, adj) {
     var LocalEndpointInternal;
     var [sourceNodeLinkDetails, srcNode, tgtNode] =
       this.getSourceAndTargetDetails(selectedTunnel);
@@ -501,69 +491,42 @@ class TopologyView extends React.Component {
     }
 
     var linkContent = (
-      <CollapsibleButton
-        id={sourceNodeLinkDetails.TapName + "Btn"}
-        className="detailsLinkBtn"
-        key={selectedTunnel.id + "Btn"}
-        name={sourceNodeLinkDetails.TapName}
-        isOpen={true}
-      >
+      <CollapseButton title={sourceNodeLinkDetails.TapName} expanded={true}>
         <div>
-          <h5>{sourceNodeLinkDetails.TapName}</h5>
           <div className="row">
             <div className="col-10" style={{ paddingRight: "0" }}>
-              <CollapsibleButton
-                id={srcNode.label + "Btn"}
-                className="sourceNodeBtn"
-                key={srcNode.label + "Btn"}
-                eventKey={srcNode.label + "Btn"}
-                name={srcNode.label}
-                style={{
-                  marginBottom: "2.5%",
-                  backgroundColor: "#8aa626",
-                  border: `solid #8aa626`,
-                }}
+              <CollapseButton
+                title={srcNode.label}
               >
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{srcNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
                 <label id="valueLabel">{srcNode.state}</label>
                 <div className="DetailsLabel">Location</div>
-                {/* <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label> */}
-                <label id="valueLabel">{"Unknown"}</label>
-              </CollapsibleButton>
+                <label id="valueLabel">{srcNode.location}</label>
+              </CollapseButton>
 
-              <CollapsibleButton
-                id={tgtNode.label + "Btn"}
-                className="targetNodeBtn"
-                key={tgtNode.label + "Btn"}
-                eventKey={tgtNode.label + "Btn"}
-                name={tgtNode.label}
-                style={{
-                  marginBottom: "2.5%",
-                  backgroundColor: "#8aa626",
-                  border: `solid #8aa626`,
-                }}
+              <CollapseButton
+                title={tgtNode.label}
               >
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{tgtNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
                 <label id="valueLabel">{tgtNode.state}</label>
                 <div className="DetailsLabel">Location</div>
-                {/* <label id="valueLabel">{targetLocation.slice(7, targetLocation.length)}</label> */}
-                <label id="valueLabel">{"Unknown"}</label>
-              </CollapsibleButton>
+                <label id="valueLabel">{tgtNode.location}</label>
+              </CollapseButton>
             </div>
             <div
               className="col"
               style={{ margin: "auto", padding: "0", textAlign: "center" }}
             >
-              <button onClick={this.handleSwitch} id="switchBtn" />
+              <button onClick={this.handleSwitch.bind(this, selectedTunnel, adj)} id="switchBtn" />
             </div>
           </div>
           <hr style={{ backgroundColor: "#486186" }} />
           <div className="DetailsLabel">Tunnel ID</div>
-          <label id="valueLabel">{selectedTunnel.id}</label>
+          <label id="valueLabel">{selectedTunnel.data().id}</label>
           <div className="DetailsLabel">Interface Name</div>
           <label id="valueLabel">{sourceNodeLinkDetails.TapName}</label>
           <div className="DetailsLabel">MAC</div>
@@ -597,12 +560,12 @@ class TopologyView extends React.Component {
             {sourceNodeLinkDetails.RemoteEndpoint.External}
           </label>
         </div>
-      </CollapsibleButton>
+      </CollapseButton>
     );
     return linkContent;
   }
 
-  getTunnelWithEitherOneReportingNodes(selectedTunnel) {
+  getTunnelWithEitherOneReportingNodes(selectedTunnel, adj) {
     var LocalEndpointInternal;
     var [sourceNodeLinkDetails, srcNode, tgtNode] =
       this.getSourceAndTargetDetails(selectedTunnel);
@@ -612,69 +575,44 @@ class TopologyView extends React.Component {
       LocalEndpointInternal = sourceNodeLinkDetails.LocalEndpoint.Internal;
     }
     var linkContent = (
-      <CollapsibleButton
-        id={sourceNodeLinkDetails.TapName + "Btn"}
-        className="detailsLinkBtn"
-        key={sourceNodeLinkDetails.TapName + "Btn"}
-        name={sourceNodeLinkDetails.TapName}
-        isOpen
+      <CollapseButton 
+      title={sourceNodeLinkDetails.TapName}
+      expanded={true}
       >
         <div>
-          <h5>{sourceNodeLinkDetails.TapName}</h5>
           <div className="row">
             <div className="col-10" style={{ paddingRight: "0" }}>
-              <CollapsibleButton
-                id={srcNode.label + "Btn"}
-                className="sourceNodeBtn"
-                key={srcNode.label + "Btn"}
-                eventKey={srcNode.label + "Btn"}
-                name={srcNode.label}
-                style={{
-                  marginBottom: "2.5%",
-                  backgroundColor: "#8aa626",
-                  border: `solid #8aa626`,
-                }}
+              <CollapseButton
+                title={srcNode.label}
               >
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{srcNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
                 <label id="valueLabel">{srcNode.state}</label>
                 <div className="DetailsLabel">Location</div>
-                {/* <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label> */}
-                <label id="valueLabel">{"Unknown"}</label>
-              </CollapsibleButton>
+                <label id="valueLabel">{srcNode.location}</label>
+              </CollapseButton>
 
-              <CollapsibleButton
-                id={tgtNode.label + "Btn"}
-                className="targetNodeBtn"
-                key={tgtNode.label + "Btn"}
-                eventKey={tgtNode.label + "Btn"}
-                name={tgtNode.label}
-                style={{
-                  marginBottom: "2.5%",
-                  backgroundColor: "#8aa626",
-                  border: `solid #8aa626`,
-                }}
-              >
+              <CollapseButton
+                title={tgtNode.label}              >
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{tgtNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
                 <label id="valueLabel">{tgtNode.state}</label>
                 <div className="DetailsLabel">Location</div>
-                {/* <label id="valueLabel">{sourceLocation.slice(7, sourceLocation.length)}</label> */}
-                <label id="valueLabel">{"Unknown"}</label>
-              </CollapsibleButton>
+                <label id="valueLabel">{tgtNode.location}</label>
+              </CollapseButton>
             </div>
             <div
               className="col"
               style={{ margin: "auto", padding: "0", textAlign: "center" }}
             >
-              <button onClick={this.handleSwitch} id="switchBtn" />
+              <button onClick={this.handleSwitch.bind(this, selectedTunnel, adj)} id="switchBtn" />
             </div>
           </div>
           <hr style={{ backgroundColor: "#486186" }} />
           <div className="DetailsLabel">Tunnel ID</div>
-          <label id="valueLabel">{selectedTunnel.id}</label>
+          <label id="valueLabel">{selectedTunnel.data().id}</label>
           <div className="DetailsLabel">Interface Name</div>
           <label id="valueLabel">{sourceNodeLinkDetails.TapName}</label>
           <div className="DetailsLabel">MAC</div>
@@ -708,33 +646,30 @@ class TopologyView extends React.Component {
             {sourceNodeLinkDetails.RemoteEndpoint.External}
           </label>
         </div>
-      </CollapsibleButton>
+      </CollapseButton>
     );
     return linkContent;
   }
 
   getTunnelWithNoReportingNodes() {
     var linkContentNR = (
-      <CollapsibleButton
-        id={"notReportingBtn"}
-        className="detailsLinkBtn"
-        key={"notReportingBtn"}
-        name={"Details"}
+      <CollapseButton 
+      title={"Details"} 
+      expanded={true}
       >
         <div>
           <label id="valueLabel">{"Data not available"}</label>
         </div>
-      </CollapsibleButton>
+      </CollapseButton>
     );
     return linkContentNR;
   }
 
-  renderTunnelDetails = (cyEdge) => {
+  renderTunnelDetails = (cyEdge, adj) => {
     var tunnelDetails;
     var selectedTunnelNodesDetails = [];
     try {
-      var partitionElements = this.partitionElements(cyEdge);
-      for (var node of partitionElements.neighborhood) {
+      for (var node of adj) {
         if (node._private.group === "nodes") {
           selectedTunnelNodesDetails.push(node.data());
         }
@@ -743,14 +678,14 @@ class TopologyView extends React.Component {
         selectedTunnelNodesDetails[0].state === nodeStates.connected &&
         selectedTunnelNodesDetails[1].state === nodeStates.connected
       ) {
-        tunnelDetails = this.getTunnelWithBothReportingNodes(cyEdge);
+        tunnelDetails = this.getTunnelWithBothReportingNodes(cyEdge, adj);
       } else if (
         (selectedTunnelNodesDetails[0].state === nodeStates.connected &&
           selectedTunnelNodesDetails[1].state === nodeStates.notReporting) ||
         (selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
           selectedTunnelNodesDetails[1].state === nodeStates.connected)
       ) {
-        tunnelDetails = this.getTunnelWithEitherOneReportingNodes(cyEdge);
+        tunnelDetails = this.getTunnelWithEitherOneReportingNodes(cyEdge, adj);
       } else if (
         selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
         selectedTunnelNodesDetails[1].state === nodeStates.notReporting
@@ -769,8 +704,9 @@ class TopologyView extends React.Component {
     }
   };
 
-  handleSwitch = () => {
-    this.setState({ isSwapToggle: !this.state.isSwapToggle });
+  handleSwitch = (selectedTunnel, adj) => {
+    this.isSwapToggle=  !this.isSwapToggle;
+    this.renderTunnelDetails(selectedTunnel, adj);
   };
 
   handleWheel(e) {
@@ -819,7 +755,7 @@ class TopologyView extends React.Component {
     if (this.props.zoomMax !== prevProps.zoomMax) {
       this.cy.maxZoom(this.props.zoomMax);
     }
-    if (this.props.redrawGraph !== prevState.redrawGraph) {
+    if (this.props.redrawGraph !== prevProps.redrawGraph) {
       this.cy.center();
     }
     if (this.props.autoUpdate !== prevProps.autoUpdate) {
@@ -886,8 +822,6 @@ class TopologyView extends React.Component {
 
 const mapStateToProps = (state) => ({
   currentOverlayId: state.evio.selectedOverlayId,
-  //selectedElementType: state.evio.selectedElementType,
-  //selectedCyElementData: state.evio.selectedCyElementData,
   cyElements: state.evio.cyElements,
   currentView: state.view.current,
   selectedView: state.view.selected,
@@ -902,8 +836,6 @@ const mapDispatchToProps = {
   setCurrentView,
   setZoomValue,
   setCyElements,
-  //setSelectedElement,
-  //clearSelectedElement,
   setRedrawGraph,
 };
 
