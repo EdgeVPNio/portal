@@ -3,7 +3,7 @@ import Card from "react-bootstrap/Card";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Accordion from "react-bootstrap/Accordion";
 import Button from "react-bootstrap/Button";
-import DowmArrow from "../images/icons/down-arrow-ic.svg";
+import DownArrow from "../images/icons/down-arrow-ic.svg";
 import UpArrow from "../images/icons/up-arrow-ic.svg";
 import { connect } from "react-redux";
 
@@ -11,7 +11,7 @@ class CollapsibleButton extends React.Component {
   constructor(props) {
     super(props);
     this.isToggle = false;
-    this.accordionStyle = this.props.isOpen ? "block" : "none"
+    this.accordionStyle = this.props.isOpen ? "block" : "none";
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.props.selectedOverlayId !== prevProps.selectedOverlayId) {
@@ -28,7 +28,7 @@ class CollapsibleButton extends React.Component {
   handleOnClick(){
     this.isToggle = !this.isToggle;
     this.accordionStyle = this.isToggle ?  "block" : "none";
-  };
+  }
 
   render() {
     return (
@@ -53,9 +53,9 @@ class CollapsibleButton extends React.Component {
             <div className="col" style={{ textAlign: "right" }}>
               {this.props.isToggle ? (
                 <img className="arrow" src={UpArrow} alt="up-arrow" />
-              ) : (
-                <img className="arrow" src={DowmArrow} alt="down-arrow" />
-              )}
+               ) : (
+                <img className="arrow" src={DownArrow} alt="down-arrow" />
+               )}
             </div>
           </div>
         </Accordion.Toggle>
