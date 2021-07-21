@@ -1,7 +1,6 @@
 import React from "react";
 import DownArrow from "../images/icons/down-arrow-ic.svg";
 import UpArrow from "../images/icons/up-arrow-ic.svg";
-import { connect } from "react-redux";
 
 class CustomCollapsibleButton extends React.Component {
   constructor(props) {

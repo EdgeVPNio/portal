@@ -11,7 +11,7 @@ import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import {
   setSelectedOverlayId,
-  clearSelectedElement,
+  //clearSelectedElement,
 } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 
@@ -188,7 +188,7 @@ class OverlaysView extends React.Component {
     this.props.setCurrentView("OverlaysView");
     this.queryOverlays();
     this.autoRefresh = this.props.autoUpdate;
-    this.props.clearSelectedElement();
+    //this.props.clearSelectedElement();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -234,7 +234,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
   setCurrentView,
   setSelectedOverlayId,
-  clearSelectedElement,
+  //clearSelectedElement,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OverlaysView);

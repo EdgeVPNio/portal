@@ -5,19 +5,12 @@ import {
   setSelectedOverlayId,
   setRedrawGraph,
   elementTypes,
-  clearSelectedElement,
 } from "../features/evio/evioSlice";
 
 class Breadcrumb extends React.Component {
   componentDidMount() {}
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.selectedElementType !== prevProps.selectedElementType) {
-      if (this.props.selectedElementType === elementTypes.eleNone) {
-        this.props.clearSelectedElement();
-      }
-    }
-  }
+  componentDidUpdate(prevProps, prevState) {}
 
   componentWillUnmount() {}
 
@@ -110,7 +103,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
-  clearSelectedElement,
   setRedrawGraph,
   setSelectedView,
   setSelectedOverlayId,

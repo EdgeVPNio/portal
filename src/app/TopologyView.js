@@ -1,17 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import Cytoscape from "react-cytoscapejs";
 import CollapseButton from "./CustomCollapsibleButton";
 import cytoscapeStyle from "./cytoscapeStyle.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import { setCyElements } from "../features/evio/evioSlice";
-import {
-  setRedrawGraph,
-} from "../features/evio/evioSlice";
+import { setRedrawGraph } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 import { setZoomValue } from "../features/tools/toolsSlice";
+import CytoscapeComponent from "react-cytoscapejs";
 
 const nodeStates = {
   connected: "Connected",
@@ -376,7 +374,7 @@ class TopologyView extends React.Component {
     var connectedNodes = adj.nodes();
     var connectedEdges = adj.edges();
     var nodeDetails = null;
-    if(cyNode.data().hasOwnProperty("location")){
+    if (cyNode.data().hasOwnProperty("location")) {
       if (cyNode.data("state") === nodeStates.notReporting) {
         nodeDetails = this.getNotReportingNodeDetails(cyNode);
       } else if (cyNode.data("state") === nodeStates.connected) {
@@ -395,33 +393,32 @@ class TopologyView extends React.Component {
         </div>,
         document.getElementById("sideBarContent")
       );
-    }
-    else{
-    this.queryGeoCoordinates(cyNode.data("coords"))
-      .then((loc) => {
-        cyNode.data("location", loc);
-        if (cyNode.data("state") === nodeStates.notReporting) {
-          nodeDetails = this.getNotReportingNodeDetails(cyNode);
-        } else if (cyNode.data("state") === nodeStates.connected) {
-          nodeDetails = this.getConnectedNodeDetails(
-            cyNode,
-            connectedNodes,
-            connectedEdges
+    } else {
+      this.queryGeoCoordinates(cyNode.data("coords"))
+        .then((loc) => {
+          cyNode.data("location", loc);
+          if (cyNode.data("state") === nodeStates.notReporting) {
+            nodeDetails = this.getNotReportingNodeDetails(cyNode);
+          } else if (cyNode.data("state") === nodeStates.connected) {
+            nodeDetails = this.getConnectedNodeDetails(
+              cyNode,
+              connectedNodes,
+              connectedEdges
+            );
+          } else if (cyNode.data("state") === nodeStates.noTunnels) {
+            nodeDetails = this.getNotConnectedNodeDetails(cyNode);
+          }
+          ReactDOM.render(
+            <div>
+              <div> Node Details </div>
+              <div> {nodeDetails} </div>
+            </div>,
+            document.getElementById("sideBarContent")
           );
-        } else if (cyNode.data("state") === nodeStates.noTunnels) {
-          nodeDetails = this.getNotConnectedNodeDetails(cyNode);
-        }
-        ReactDOM.render(
-          <div>
-            <div> Node Details </div>
-            <div> {nodeDetails} </div>
-          </div>,
-          document.getElementById("sideBarContent")
-        );
-      })
-      .catch((err) => {
-        console.warn(err);
-      });
+        })
+        .catch((err) => {
+          console.warn(err);
+        });
     }
   };
 
@@ -495,9 +492,7 @@ class TopologyView extends React.Component {
         <div>
           <div className="row">
             <div className="col-10" style={{ paddingRight: "0" }}>
-              <CollapseButton
-                title={srcNode.label}
-              >
+              <CollapseButton title={srcNode.label}>
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{srcNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
@@ -506,9 +501,7 @@ class TopologyView extends React.Component {
                 <label id="valueLabel">{srcNode.location}</label>
               </CollapseButton>
 
-              <CollapseButton
-                title={tgtNode.label}
-              >
+              <CollapseButton title={tgtNode.label}>
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{tgtNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
@@ -521,7 +514,10 @@ class TopologyView extends React.Component {
               className="col"
               style={{ margin: "auto", padding: "0", textAlign: "center" }}
             >
-              <button onClick={this.handleSwitch.bind(this, selectedTunnel, adj)} id="switchBtn" />
+              <button
+                onClick={this.handleSwitch.bind(this, selectedTunnel, adj)}
+                id="switchBtn"
+              />
             </div>
           </div>
           <hr style={{ backgroundColor: "#486186" }} />
@@ -575,16 +571,11 @@ class TopologyView extends React.Component {
       LocalEndpointInternal = sourceNodeLinkDetails.LocalEndpoint.Internal;
     }
     var linkContent = (
-      <CollapseButton 
-      title={sourceNodeLinkDetails.TapName}
-      expanded={true}
-      >
+      <CollapseButton title={sourceNodeLinkDetails.TapName} expanded={true}>
         <div>
           <div className="row">
             <div className="col-10" style={{ paddingRight: "0" }}>
-              <CollapseButton
-                title={srcNode.label}
-              >
+              <CollapseButton title={srcNode.label}>
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{srcNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
@@ -593,8 +584,7 @@ class TopologyView extends React.Component {
                 <label id="valueLabel">{srcNode.location}</label>
               </CollapseButton>
 
-              <CollapseButton
-                title={tgtNode.label}              >
+              <CollapseButton title={tgtNode.label}>
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{tgtNode.id.slice(0, 7)}</label>
                 <div className="DetailsLabel">State</div>
@@ -607,7 +597,10 @@ class TopologyView extends React.Component {
               className="col"
               style={{ margin: "auto", padding: "0", textAlign: "center" }}
             >
-              <button onClick={this.handleSwitch.bind(this, selectedTunnel, adj)} id="switchBtn" />
+              <button
+                onClick={this.handleSwitch.bind(this, selectedTunnel, adj)}
+                id="switchBtn"
+              />
             </div>
           </div>
           <hr style={{ backgroundColor: "#486186" }} />
@@ -653,10 +646,7 @@ class TopologyView extends React.Component {
 
   getTunnelWithNoReportingNodes() {
     var linkContentNR = (
-      <CollapseButton 
-      title={"Details"} 
-      expanded={true}
-      >
+      <CollapseButton title={"Details"} expanded={true}>
         <div>
           <label id="valueLabel">{"Data not available"}</label>
         </div>
@@ -705,7 +695,7 @@ class TopologyView extends React.Component {
   };
 
   handleSwitch = (selectedTunnel, adj) => {
-    this.isSwapToggle=  !this.isSwapToggle;
+    this.isSwapToggle = !this.isSwapToggle;
     this.renderTunnelDetails(selectedTunnel, adj);
   };
 
@@ -717,7 +707,6 @@ class TopologyView extends React.Component {
     var cyEle = event.target[0];
     try {
       if (event.target === this.cy) {
-        //this.props.clearSelectedElement();
         this.cy.elements().removeClass("transparent");
         this._typeahead.clear();
         return;
@@ -731,7 +720,6 @@ class TopologyView extends React.Component {
         this.renderTunnelDetails(cyEle, part.neighborhood);
       }
     } catch (error) {
-      //this.props.clearSelectedElement();
       this.cy.elements().removeClass("transparent");
       console.warn(error);
     }
@@ -747,7 +735,7 @@ class TopologyView extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (this.props.zoomValue !== prevProps.zoomValue) {
-      this.cy.zoom(this.props.zoomValue);
+      this.cy.zoom({ level: this.props.zoomValue });
     }
     if (this.props.zoomMin !== prevProps.zoomMin) {
       this.cy.minZoom(this.props.zoomMin);
@@ -769,13 +757,12 @@ class TopologyView extends React.Component {
   componentWillUnmount() {
     this.autoRefresh = false;
     clearTimeout(this.timeoutId);
-    //this.props.clearSelectedElement();
     this.props.setCyElements([]);
   }
 
   renderTopologyContent() {
     const topologyContent = (
-      <Cytoscape
+      <CytoscapeComponent
         id="cy"
         cy={(cy) => {
           this.cy = cy;
@@ -783,15 +770,12 @@ class TopologyView extends React.Component {
             .layout({
               name: "circle",
               clockwise: true,
-              animate: true,
-              animationDuration: 400,
             })
             .run();
           this.cy.on("click", this.handleCytoClick.bind(this));
           this.cy.maxZoom(this.props.zoomMax);
           this.cy.minZoom(this.props.zoomMin);
-          this.cy.zoom(this.props.zoomValue); // has to be set after the other operations or it gets reset
-          //this.cy.center();
+          this.cy.zoom({ level: this.props.zoomValue }); // has to be set after the other operations or it gets reset
         }}
         wheelSensitivity={0.1}
         elements={JSON.parse(JSON.stringify(this.props.cyElements))} //props.cyElements are frozen
