@@ -1,113 +1,151 @@
 /* EdgeVPNio
-* Copyright 2020, University of Florida
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * Copyright 2020, University of Florida
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 /**
  * Class to hold the data transform functionality.
  */
- class DataTransformer {
-    /**
-     * Function to transform the raw data into data required to be stored in the DB.
-     * Refer to the design document for more details on the data format.
-     * 
-     * @param {JSON} data Json raw aggregated data.
-     */
-    transformData(data) {
-        var topologyDict = {};
-        var overlayDict = {}
-        var topologyArray = [];
-        var overlaysArray = []
-        for (var timeStampId in data) {
-            var visData = data[timeStampId]['VizData'];
-            for (var overlayId in visData) {
-                if (topologyDict.hasOwnProperty(overlayId)) {
-                    var overlayData = topologyDict[overlayId]
-                }
-                else {
-                    var overlayData = {
-                        OverlayId: overlayId,
-                        Nodes: {}
-                    }
-                    topologyDict[overlayId] = overlayData;
-                }
-                if (overlayDict.hasOwnProperty(overlayId)) {
-                    var highLevelOverlayData = overlayDict[overlayId]
-                }
-                else {
-                    var highLevelOverlayData = {
-                        OverlayId: overlayId,
-                        Nodes: new Set(),
-                        Edges: new Set()
-                    }
-                }
-                overlayData['OverlayId'] = overlayId;
-                var linkManagerData = visData[overlayId]['LinkManager'];
-                var topologyData = visData[overlayId]['Topology'];
-                var nodeObject = {
-                    NodeId: data[timeStampId]['NodeId'],
-                    NodeName: data[timeStampId]['NodeName'],
-                    Version: data[timeStampId]['Version'],
-                    GeoCoordinates: data[timeStampId]['GeoCoordinate'],
-                    Edges: []
-                };
-
-                for (var nodeId in linkManagerData) {
-                    var edgeData = linkManagerData[nodeId]
-                    for (var edgeId in edgeData) {
-                        highLevelOverlayData['Edges'].add(edgeId);
-                        var edgeObject = {
-                            EdgeId: edgeId,
-                            PeerId: topologyData[edgeId]['PeerId'],
-                            CreatedTime: topologyData[edgeId]['CreatedTime'],
-                            ConnectedTime: topologyData[edgeId]['ConnectedTime'],
-                            State: topologyData[edgeId]['State'],
-                            Type: topologyData[edgeId]['Type'],
-                            TapName: linkManagerData[nodeId][edgeId]['TapName'],
-                            MAC: linkManagerData[nodeId][edgeId]['MAC']
-                        }
-                        nodeObject['Edges'].push(edgeObject);
-                    }
-                    
-                    highLevelOverlayData['Nodes'].add(nodeObject.NodeId);
-                    overlayData['Nodes'][nodeObject.NodeId] = nodeObject;
-                    //console.log("overlayData: ", overlayData)
-                }
-                topologyDict[overlayId] = overlayData;
-                overlayDict[overlayId] = highLevelOverlayData;
-            }
+class DataTransformer {
+  /**
+   * Function to transform the raw data into data required to be stored in the DB.
+   * Refer to the design document for more details on the data format.
+   *
+   * @param {JSON} data Json raw aggregated data.
+   */
+  transformData(data) {
+    var topologies = {};
+    var overlays = {};
+    var topologyArray = [];
+    var overlaysArray = [];
+    for (var timeStampId in data) {
+      var visData = data[timeStampId]["VizData"];
+      var nodeId = data[timeStampId]["NodeId"];
+      for (var overlayId in visData) {
+        var topoData;
+        var overlaySummary;
+        if (topologies.hasOwnProperty(overlayId)) {
+          topoData = topologies[overlayId];
+        } else {
+          topoData = {
+            OverlayId: overlayId,
+            Nodes: {},
+            Edges: {},
+          };
+          topologies[overlayId] = topoData;
         }
-        Object.keys(topologyDict).forEach(function (item) {
-            topologyArray.push(topologyDict[item]);
-        });
-        Object.keys(overlayDict).forEach(function (item) {
-            var overlayObject = {
-                OverlayId: overlayDict[item]['OverlayId'],
-                NumNodes: overlayDict[item]['Nodes'].size,
-                NumEdges: overlayDict[item]['Edges'].size
+        if (overlays.hasOwnProperty(overlayId)) {
+          overlaySummary = overlays[overlayId];
+        } else {
+          overlaySummary = {
+            OverlayId: overlayId,
+            Nodes: new Set(),
+            Edges: new Set(),
+          };
+          overlays[overlayId] = overlaySummary;
+        }
+        var nodeObject = {};
+        if (topoData["Nodes"].hasOwnProperty(nodeId)) {
+          nodeObject = topoData["Nodes"][nodeId];
+        }
+        nodeObject["NodeId"] = nodeId;
+        nodeObject["NodeName"] = data[timeStampId]["NodeName"];
+        nodeObject["Version"] = data[timeStampId]["Version"];
+        nodeObject["GeoCoordinates"] = data[timeStampId]["GeoCoordinate"];
+        nodeObject["Edges"] = [];
+        overlaySummary["Nodes"].add(nodeObject.NodeId);
+        topoData["Nodes"][nodeObject.NodeId] = nodeObject;
+
+        var edges = visData[overlayId]["Tunnels"];
+        for (var edgeId in edges) {
+          nodeObject["Edges"].push(edgeId);
+          var edgeData = edges[edgeId];
+          var edgeObject = { Descriptor: [] };
+          if (topoData["Edges"].hasOwnProperty(edgeId)) {
+            edgeObject = topoData["Edges"][edgeId];
+          }
+          edgeObject["EdgeId"] = edgeId;
+          let localEp = { Proto: "", Internal: "", External: "" };
+          let remoteEp = localEp;
+          if (
+            edgeData.hasOwnProperty("LocalEndpoint") &&
+            edgeData.hasOwnProperty("RemoteEndpoint")
+          ) {
+            localEp = edgeData["LocalEndpoint"];
+            remoteEp = edgeData["RemoteEndpoint"];
+          }
+          let desc = {
+            Source: nodeId,
+            Target: edgeData["PeerId"],
+            CreatedTime: edgeData["CreatedTime"],
+            ConnectedTime: edgeData["ConnectedTime"],
+            State: edgeData["State"],
+            Type: edgeData["Type"],
+            TapName: edgeData["TapName"],
+            MAC: edgeData["MAC"],
+            LocalEndpoint: {
+              Proto: localEp["Proto"],
+              Internal: localEp["Internal"],
+              External: localEp["External"],
+            },
+            RemoteEndpoint: {
+              Proto: remoteEp["Proto"],
+              External: remoteEp["External"],
+            },
+          };
+          var isFound = false;
+          for (let i = 0; i < edgeObject["Descriptor"].length; i++) {
+            if (edgeObject["Descriptor"][i].Source === nodeId) {
+              edgeObject["Descriptor"][i] = desc;
+              isFound = true;
+              break;
             }
-            overlaysArray.push(overlayObject);
-        });
-        return [overlaysArray, topologyArray];
+          }
+          if (!isFound) {
+            edgeObject["Descriptor"].push(desc);
+          }
+          overlaySummary["Nodes"].add(edgeData["PeerId"]); //add data about the edge's target
+          if (!topoData["Nodes"].hasOwnProperty(edgeData["PeerId"])) {
+            topoData["Nodes"][edgeData["PeerId"]] = {
+              NodeId: edgeData["PeerId"],
+            };
+          } // only add topo data about the edge's target node is it has not yet been reported
+
+          overlaySummary["Edges"].add(edgeId);
+          topoData["Edges"][edgeObject.EdgeId] = edgeObject;
+        }
+      }
     }
+    Object.keys(topologies).forEach(function (olid) {
+      topologyArray.push(topologies[olid]);
+    });
+    Object.keys(overlays).forEach(function (olid) {
+      var overlayObject = {
+        OverlayId: overlays[olid]["OverlayId"],
+        NumNodes: overlays[olid]["Nodes"].size,
+        NumEdges: overlays[olid]["Edges"].size,
+      };
+      overlaysArray.push(overlayObject);
+    });
+    return [overlaysArray, topologyArray];
+  }
 }
 
-module.exports = { DataTransformer }
-
+module.exports = { DataTransformer };

@@ -20,25 +20,26 @@
 * THE SOFTWARE.
 */
 
-const {overlayModel, topologyModel} = require('../db/Model');
+const {overlayModel} = require('../db/Model');
 /**
  * Function to retrieve all Intervals from the database
  */
 exports.findAllIntervals = (req, res, dbInstance) => {
     var tableName = null;
-    if (process.env.DB == 'mongo') {
+    if (process.env.DB === 'mongo') {
       tableName = overlayModel;
-    } else if (process.env.DB == 'influx') {
+    } else if (process.env.DB === 'influx') {
       tableName = 'Overlays'
     }
     dbInstance.getIntervals(tableName)
       .then(data => {
-        res.send(data);
+          //console.log("Interval data:", data);
+          res.send(data);
       })
       .catch(err => {
         res.status(500).send({
           message:
-            err.message || "Some error occurred while retrieving intervals."
+            err.message || "An error occurred while retrieving intervals."
         });
       });
 };
@@ -50,20 +51,20 @@ exports.findAllIntervals = (req, res, dbInstance) => {
 
   const intervalId = parseFloat(req.query.interval);
   var tableName = null;
-    if (process.env.DB == 'mongo') {
+    if (process.env.DB === 'mongo') {
       tableName = overlayModel;
-    } else if (process.env.DB == 'influx') {
+    } else if (process.env.DB === 'influx') {
       tableName = 'Overlays'
     }
   dbInstance.getOverlays(tableName, intervalId)
     .then(data => {
-          //console.log("Response data being sent:", data);
+          //console.log("Overlay data:", JSON.stringify(data));
           res.send(data);
     })
     .catch(err => {
     res.status(502).send({
       message:
-        err.message || "Some error occurred while retrieving overlays."
+        err.message || "An error occurred while retrieving overlays."
     });
   });
 };

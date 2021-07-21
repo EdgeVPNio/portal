@@ -28,7 +28,6 @@ const overlays = require("../controllers/Overlays.controller.js");
 const topology = require("../controllers/Topology.controller.js");
 const dotenv = require('dotenv')
 const {InfluxDBImpl} = require('../db/InfluxDBImpl')
-
 const app = express()
 
 // parse requests of content-type - application/json
@@ -47,11 +46,12 @@ if(process.env.PORT) {
 }
 
 var Data = {}
+var dbInstance;
 //As the object dbInstance is built, Evio db is connected from constructor, check for the type of database.
-if (process.env.DB == "mongo") {
-  var dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio');
-} else if (process.env.DB == "influx") {
-  var dbInstance = new InfluxDBImpl('Evio');
+if (process.env.DB === "mongo") {
+  dbInstance = new MongoDBImpl('mongodb://' + process.env.DB_URI + ':27017/Evio', 'Evio');
+} else if (process.env.DB === "influx") {
+  dbInstance = new InfluxDBImpl('Evio');
 }
 
 app.set('views', path.join(__dirname, '../build'));
@@ -86,11 +86,11 @@ app.put('/EVIO/*', (req, res) => {
 
 setInterval(function(){
     var timeStamp = Date.now()
-    var dataCopy = Data;
+    var _data = Data;
     Data = {}
-    //console.log("Data in PUT is:", dataCopy);
-    if (!Object.keys(dataCopy).length == 0) {
-      dbInstance.insertInto(dataCopy, timeStamp);
+    if (Object.keys(_data).length !== 0) {
+      //console.log("Nodes interval data: ", JSON.stringify(_data))
+      dbInstance.insertInto(_data, timeStamp);
     }
 }, 30000)
 
