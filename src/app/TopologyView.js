@@ -643,9 +643,9 @@ class TopologyView extends React.Component {
 
   async getQueriedLocNodes(nodes) {
     var newLocNodes = [];
-    try {
-      for (var node of nodes) {
-        if (node.coords === "0,0") {
+    for (var node of nodes) {
+      try {
+        if (node.coords in ["0,0", "0.0,0.0"]) {
           node.location = "Unknown";
           newLocNodes.push(node);
         } else {
@@ -658,14 +658,26 @@ class TopologyView extends React.Component {
             `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates[0]},${coordinates[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`
           );
           var data = await res.json();
-          var nodeLocation =
-            data.results[data.results.length - 1].formatted_address;
-          node.location = nodeLocation.slice(7, nodeLocation.length);
-          newLocNodes.push(node);
+          if (
+            data.results.length > 0 &&
+            data.results[data.results.length - 1].hasOwnProperty(
+              "formatted_address"
+            )
+          ) {
+            var nodeLocation =
+              data.results[data.results.length - 1].formatted_address;
+            node.location = nodeLocation.slice(7, nodeLocation.length);
+            newLocNodes.push(node);
+          } else {
+            node.location = "Unknown";
+            newLocNodes.push(node);
+          }
         }
+      } catch (err) {
+        node.location = "Unknown";
+        newLocNodes.push(node);
+        console.warn(err);
       }
-    } catch (err) {
-      console.warn(err);
     }
     return newLocNodes;
   }
