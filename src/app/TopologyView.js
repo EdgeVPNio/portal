@@ -382,8 +382,7 @@ class TopologyView extends React.Component {
       );
     } else {
       this.getQueriedLocNodes([cyNode.data()])
-        .then((newLocNode) => {
-          console.warn("newLocNode", newLocNode);
+        .then(() => {
           if (cyNode.data("state") === nodeStates.notReporting) {
             nodeDetails = this.getNotReportingNodeDetails(cyNode);
           } else if (cyNode.data("state") === nodeStates.connected) {
