@@ -11,7 +11,8 @@ import SideBar from "./Sidebar";
 import { connect } from "react-redux";
 import {
   setSelectedOverlayId,
-  //clearSelectedElement,
+  clearSelectedElement,
+  appViews,
 } from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 
@@ -185,10 +186,10 @@ class OverlaysView extends React.Component {
   };
 
   componentDidMount() {
-    this.props.setCurrentView("OverlaysView");
+    this.props.setCurrentView(appViews.OverlaysView);
     this.queryOverlays();
     this.autoRefresh = this.props.autoUpdate;
-    //this.props.clearSelectedElement();
+    this.props.clearSelectedElement();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -214,9 +215,6 @@ class OverlaysView extends React.Component {
             typeahead={this.renderTypeahead()}
             sidebarDetails={this.renderSidebarDetails()}
           />
-          {/* <div id="bottomTools">
-            <Toolbar />
-          </div> */}
         </div>
       </>
     );
@@ -234,29 +232,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
   setCurrentView,
   setSelectedOverlayId,
-  //clearSelectedElement,
+  clearSelectedElement,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OverlaysView);
-
-// buttonSelected = (selectedButton) => (ev) => {
-//   this.setState({ selectedButton });
-// };
-
-// render() {
-//   return (
-//     <div>
-//       {["A", "B", "C"].map((key) => (
-//         <button
-//           className={key === this.state.selectedButton ? "selected" : ""}
-//           type="button"
-//           style={{ width: "25%", border: "none" }}
-//           key={key}
-//           onClick={this.buttonSelected(key)}
-//         >
-//           {key}
-//         </button>
-//       ))}
-//     </div>
-//   );
-// }
