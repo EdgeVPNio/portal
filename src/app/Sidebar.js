@@ -29,6 +29,9 @@ class Sidebar extends React.Component {
         document.getElementById("sideBarContent")
       );
     }
+    if(this.props.currentView === appViews.OverlaysView){
+      return this.props.sidebarDetails
+    }
   }
 
   componentDidUpdate() {}
