@@ -26,7 +26,7 @@ var cytoscapeStyle = [{
 
   }
 }, {
-  selector: 'node.subgraph',
+  selector: 'node.hidden',
   style: {
     display: 'none'
   }
@@ -50,7 +50,7 @@ var cytoscapeStyle = [{
     opacity: '0.3'
   }
 }, {
-  selector: 'edge.subgraph',
+  selector: 'edge.hidden',
   style: {
     display: 'none'
   }
