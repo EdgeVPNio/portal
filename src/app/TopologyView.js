@@ -5,8 +5,14 @@ import cytoscapeStyle from "./cytoscapeStyle.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import SideBar from "./Sidebar";
 import { connect } from "react-redux";
-import { setCyElements } from "../features/evio/evioSlice";
-import { setRedrawGraph } from "../features/evio/evioSlice";
+import {
+  setCyElements,
+  setRedrawGraph,
+  setSelectedElement,
+  clearSelectedElement,
+  elementTypes,
+  appViews,
+} from "../features/evio/evioSlice";
 import { setCurrentView } from "../features/view/viewSlice";
 import { setZoomValue } from "../features/tools/toolsSlice";
 import CytoscapeComponent from "react-cytoscapejs";
@@ -48,7 +54,6 @@ class TopologyView extends React.Component {
         .then((res) => {
           if (this.autoRefresh) {
             this.props.setCyElements(this.buildCyElements(res[0].Topology));
-            //console.log("cyElements:", this.props.cyElements);
             this.intervalId = res[0]._id;
             this.queryTopology();
           }
@@ -211,31 +216,13 @@ class TopologyView extends React.Component {
     return { neighborhood, excluded };
   }
 
-  async queryGeoCoordinates(coordinates) {
-    coordinates = coordinates.split(",");
-    if (coordinates.length < 2) return "Unknown";
-    try {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates[0]},${coordinates[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`
-      );
-      var data = await res.json();
-      var nodeLocation =
-        data.results[data.results.length - 1].formatted_address;
-      return nodeLocation.slice(7, nodeLocation.length);
-    } catch (err) {
-      return "Unknown";
-    }
-  }
-
   renderTypeahead() {
     return (
       <Typeahead
         id="searchTopology"
         onChange={(selected) => {
           if (selected.length > 0) {
-            let selectedEle = this.cy
-              //.elements()
-              .getElementById(selected[0].data.id);
+            let selectedEle = this.cy.getElementById(selected[0].data.id);
             this.cy.elements().unselect();
             selectedEle.select();
             let part = this.partitionElements(selectedEle);
@@ -266,7 +253,7 @@ class TopologyView extends React.Component {
 
   getNotReportingNodeDetails(cyNode) {
     var nodeContent = (
-      <CollapseButton title={cyNode.data().label}>
+      <CollapseButton title={cyNode.data().label} expanded={true}>
         <div>
           <h5>{cyNode.data().label}</h5>
           <div className="DetailsLabel">Node ID</div>
@@ -394,9 +381,9 @@ class TopologyView extends React.Component {
         document.getElementById("sideBarContent")
       );
     } else {
-      this.queryGeoCoordinates(cyNode.data("coords"))
-        .then((loc) => {
-          cyNode.data("location", loc);
+      this.getQueriedLocNodes([cyNode.data()])
+        .then((newLocNode) => {
+          console.warn("newLocNode", newLocNode);
           if (cyNode.data("state") === nodeStates.notReporting) {
             nodeDetails = this.getNotReportingNodeDetails(cyNode);
           } else if (cyNode.data("state") === nodeStates.connected) {
@@ -655,44 +642,85 @@ class TopologyView extends React.Component {
     return linkContentNR;
   }
 
-  renderTunnelDetails = (cyEdge, adj) => {
-    var tunnelDetails;
-    var selectedTunnelNodesDetails = [];
+  async getQueriedLocNodes(nodes) {
+    var newLocNodes = [];
     try {
-      for (var node of adj) {
-        if (node._private.group === "nodes") {
-          selectedTunnelNodesDetails.push(node.data());
+      for (var node of nodes) {
+        if (node.coords === "0,0") {
+          node.location = "Unknown";
+          newLocNodes.push(node);
+        } else {
+          if (node.hasOwnProperty("location") && node.location !== "Unknown") {
+            newLocNodes.push(node);
+            continue;
+          }
+          let coordinates = node.coords.split(",");
+          const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates[0]},${coordinates[1]}&key=AIzaSyBjkkk4UyMh4-ihU1B1RR7uGocXpKECJhs&language=en`
+          );
+          var data = await res.json();
+          var nodeLocation =
+            data.results[data.results.length - 1].formatted_address;
+          node.location = nodeLocation.slice(7, nodeLocation.length);
+          newLocNodes.push(node);
         }
       }
-      if (
-        selectedTunnelNodesDetails[0].state === nodeStates.connected &&
-        selectedTunnelNodesDetails[1].state === nodeStates.connected
-      ) {
-        tunnelDetails = this.getTunnelWithBothReportingNodes(cyEdge, adj);
-      } else if (
-        (selectedTunnelNodesDetails[0].state === nodeStates.connected &&
-          selectedTunnelNodesDetails[1].state === nodeStates.notReporting) ||
-        (selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
-          selectedTunnelNodesDetails[1].state === nodeStates.connected)
-      ) {
-        tunnelDetails = this.getTunnelWithEitherOneReportingNodes(cyEdge, adj);
-      } else if (
-        selectedTunnelNodesDetails[0].state === nodeStates.notReporting &&
-        selectedTunnelNodesDetails[1].state === nodeStates.notReporting
-      ) {
-        tunnelDetails = this.getTunnelWithNoReportingNodes();
-      }
-      ReactDOM.render(
-        <div>
-          <div> Tunnel Details </div>
-          <div> {tunnelDetails} </div>
-        </div>,
-        document.getElementById("sideBarContent")
-      );
     } catch (err) {
       console.warn(err);
     }
+    return newLocNodes;
+  }
+
+  renderTunnelDetails = (cyEdge, adj) => {
+    var tunnelDetails;
+    var selectedTunnelNodesDetails = [];
+    for (var node of adj) {
+      if (node._private.group === "nodes") {
+        selectedTunnelNodesDetails.push(node.data());
+      }
+    }
+    this.getQueriedLocNodes(selectedTunnelNodesDetails).then((newLocNodes) => {
+      try {
+        if (
+          newLocNodes[0].state === nodeStates.connected &&
+          newLocNodes[1].state === nodeStates.connected
+        ) {
+          tunnelDetails = this.getTunnelWithBothReportingNodes(cyEdge, adj);
+        } else if (
+          (newLocNodes[0].state === nodeStates.connected &&
+            newLocNodes[1].state === nodeStates.notReporting) ||
+          (newLocNodes[0].state === nodeStates.notReporting &&
+            newLocNodes[1].state === nodeStates.connected)
+        ) {
+          tunnelDetails = this.getTunnelWithEitherOneReportingNodes(
+            cyEdge,
+            adj
+          );
+        } else if (
+          newLocNodes[0].state === nodeStates.notReporting &&
+          newLocNodes[1].state === nodeStates.notReporting
+        ) {
+          tunnelDetails = this.getTunnelWithNoReportingNodes();
+        }
+        ReactDOM.render(
+          <div>
+            <div> Tunnel Details </div>
+            <div> {tunnelDetails} </div>
+          </div>,
+          document.getElementById("sideBarContent")
+        );
+      } catch (err) {
+        console.warn(err);
+      }
+    });
   };
+
+  hideExcludedCyEles() {
+    var id = JSON.parse(this.props.selectedCyElementData).id;
+    var selectedCyEle = this.cy.getElementById(id);
+    var part = this.partitionElements(selectedCyEle);
+    part.excluded.addClass("hidden");
+  }
 
   handleSwitch = (selectedTunnel, adj) => {
     this.isSwapToggle = !this.isSwapToggle;
@@ -707,6 +735,7 @@ class TopologyView extends React.Component {
     var cyEle = event.target[0];
     try {
       if (event.target === this.cy) {
+        this.props.clearSelectedElement();
         this.cy.elements().removeClass("transparent");
         this._typeahead.clear();
         return;
@@ -715,18 +744,29 @@ class TopologyView extends React.Component {
       part.neighborhood.removeClass("transparent");
       part.excluded.addClass("transparent");
       if (cyEle.isNode()) {
+        this.props.setSelectedElement({
+          selectedElementType: elementTypes.eleNode,
+          selectedCyElementData: cyEle.data(),
+        });
         this.renderNodeDetails(cyEle, cyEle.neighborhood());
       } else if (cyEle.isEdge()) {
+        this.props.setSelectedElement({
+          selectedElementType: elementTypes.eleTunnel,
+          selectedCyElementData: cyEle.data(),
+        });
         this.renderTunnelDetails(cyEle, part.neighborhood);
       }
     } catch (error) {
+      this.props.clearSelectedElement();
       this.cy.elements().removeClass("transparent");
       console.warn(error);
     }
   }
 
   componentDidMount() {
-    this.props.setCurrentView("TopologyView");
+    if (this.props.selectedView === appViews.TopologyView) {
+      this.props.setCurrentView(appViews.TopologyView);
+    }
     this.autoRefresh = this.props.autoUpdate;
     if (this.autoRefresh) {
       this.queryTopology();
@@ -752,15 +792,36 @@ class TopologyView extends React.Component {
         this.queryTopology();
       }
     }
+    if (this.props.selectedView !== prevProps.selectedView) {
+      if (this.props.selectedView === appViews.SubgraphView) {
+        this.props.setCurrentView(appViews.SubgraphView);
+      } else if (this.props.selectedView === appViews.TopologyView) {
+        this.props.setCurrentView(appViews.TopologyView);
+      }
+    }
   }
 
   componentWillUnmount() {
     this.autoRefresh = false;
-    clearTimeout(this.timeoutId);
-    this.props.setCyElements([]);
+    //clearTimeout(this.timeoutId);
+    //this.props.clearSelectedElement();
+    //this.props.setCyElements([]);
   }
 
   renderTopologyContent() {
+    if (
+      this.props.currentView === appViews.TopologyView &&
+      this.props.selectedView === appViews.SubgraphView
+    ) {
+      this.hideExcludedCyEles();
+    } else if (
+      this.props.selectedView === appViews.TopologyView &&
+      this.cy !== null &&
+      this.props.currentView === appViews.SubgraphView
+    ) {
+      this.cy.elements().removeClass("transparent");
+      this.cy.elements().removeClass("hidden");
+    }
     const topologyContent = (
       <CytoscapeComponent
         id="cy"
@@ -814,6 +875,7 @@ const mapStateToProps = (state) => ({
   zoomMax: state.tools.zoomMaximum,
   autoUpdate: state.tools.autoUpdate,
   redrawGraph: state.evio.redrawGraph,
+  selectedCyElementData: state.evio.selectedCyElementData,
 });
 
 const mapDispatchToProps = {
@@ -821,6 +883,8 @@ const mapDispatchToProps = {
   setZoomValue,
   setCyElements,
   setRedrawGraph,
+  setSelectedElement,
+  clearSelectedElement,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TopologyView);
