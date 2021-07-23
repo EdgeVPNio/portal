@@ -1,8 +1,11 @@
 import React from "react";
+import { connect } from "react-redux";
 import { slide as Slidebar } from "react-burger-menu";
 import evio_logo from "../images/icons/evio.svg";
 import Navbar from "./Navbar";
 import { Typeahead } from "react-bootstrap-typeahead";
+import { appViews } from "../features/evio/evioSlice";
+import ReactDOM from "react-dom";
 
 class Sidebar extends React.Component {
   renderTypeahead() {
@@ -14,13 +17,21 @@ class Sidebar extends React.Component {
   }
 
   renderDetails() {
-    if (this.props.sidebarDetails !== null) {
-      return this.props.sidebarDetails;
+    if (
+      (this.props.currentView === appViews.TopologyView ||
+        this.props.currentView === appViews.SubgraphView) &&
+      this.props.selectedElementType === "ElementTypeNone"
+    ) {
+      ReactDOM.render(
+        <div>
+          <div title="Select Node or Tunnel to see details"> Details: </div>
+        </div>,
+        document.getElementById("sideBarContent")
+      );
     }
-    return <null />;
   }
 
-  componentDidUpdate(prevProps, prevState) {}
+  componentDidUpdate() {}
 
   componentDidMount() {}
 
@@ -40,12 +51,6 @@ class Sidebar extends React.Component {
           id="evioLabel"
           style={{ textAlign: "center", top: "8px", fontSize: "medium" }}
         >
-          {/* <img
-            src={evio_logo}
-            alt={"Evio Logo"}
-            width={"25px"}
-            height={"25px"}
-          /> */}
           <label id="evioTitle"> Evio Platform Visualizer </label>
         </div>
         <div id="navBar">
@@ -55,11 +60,17 @@ class Sidebar extends React.Component {
           {this.renderTypeahead()}
         </div>
         <div id="sideBarContent" style={{ padding: "8px" }}>
-          {this.props.sidebarDetails}
+          {this.renderDetails()}
         </div>
       </Slidebar>
     );
   }
 }
 
-export default Sidebar;
+const mapStateToProps = (state) => ({
+  currentView: state.view.current,
+  selectedView: state.view.selected,
+  selectedElementType: state.evio.selectedElementType,
+});
+
+export default connect(mapStateToProps)(Sidebar);
