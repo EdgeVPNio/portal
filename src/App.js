@@ -22,6 +22,8 @@ class App extends React.Component {
         return <OverlaysView />;
       case "TopologyView":
         return <TopologyView />;
+      case "SubgraphView":
+          return <TopologyView />;
       default:
         return <Spinner id="loading" animation="border" variant="info" />;
     }
