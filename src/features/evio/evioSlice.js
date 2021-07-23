@@ -5,6 +5,12 @@ export const elementTypes = {
   eleTunnel: "ElementTypeTunnel",
   eleNone: "ElementTypeNone",
 };
+export const appViews = {
+  TopologyView: "TopologyView",
+  SubgraphView: "SubgraphView",
+  MapView: "MapView",
+  OverlaysView: "OverlaysView",
+};
 
 const evioSlice = createSlice({
   name: "evio",
@@ -22,6 +28,16 @@ const evioSlice = createSlice({
     setCyElements(state, action) {
       state.cyElements = action.payload;
     },
+    setSelectedElement(state, action) {
+      state.selectedElementType = action.payload.selectedElementType;
+      state.selectedCyElementData = JSON.stringify(
+        action.payload.selectedCyElementData
+      );
+    },
+    clearSelectedElement(state) {
+      state.selectedElementType = elementTypes.eleNone;
+      state.selectedCyElementData = JSON.stringify({});
+    },
     setRedrawGraph(state, action) {
       state.redrawGraph = action.payload;
     },
@@ -31,6 +47,8 @@ const evioSlice = createSlice({
 export const {
   setSelectedOverlayId,
   setCyElements,
+  setSelectedElement,
+  clearSelectedElement,
   setRedrawGraph,
 } = evioSlice.actions;
 
