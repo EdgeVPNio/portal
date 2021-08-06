@@ -4,7 +4,7 @@ import { SiGraphql } from "react-icons/si";
 import { BiNetworkChart } from "react-icons/bi";
 import { GrMapLocation } from "react-icons/gr";
 import { setSelectedView } from "../features/view/viewSlice";
-import {  appViews } from "../features/evio/evioSlice";
+import {  appViews } from "./Shared";
 
 class Navbar extends React.Component {
   constructor(props) {

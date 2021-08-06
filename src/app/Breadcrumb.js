@@ -4,9 +4,8 @@ import { setSelectedView } from "../features/view/viewSlice";
 import {
   setSelectedOverlayId,
   setRedrawGraph,
-  elementTypes,
 } from "../features/evio/evioSlice";
-
+import {elementTypes} from "./Shared";
 class Breadcrumb extends React.Component {
   componentDidMount() {}
 

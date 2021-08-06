@@ -4,7 +4,7 @@ import { slide as Slidebar } from "react-burger-menu";
 import evio_logo from "../images/icons/evio.svg";
 import Navbar from "./Navbar";
 import { Typeahead } from "react-bootstrap-typeahead";
-import { appViews } from "../features/evio/evioSlice";
+import { appViews } from "./Shared";
 import ReactDOM from "react-dom";
 
 class Sidebar extends React.Component {

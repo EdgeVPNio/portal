@@ -12,8 +12,8 @@ import { connect } from "react-redux";
 import {
   setSelectedOverlayId,
   clearSelectedElement,
-  appViews,
 } from "../features/evio/evioSlice";
+import {appViews} from "./Shared";
 import { setCurrentView } from "../features/view/viewSlice";
 
 class OverlaysView extends React.Component {

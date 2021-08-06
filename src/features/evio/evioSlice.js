@@ -1,16 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-
-export const elementTypes = {
-  eleNode: "ElementTypeNode",
-  eleTunnel: "ElementTypeTunnel",
-  eleNone: "ElementTypeNone",
-};
-export const appViews = {
-  TopologyView: "TopologyView",
-  SubgraphView: "SubgraphView",
-  MapView: "MapView",
-  OverlaysView: "OverlaysView",
-};
+import { 
+  elementTypes, 
+  appViews,
+  nodeStates,} from "../../app/Shared";
 
 const evioSlice = createSlice({
   name: "evio",

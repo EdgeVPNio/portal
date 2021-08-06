@@ -10,18 +10,14 @@ import {
   setRedrawGraph,
   setSelectedElement,
   clearSelectedElement,
-  elementTypes,
-  appViews,
 } from "../features/evio/evioSlice";
+import { 
+  elementTypes, 
+  appViews,
+  nodeStates,} from "./Shared";
 import { setCurrentView } from "../features/view/viewSlice";
 import { setZoomValue } from "../features/tools/toolsSlice";
 import CytoscapeComponent from "react-cytoscapejs";
-
-const nodeStates = {
-  connected: "Connected",
-  noTunnels: "No Tunnels",
-  notReporting: "Not Reporting",
-};
 
 class TopologyView extends React.Component {
   constructor(props) {
@@ -260,6 +256,8 @@ class TopologyView extends React.Component {
           <label id="valueLabel">{cyNode.data().id}</label>
           <div className="DetailsLabel">State</div>
           <label id="valueLabel">{cyNode.data().state}</label>
+          <div className="DetailsLabel">Version</div>
+          <label id="valueLabel">{cyNode.data().version}</label>
           <div className="DetailsLabel">Location</div>
           <label id="valueLabel">{cyNode.data().location}</label>
           <hr style={{ backgroundColor: "#486186" }} />
@@ -286,6 +284,8 @@ class TopologyView extends React.Component {
             <label id="valueLabel">{cyNode.data().id}</label>
             <div className="DetailsLabel">State</div>
             <label id="valueLabel">{cyNode.data().state}</label>
+            <div className="DetailsLabel">Version</div>
+            <label id="valueLabel">{cyNode.data().version}</label>
             <div className="DetailsLabel">Location</div>
             <label id="valueLabel">{cyNode.data().location}</label>
             <hr style={{ backgroundColor: "#486186" }} />
@@ -295,7 +295,7 @@ class TopologyView extends React.Component {
       >
         {sidebarNodeslist.map((connectedNode) => {
           try {
-            var [connectedlinkDetail, tunnelId] = this.getConnectedLinkDetails(
+            var {connectedlinkDetail, tunnelId} = this.getConnectedLinkDetails(
               cyNode,
               connectedNode,
               connectedEdges
@@ -348,6 +348,8 @@ class TopologyView extends React.Component {
           <label id="valueLabel">{cyNode.data().id}</label>
           <div className="DetailsLabel">State</div>
           <label id="valueLabel">{cyNode.data().state}</label>
+          <div className="DetailsLabel">Version</div>
+          <label id="valueLabel">{cyNode.data().version}</label>
           <div className="DetailsLabel">Location</div>
           <label id="valueLabel">{cyNode.data().location}</label>
           <hr style={{ backgroundColor: "#486186" }} />
@@ -421,7 +423,9 @@ class TopologyView extends React.Component {
             source.data().id === descriptorItem.Source &&
             tgt.id === descriptorItem.Target
           ) {
-            return [descriptorItem, edge._private.data.id];
+            let connectedlinkDetail = descriptorItem;
+            let tunnelId = edge._private.data.id;
+            return { connectedlinkDetail, tunnelId };
           }
         }
       }
@@ -814,9 +818,9 @@ class TopologyView extends React.Component {
 
   componentWillUnmount() {
     this.autoRefresh = false;
-    //clearTimeout(this.timeoutId);
+    clearTimeout(this.timeoutId);
     //this.props.clearSelectedElement();
-    //this.props.setCyElements([]);
+    this.props.setCyElements([]);
   }
 
   renderTopologyContent() {
