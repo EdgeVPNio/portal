@@ -26,7 +26,7 @@ class Navbar extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     if (this.props.selectedOverlayId !== prevProps.selectedOverlayId) {
       if (this.props.selectedOverlayId.length > 0) {
-        this.setState({ buttonStates: [false, true, true] });
+        this.setState({ buttonStates: [false, true, false] });
       } else {
         this.setState({ buttonStates: [true, true, true] });
       }
@@ -36,7 +36,7 @@ class Navbar extends React.Component {
         this.props.selectedView === appViews.TopologyView &&
         this.props.selectedElementType !== "ElementTypeNone"
       ) {
-        this.setState({ buttonStates: [true, false, true] }); 
+        this.setState({ buttonStates: [true, false, false] }); 
         // on Topologyview and any cyElement is selected - enable subgraph
       }
       if (
@@ -48,19 +48,26 @@ class Navbar extends React.Component {
       }
     }
     if (this.props.currentView !== prevProps.currentView) {
-      // Toggle the current state buttons
-      if (
-        this.props.selectedView === appViews.SubgraphView &&
-        this.props.currentView === appViews.SubgraphView
-      ) {
-        this.setState({ buttonStates: [false, true, true] });
-      }
+      // Toggle the current state buttons on change of Topo, SubGraph, Map views
       if (
         this.props.selectedView === appViews.TopologyView &&
         this.props.currentView === appViews.TopologyView
       ) {
         this.setState({ buttonStates: [true, true, true] });
       }
+      if (
+        this.props.selectedView === appViews.SubgraphView &&
+        this.props.currentView === appViews.SubgraphView
+      ) {
+        this.setState({ buttonStates: [false, true, false] });
+      }
+      if (
+        this.props.selectedView === appViews.MapView &&
+        this.props.currentView === appViews.MapView
+      ) {
+        this.setState({ buttonStates: [false, true, true] });
+      }
+      
     }
   }
 
