@@ -211,14 +211,10 @@ h5 {
 
 .sourceNodeBtn {
   border-radius: 3px;
-  /* border          : solid #8FD24D; */
-  /* background-color: #8FD24D; */
 }
 
 .targetNodeBtn {
   border-radius: 3px;
-  /* border          : solid #42B2C3; */
-  /* background-color: #42B2C3; */
 }
 
 #breadcrumbPanelId {
@@ -370,15 +366,6 @@ h5 {
   background-size: cover;
 }
 
-.nodeMarker {
-  outline: none;
-  border: none;
-  width: 70px;
-  height: 70px;
-  background: url("./images/icons/green_node_ic.svg") no-repeat;
-  background-size: contain;
-}
-
 .markerLabel {
   font-family: "Roboto", sans-serif;
   font-size: medium;
@@ -394,9 +381,19 @@ h5 {
   transform: translate(-15%, -15%);
   outline: none;
   border: none;
-  width: 100px;
-  height: 100px;
-  background: url("./images/icons/green_node_selected_ic.svg") no-repeat;
+  background: url("./images/icons/marker_red.png") no-repeat;
+  background-size: contain;
+}
+
+.nodeMarker.cluster {
+  -webkit-transform: translate(-15%, -15%);
+  -ms-transform: translate(-15%, -15%);
+  transform: translate(-15%, -15%);
+  outline: none;
+  border: none;
+  width: 40px;
+  height:40px;
+  background: url("./images/icons/m3.png") no-repeat;
   background-size: contain;
 }
 
