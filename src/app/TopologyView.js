@@ -1,3 +1,24 @@
+/* EdgeVPNio
+ * Copyright 2021, University of Florida
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 import React from "react";
 import ReactDOM from "react-dom";
 import CollapseButton from "./CustomCollapsibleButton";
@@ -10,11 +31,9 @@ import {
   setRedrawGraph,
   setSelectedElement,
   clearSelectedElement,
+  setSubgraphCyElements,
 } from "../features/evio/evioSlice";
-import { 
-  elementTypes, 
-  appViews,
-  nodeStates,} from "./Shared";
+import { elementTypes, appViews, nodeStates } from "./Shared";
 import { setCurrentView } from "../features/view/viewSlice";
 import { setZoomValue } from "../features/tools/toolsSlice";
 import CytoscapeComponent from "react-cytoscapejs";
@@ -295,33 +314,37 @@ class TopologyView extends React.Component {
       >
         {sidebarNodeslist.map((connectedNode) => {
           try {
-            var {connectedlinkDetail, tunnelId} = this.getConnectedLinkDetails(
+            var tunnelDetails = this.getConnectedLinkDetails(
               cyNode,
               connectedNode,
               connectedEdges
-            );
+            ); // returns { connectedlinkDetail, tunnelId }
             var connectedNodeBtn = (
               <CollapseButton title={connectedNode.label}>
                 <div className="DetailsLabel">Node ID</div>
                 <label id="valueLabel">{connectedNode.id}</label>
                 <div className="DetailsLabel">Tunnel ID</div>
-                <label id="valueLabel">{tunnelId}</label>
+                <label id="valueLabel">{tunnelDetails.tunnelId}</label>
                 <div className="DetailsLabel">Interface Name</div>
-                <label id="valueLabel">{connectedlinkDetail.TapName}</label>
+                <label id="valueLabel">
+                  {tunnelDetails.connectedlinkDetail.TapName}
+                </label>
                 <div className="DetailsLabel">MAC</div>
-                <label id="valueLabel">{connectedlinkDetail.MAC}</label>
+                <label id="valueLabel">
+                  {tunnelDetails.connectedlinkDetail.MAC}
+                </label>
                 <div className="DetailsLabel">State</div>
                 <label id="valueLabel">
-                  {connectedlinkDetail.State.slice(
+                  {tunnelDetails.connectedlinkDetail.State.slice(
                     7,
-                    connectedlinkDetail.State.length
+                    tunnelDetails.connectedlinkDetail.State.length
                   )}
                 </label>
                 <div className="DetailsLabel">Tunnel Type</div>
                 <label id="valueLabel">
-                  {connectedlinkDetail.Type.slice(
+                  {tunnelDetails.connectedlinkDetail.Type.slice(
                     6,
-                    connectedlinkDetail.Type.length
+                    tunnelDetails.connectedlinkDetail.Type.length
                   )}
                 </label>
               </CollapseButton>
@@ -736,6 +759,12 @@ class TopologyView extends React.Component {
     var part = this.partitionElements(selectedCyEle);
     part.excluded.addClass("hidden");
   }
+  setSubgraphCyElementsProp() {
+    var id = JSON.parse(this.props.selectedCyElementData).id;
+    var selectedCyEle = this.cy.getElementById(id);
+    var part = this.partitionElements(selectedCyEle);
+    this.props.setSubgraphCyElements(part.neighborhood);
+  }
 
   handleSwitch = (selectedTunnel, adj) => {
     this.isSwapToggle = !this.isSwapToggle;
@@ -820,7 +849,7 @@ class TopologyView extends React.Component {
     this.autoRefresh = false;
     clearTimeout(this.timeoutId);
     //this.props.clearSelectedElement();
-    this.props.setCyElements([]);
+    //this.props.setCyElements([]);
   }
 
   renderTopologyContent() {
@@ -829,6 +858,7 @@ class TopologyView extends React.Component {
       this.props.selectedView === appViews.SubgraphView
     ) {
       this.hideExcludedCyEles();
+      this.setSubgraphCyElementsProp();
     } else if (
       this.props.selectedView === appViews.TopologyView &&
       this.cy !== null &&
@@ -899,6 +929,7 @@ const mapDispatchToProps = {
   setCyElements,
   setRedrawGraph,
   setSelectedElement,
+  setSubgraphCyElements,
   clearSelectedElement,
 };
 
