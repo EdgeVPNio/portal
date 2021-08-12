@@ -35,6 +35,7 @@ import {
   setZoomValue,
   toggleAutoUpdate,
 } from "../features/tools/toolsSlice";
+import { appViews } from "./Shared";
 
 class Toolbar extends React.Component {
   constructor(props) {
@@ -50,7 +51,7 @@ class Toolbar extends React.Component {
 
   zoomIn = () => {
     var zoomTo = this.props.zoomValue + this.zoomIncrement;
-    if (zoomTo > this.props.zoomMaximum){
+    if (zoomTo > this.props.zoomMaximum) {
       zoomTo = this.props.zoomMaximum;
     }
     this.props.setZoomValue(zoomTo);
@@ -118,7 +119,6 @@ class Toolbar extends React.Component {
         }
         title="Disable/Enable Auto Updates"
         disabled={this.state.buttonStates[2]}
-        style={this.props.autoUpdate ? { opacity: 1 } : { opacity: 0.4 }}
       ></button>
     );
   }
@@ -127,13 +127,14 @@ class Toolbar extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (this.props.currentView !== prevProps.currentView) {
-      if (this.props.currentView === "OverlaysView") {
+      if (this.props.currentView === appViews.OverlaysView) {
         this.setState({ buttonStates: [true, true, false, true, true] });
         //[zoomIn, zoomOut, refresh, config, legend]
-      }
-      if (this.props.currentView === "TopologyView") {
+      } else if (this.props.currentView === appViews.TopologyView) {
         this.setState({ buttonStates: [false, false, false, false, false] });
         //[zoomIn, zoomOut, refresh, config, legend]
+      } else if (this.props.currentView === appViews.SubgraphView) {
+        this.setState({ buttonStates: [false, false, true, false, false] });
       }
     }
   }

@@ -283,6 +283,10 @@ h5 {
   box-shadow: 0 5px 8px rgba(139, 255, 236, 0.5);
 }
 
+.refreshBtn{
+    opacity: 1.0;
+}
+
 .refreshBtnDisabled,
 .configBtnDisabled,
 .infoBtnDisabled,
