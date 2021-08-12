@@ -296,6 +296,7 @@ class TopologyView extends React.Component {
     var nodeContent = (
       <CollapseButton
         title={cyNode.data().label}
+        length = {sidebarNodeslist.length}
         expanded={true}
         description={
           <div>
@@ -859,6 +860,7 @@ class TopologyView extends React.Component {
     ) {
       this.hideExcludedCyEles();
       this.setSubgraphCyElementsProp();
+      this.autoRefresh = false
     } else if (
       this.props.selectedView === appViews.TopologyView &&
       this.cy !== null &&

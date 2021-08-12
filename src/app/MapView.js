@@ -279,7 +279,7 @@ class MapView extends React.Component {
     }
     ReactDOM.render(
       <div>
-        <div>Selected Nodes</div>
+        <div>Selected Nodes ({sidebarNodes.length})</div>
         <div> {this.createCollapsibleNodeDetails(sidebarNodes)} </div>
       </div>,
       document.getElementById("sideBarContent")

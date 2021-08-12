@@ -63,6 +63,8 @@ class CustomCollapsibleButton extends React.Component {
         {this.state.open ? (
           <div className="collapse-content">
             {this.props.description}
+            <div> Connected Nodes ({this.props.length})</div>
+
             {this.props.children}
           </div>
         ) : null}
