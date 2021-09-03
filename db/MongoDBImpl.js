@@ -186,5 +186,17 @@ class MongoDBImpl extends DataBaseInterface {
     }
     return topologyData;
   }
+
+  /**
+   * Database call to get the intervals stored.
+   *
+   * @param {mogoose.Model} tableName Model Name to use to find the intervals.
+   * @param {String} nodeId
+   */
+   async getEvioControl(tableName, nodeId) {
+    return tableName.find(
+        { "EvioControl.NodeId": { $eq: nodeId } }
+      ).sort({ _id: -1 }).limit(1);
+  }  
 }
 module.exports = { MongoDBImpl };

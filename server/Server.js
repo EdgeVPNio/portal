@@ -26,6 +26,7 @@ const bodyParser = require('body-parser');
 const {MongoDBImpl} = require('../db/MongoDBImpl')
 const overlays = require("../controllers/Overlays.controller.js");
 const topology = require("../controllers/Topology.controller.js");
+const EvioControl = require("../controllers/EvioControl.controller.js");
 const dotenv = require('dotenv')
 const {InfluxDBImpl} = require('../db/InfluxDBImpl')
 const app = express()
@@ -77,6 +78,9 @@ app.get('/Overlays', (req, res) => overlays.findOverlays(req, res, dbInstance));
 //routing logic for GET topology information given overlayid and interval
 //Syntax: http://localhost:3000/topology?overlayid=overlayId&interval=intervalId
 app.get('/Topology', (req, res) => topology.findTopology(req, res, dbInstance));
+
+//Syntax: http://localhost:3000/eviocontrol?nodeid=value
+app.get('/EvioControl', (req, resp) => EvioControl.getControl(req, resp, dbInstance))
 
 // routing logic for the PUT request to gather data from all Evio nodes. 
 app.put('/EVIO/*', (req, res) => {

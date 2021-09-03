@@ -95,9 +95,31 @@ const topologySchema = new mongoose.Schema(
 
 //----------------------------------- End of Topology collection schema ------------------------------------------
 
+// var orderedControlSchema = new mongoose.Schema(
+//     {
+//       NodeId: String,
+//       Control: String,
+//     },
+//     { _id: false }
+//   );
+
+const evioControlSchema = new mongoose.Schema(
+    {
+        _id: Number,
+        createdAt: {
+          type: Date,
+          expires: process.env.expireTime,
+          default: Date.now,
+        },
+        EvioControl: {},
+      },
+      { _id: false }
+)
+
 //----------------------------------- Export the model so that they can be used ------------------------------------------
 
 var overlayModel = mongoose.model("overlayData", overlaySchema, "Overlays");
 var topologyModel = mongoose.model("topologyData", topologySchema, "Topology");
+var evioControlModel = mongoose.model("evioControl", evioControlSchema, "EvioControl")
 
-module.exports = { overlayModel, topologyModel };
+module.exports = { overlayModel, topologyModel, evioControlModel };

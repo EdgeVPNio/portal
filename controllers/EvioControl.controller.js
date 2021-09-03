@@ -20,37 +20,29 @@
 * THE SOFTWARE.
 */
 
+const {evioControlModel} = require('../db/Model');
 /**
- * Parent Interface of all the databases.
+ * Function to retrieve all Intervals from the database
  */
-class DataBaseInterface {
-    constructor(url) {
-        this.url = url;
+exports.getControl = (req, res, dbInstance) => {
+    const nodeId = req.query.nodeid;
+    var tableName = null;
+    if (process.env.DB === 'mongo') {
+      tableName = evioControlModel;
+    } else if (process.env.DB === 'influx') {
+        console.error("Operation not supported for Influx")
+        return
     }
+    dbInstance.getEvioControl(tableName, nodeId)
+      .then(data => {
+        //   console.log("Control data:", data);
+          res.send(data);
+      })
+      .catch(err => {
+        res.status(500).send({
+          message:
+            err.message || "An error occurred while retrieving the Evio Control."
+        });
+      });
+};
 
-    insertInto(tableName, data) {
-        console.log("insertInto method not implemented by specific db");
-    }
-
-    getIntervals(tableName) {
-        console.log("getIntervals method not implemented by specific db");
-    }
-
-    getTopology(tableName, intervalId, overlayId) {
-        console.log("getTopology method not implemented by specific db");
-    }
-
-    getOverlays(tableName, intervalId) {
-        console.log("checkOverlayUpdate method not implemented by specific db");
-    }
-
-    close() {
-        console.log("close method not implemented by specific db");
-    }
-
-    getEvioControl(tableName, nodeId) {
-        console.log("getEvioControl method not implemented by specific db");
-    }
-}
-
-module.exports = { DataBaseInterface }
